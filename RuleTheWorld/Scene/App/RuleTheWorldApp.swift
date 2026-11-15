@@ -19,7 +19,7 @@ struct RuleTheWorldApp: App {
             if ProcessInfo.isRunningTests {
                 Color.clear
             } else {
-                CoordinatorView(coordinator: Coordinator(root: MainPath.content))
+                CoordinatorView(coordinator: Coordinator(root: MainPath.hexMap))
                     .withRenderers(resolver: assembler.resolver)
                     .environment(\.resolver, assembler.resolver)
             }

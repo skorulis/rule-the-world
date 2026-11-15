@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB000000000000000000BB01 /* SwiftyH3 in Frameworks */ = {isa = PBXBuildFile; productRef = BB000000000000000000BB02 /* SwiftyH3 */; };
 		FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325B30AA4E7C0020E36D /* Knit */; };
 		FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325D30AA4E7C0020E36D /* KnitMacros */; };
 		FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA326030AA4EAC0020E36D /* ASKCore */; };
@@ -41,6 +42,7 @@
 			files = (
 				FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */,
 				FAFA326630AA4EAC0020E36D /* ASKCoordinator in Frameworks */,
+				BB000000000000000000BB01 /* SwiftyH3 in Frameworks */,
 				FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */,
 				FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */,
 			);
@@ -101,6 +103,7 @@
 				FAFA325D30AA4E7C0020E36D /* KnitMacros */,
 				FAFA326030AA4EAC0020E36D /* ASKCore */,
 				FAFA326530AA4EAC0020E36D /* ASKCoordinator */,
+				BB000000000000000000BB02 /* SwiftyH3 */,
 			);
 			productName = RuleTheWorld;
 			productReference = 000000000000000000000120 /* RuleTheWorld.app */;
@@ -161,6 +164,7 @@
 				FAFA325F30AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCore" */,
 				FAFA326430AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCoordinator" */,
 				FAFA326730AA4EAC0020E36D /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
+				BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */,
 			);
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -498,6 +502,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pawelmajcher/SwiftyH3.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.6.0;
+			};
+		};
 		FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/skorulis/ASKKnit";
@@ -533,6 +545,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		BB000000000000000000BB02 /* SwiftyH3 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */;
+			productName = SwiftyH3;
+		};
 		FAFA325B30AA4E7C0020E36D /* Knit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */;

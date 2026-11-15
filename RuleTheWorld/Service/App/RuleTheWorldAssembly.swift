@@ -29,14 +29,21 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     }
 
     @MainActor
-    private func registerServices(container: Container<TargetResolver>) {}
+    private func registerServices(container: Container<TargetResolver>) {
+        container.register(HexGridService.self) { _ in HexGridService() }
+            .inObjectScope(.container)
+    }
 
     @MainActor
-    private func registerStores(container: Container<TargetResolver>) {}
+    private func registerStores(container: Container<TargetResolver>) {
+        container.register(HexOwnershipStore.self) { HexOwnershipStore(kvStore: $0.pKeyValueStore()) }
+            .inObjectScope(.container)
+    }
 
     @MainActor
     private func registerViewModels(container: Container<TargetResolver>) {
         container.register(ContentViewModel.self) { ContentViewModel.make(resolver: $0) }
+        container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
     }
 }
 
