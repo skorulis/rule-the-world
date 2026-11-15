@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 90;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -126,6 +126,8 @@
 				FAFA327130AA4EAC0020E36D /* RuleTheWorldUnitTests */,
 			);
 			name = RuleTheWorldUnitTests;
+			packageProductDependencies = (
+			);
 			productName = RuleTheWorldUnitTests;
 			productReference = FAFA327230AA4EAC0020E36D /* RuleTheWorldUnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";

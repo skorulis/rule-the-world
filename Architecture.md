@@ -5,7 +5,7 @@ This document records the architectural decisions behind this app.
 
 ## 1. Use SwiftUI for all UI presentation
 
-Unless a feature can only be built using UIKit, all code should be pure SwiftUI.
+Unless a feature can only be built using UIKit, all code should be pure SwiftUI. `HexMapViewRepresentable` is the one sanctioned exception: the hex grid is drawn by an `MKMapView` with a single custom tiled `MKOverlayRenderer`, because SwiftUI `Map` cannot batch-draw hundreds of polygons without stuttering while panning.
 
 ---
 
@@ -62,4 +62,4 @@ Sources are grouped by responsibility, not by feature screen:
 ## 8. Hex grid uses H3
 
 - The territory grid is [Uber H3](https://h3geo.org) via the `SwiftyH3` Swift package (`HexGridService` is the only type that imports it). A cell's `UInt64` index is its stable identity (`Model/Hex/HexCell`); persistence stores those raw values so the model never depends on the library type.
-- Base resolution is 10 (~0.015 km² per hex, ~66 m edge). Zoomed-out views switch to a coarser resolution chosen by `HexZoomPolicy` so the visible tile count stays within a ~400 tile budget; ownership is aggregated to coarser cells by majority vote (`HexOwnershipStore.aggregated(at:)`).
+- Base resolution is 10 (~0.015 km² per hex, ~66 m edge). Zoomed-out views switch to a coarser resolution chosen by `HexZoomPolicy` so the visible tile count stays within a ~400 tile budget; ownership is aggregated to coarser cells by majority vote (`HexOwnershipSnapshot.aggregated(at:)`).

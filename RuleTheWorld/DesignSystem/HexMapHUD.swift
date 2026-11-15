@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HexMapHUD: View {
     let resolution: Int?
-    let tileCount: Int
     let lastTappedCell: HexCell?
     @Binding var showGrid: Bool
 
@@ -10,7 +9,6 @@ struct HexMapHUD: View {
         VStack(alignment: .leading, spacing: 8) {
             if let resolution {
                 LabeledContent("Resolution", value: "\(resolution)")
-                LabeledContent("Tiles", value: "\(tileCount)")
             } else {
                 Text("Zoom in to see grid")
                     .font(.headline)
@@ -29,8 +27,7 @@ struct HexMapHUD: View {
 
 #Preview {
     HexMapHUD(
-        resolution: 9,
-        tileCount: 42,
+        resolution: 10,
         lastTappedCell: HexCell(rawValue: 0x8928308280FFFFF),
         showGrid: .constant(true)
     )
