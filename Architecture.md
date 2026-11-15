@@ -62,4 +62,4 @@ Sources are grouped by responsibility, not by feature screen:
 ## 8. Hex grid uses H3
 
 - The territory grid is [Uber H3](https://h3geo.org) via the `SwiftyH3` Swift package (`HexGridService` is the only type that imports it). A cell's `UInt64` index is its stable identity (`Model/Hex/HexCell`); persistence stores those raw values so the model never depends on the library type.
-- Base resolution is 9 (~0.105 km² per hex). Zoomed-out views switch to a coarser resolution chosen by `HexZoomPolicy` so the visible tile count stays within a ~400 tile budget; ownership is aggregated to coarser cells by majority vote (`HexOwnershipStore.aggregated(at:)`).
+- Base resolution is 10 (~0.015 km² per hex, ~66 m edge). Zoomed-out views switch to a coarser resolution chosen by `HexZoomPolicy` so the visible tile count stays within a ~400 tile budget; ownership is aggregated to coarser cells by majority vote (`HexOwnershipStore.aggregated(at:)`).

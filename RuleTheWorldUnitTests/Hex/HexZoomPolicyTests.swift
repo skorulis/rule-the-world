@@ -12,7 +12,7 @@ struct HexZoomPolicyTests {
     }
 
     @Test func neighbourhoodReturnsBaseResolution() {
-        #expect(HexZoomPolicy.resolution(for: region(span: 0.02)) == 9)
+        #expect(HexZoomPolicy.resolution(for: region(span: 0.018)) == 10)
     }
 
     @Test func cityReturnsCoarserResolution() {

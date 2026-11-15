@@ -4,7 +4,7 @@ import Observation
 
 @Observable
 final class HexOwnershipStore {
-    static let baseResolution = 9
+    static let baseResolution = 10
     private static let storageKey = "hexOwnership.states"
 
     private let kvStore: PKeyValueStore

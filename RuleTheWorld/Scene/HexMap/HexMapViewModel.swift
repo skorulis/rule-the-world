@@ -26,7 +26,7 @@ final class HexMapViewModel {
         self.cameraPosition = .region(
             MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
-                span: MKCoordinateSpan(latitudeDelta: 0.027, longitudeDelta: 0.027)
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         )
     }
@@ -41,16 +41,10 @@ final class HexMapViewModel {
     }
 
     func tapped(coordinate: CLLocationCoordinate2D) {
-        guard let resolution = displayedResolution else { return }
-        let cell = grid.cell(containing: coordinate, resolution: resolution)
+        guard displayedResolution == HexOwnershipStore.baseResolution else { return }
+        let cell = grid.cell(containing: coordinate, resolution: HexOwnershipStore.baseResolution)
         lastTappedCell = cell
-        if resolution == HexOwnershipStore.baseResolution {
-            store.toggle(cell)
-        } else {
-            let children = grid.children(of: cell, at: HexOwnershipStore.baseResolution)
-            let target = store.state(for: children.first ?? cell).next
-            store.set(target, for: children)
-        }
+        store.toggle(cell)
         recomputeTiles()
     }
 

@@ -38,9 +38,9 @@ struct HexOwnershipStoreTests {
     @Test func aggregatedMajorityWins() {
         let store = makeStore()
         let coordinate = CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19)
-        let cell = grid.cell(containing: coordinate, resolution: 9)
+        let cell = grid.cell(containing: coordinate, resolution: HexOwnershipStore.baseResolution)
         let parent = grid.parent(of: cell, at: 7)!
-        let children = grid.children(of: parent, at: 9)
+        let children = grid.children(of: parent, at: HexOwnershipStore.baseResolution)
 
         for child in children.prefix(4) {
             store.set(.mine, for: child)
@@ -56,9 +56,9 @@ struct HexOwnershipStoreTests {
     @Test func aggregatedTieGoesToMine() {
         let store = makeStore()
         let coordinate = CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19)
-        let cell = grid.cell(containing: coordinate, resolution: 9)
+        let cell = grid.cell(containing: coordinate, resolution: HexOwnershipStore.baseResolution)
         let parent = grid.parent(of: cell, at: 7)!
-        let children = grid.children(of: parent, at: 9)
+        let children = grid.children(of: parent, at: HexOwnershipStore.baseResolution)
 
         store.set(.mine, for: children[0])
         store.set(.rival, for: children[1])
@@ -70,9 +70,9 @@ struct HexOwnershipStoreTests {
     @Test func batchSetPersistsAllCells() {
         let kvStore = InMemoryKeyValueStore()
         let coordinate = CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19)
-        let cell = grid.cell(containing: coordinate, resolution: 9)
+        let cell = grid.cell(containing: coordinate, resolution: HexOwnershipStore.baseResolution)
         let parent = grid.parent(of: cell, at: 7)!
-        let children = grid.children(of: parent, at: 9)
+        let children = grid.children(of: parent, at: HexOwnershipStore.baseResolution)
 
         let store = HexOwnershipStore(kvStore: kvStore)
         store.set(.rival, for: children)

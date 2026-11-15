@@ -12,7 +12,7 @@ enum HexZoomPolicy {
     static func resolution(
         for region: MKCoordinateRegion,
         budget: Int = 400,
-        baseResolution: Int = 9,
+        baseResolution: Int = HexOwnershipStore.baseResolution,
         minResolution: Int = 4
     ) -> Int? {
         let latMeters = region.span.latitudeDelta * 111_000
