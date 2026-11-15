@@ -1,0 +1,42 @@
+{
+  "originHash" : "a6f802e5d3758e2b97ba3fbc7af6b3906c2d3a451fe0e8f5e2c2a507d916784b",
+  "pins" : [
+    {
+      "identity" : "askcore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skorulis/ASKCore",
+      "state" : {
+        "branch" : "main",
+        "revision" : "06049e00f93742fc4d80591c3b2446877da9f9d3"
+      }
+    },
+    {
+      "identity" : "askknit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skorulis/ASKKnit",
+      "state" : {
+        "branch" : "main",
+        "revision" : "5ab52b6e2e162fbb7905b8f86b34eab285d60cf4"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-syntax.git",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}

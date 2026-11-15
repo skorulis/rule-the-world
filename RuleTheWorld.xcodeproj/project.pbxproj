@@ -6,6 +6,12 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325B30AA4E7C0020E36D /* Knit */; };
+		FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325D30AA4E7C0020E36D /* KnitMacros */; };
+		FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA326030AA4EAC0020E36D /* ASKCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* RuleTheWorld.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RuleTheWorld.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -22,6 +28,9 @@
 		000000000000000130000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */,
+				FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */,
+				FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -60,6 +69,11 @@
 				000000000000000000000010 /* RuleTheWorld */,
 			);
 			name = RuleTheWorld;
+			packageProductDependencies = (
+				FAFA325B30AA4E7C0020E36D /* Knit */,
+				FAFA325D30AA4E7C0020E36D /* KnitMacros */,
+				FAFA326030AA4EAC0020E36D /* ASKCore */,
+			);
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* RuleTheWorld.app */;
 			productType = "com.apple.product-type.application";
@@ -88,6 +102,10 @@
 			);
 			mainGroup = 000000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */,
+				FAFA325F30AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCore" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -343,6 +361,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/skorulis/ASKKnit";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		FAFA325F30AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCore" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/skorulis/ASKCore";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FAFA325B30AA4E7C0020E36D /* Knit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */;
+			productName = Knit;
+		};
+		FAFA325D30AA4E7C0020E36D /* KnitMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */;
+			productName = KnitMacros;
+		};
+		FAFA326030AA4EAC0020E36D /* ASKCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FAFA325F30AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCore" */;
+			productName = ASKCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;
 }
