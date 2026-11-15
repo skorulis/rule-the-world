@@ -1,6 +1,15 @@
 {
-  "originHash" : "a6f802e5d3758e2b97ba3fbc7af6b3906c2d3a451fe0e8f5e2c2a507d916784b",
+  "originHash" : "b34642e909277f0efa6bd67369c0a07e3ba1e160d19e69fa485696fef2ca55fa",
   "pins" : [
+    {
+      "identity" : "askcoordinator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skorulis/ASKCoordinator",
+      "state" : {
+        "branch" : "main",
+        "revision" : "9d5997c0f282b9b0e91cf845c5142d6fcbce351d"
+      }
+    },
     {
       "identity" : "askcore",
       "kind" : "remoteSourceControl",
@@ -35,6 +44,15 @@
       "state" : {
         "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
         "version" : "602.0.0"
+      }
+    },
+    {
+      "identity" : "swiftlintplugins",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SimplyDanny/SwiftLintPlugins",
+      "state" : {
+        "revision" : "ef7d692fc6706e8f5628e26bcafaefa445c58a97",
+        "version" : "0.65.1"
       }
     }
   ],

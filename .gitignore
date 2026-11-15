@@ -1,1 +1,5 @@
 RuleTheWorld.xcodeproj/xcuserdata
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.DS_Store
