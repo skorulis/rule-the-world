@@ -12,7 +12,7 @@ enum HexZoomPolicy {
     static func resolution(
         for region: MKCoordinateRegion,
         budget: Int = 400,
-        baseResolution: Int = HexOwnershipStore.baseResolution,
+        baseResolution: Int = HexGridService.baseResolution,
         minResolution: Int = 4
     ) -> Int? {
         let latMeters = region.span.latitudeDelta * 111_000
@@ -30,7 +30,7 @@ enum HexZoomPolicy {
         latitude: CLLocationDegrees,
         screenSize: CGSize = CGSize(width: 400, height: 850),
         budget: Int = 400,
-        baseResolution: Int = HexOwnershipStore.baseResolution,
+        baseResolution: Int = HexGridService.baseResolution,
         minResolution: Int = 4
     ) -> Int? {
         let metersPerPoint = 1 / (zoomScale * MKMapPointsPerMeterAtLatitude(latitude))
@@ -46,7 +46,7 @@ enum HexZoomPolicy {
     static func resolution(
         forVisibleAreaM2 area: Double,
         budget: Int = 400,
-        baseResolution: Int = HexOwnershipStore.baseResolution,
+        baseResolution: Int = HexGridService.baseResolution,
         minResolution: Int = 4
     ) -> Int? {
         var res = baseResolution

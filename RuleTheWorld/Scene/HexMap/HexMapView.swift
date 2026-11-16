@@ -22,6 +22,7 @@ struct HexMapView: View {
             HexMapHUD(
                 resolution: model.displayedResolution,
                 lastTappedCell: model.lastTappedCell,
+                lastTappedVisit: model.lastTappedVisit,
                 showGrid: $model.showGrid
             )
         }

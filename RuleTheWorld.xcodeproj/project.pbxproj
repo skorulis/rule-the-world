@@ -12,6 +12,7 @@
 		FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325D30AA4E7C0020E36D /* KnitMacros */; };
 		FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA326030AA4EAC0020E36D /* ASKCore */; };
 		FAFA326630AA4EAC0020E36D /* ASKCoordinator in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA326530AA4EAC0020E36D /* ASKCoordinator */; };
+		FAFA35B230AA82190020E36D /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA35B130AA82190020E36D /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +44,7 @@
 				FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */,
 				FAFA326630AA4EAC0020E36D /* ASKCoordinator in Frameworks */,
 				BB000000000000000000BB01 /* SwiftyH3 in Frameworks */,
+				FAFA35B230AA82190020E36D /* GRDB in Frameworks */,
 				FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */,
 				FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */,
 			);
@@ -104,6 +106,7 @@
 				FAFA326030AA4EAC0020E36D /* ASKCore */,
 				FAFA326530AA4EAC0020E36D /* ASKCoordinator */,
 				BB000000000000000000BB02 /* SwiftyH3 */,
+				FAFA35B130AA82190020E36D /* GRDB */,
 			);
 			productName = RuleTheWorld;
 			productReference = 000000000000000000000120 /* RuleTheWorld.app */;
@@ -167,6 +170,7 @@
 				FAFA326430AA4EAC0020E36D /* XCRemoteSwiftPackageReference "ASKCoordinator" */,
 				FAFA326730AA4EAC0020E36D /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
 				BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */,
+				FAFA35B030AA82190020E36D /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -544,6 +548,14 @@
 				minimumVersion = 0.60.0;
 			};
 		};
+		FAFA35B030AA82190020E36D /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.12.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -581,6 +593,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FAFA326730AA4EAC0020E36D /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
 			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		FAFA35B130AA82190020E36D /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FAFA35B030AA82190020E36D /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

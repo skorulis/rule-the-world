@@ -1,11 +1,19 @@
 import Foundation
 
-struct HexCell: Hashable, Codable, Identifiable, CustomStringConvertible {
+struct HexCell: nonisolated Hashable, Codable, Identifiable, CustomStringConvertible {
     let rawValue: UInt64
 
-    var id: UInt64 { rawValue }
+    nonisolated var id: UInt64 { rawValue }
 
-    var description: String {
+    nonisolated var description: String {
         String(rawValue, radix: 16)
+    }
+
+    nonisolated static func == (lhs: HexCell, rhs: HexCell) -> Bool {
+        lhs.rawValue == rhs.rawValue
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
     }
 }

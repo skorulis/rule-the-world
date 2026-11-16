@@ -3,6 +3,7 @@ import Knit
 import KnitMacros
 import MapKit
 import Observation
+import OSLog
 import SwiftUI
 
 @Observable
@@ -11,13 +12,14 @@ final class HexMapViewModel {
     let initialRegion: MKCoordinateRegion
     var displayedResolution: Int?
     var lastTappedCell: HexCell?
+    var lastTappedVisit: HexVisit?
     var showGrid = true
 
     let grid: HexGridService
-    private let store: HexOwnershipStore
+    private let store: HexVisitStore
 
     @Resolvable<Resolver>
-    init(grid: HexGridService, store: HexOwnershipStore) {
+    init(grid: HexGridService, store: HexVisitStore) {
         self.grid = grid
         self.store = store
         self.initialRegion = MKCoordinateRegion(
@@ -42,9 +44,15 @@ final class HexMapViewModel {
     }
 
     func tapped(coordinate: CLLocationCoordinate2D) {
-        guard displayedResolution == HexOwnershipStore.baseResolution else { return }
-        let cell = grid.cell(containing: coordinate, resolution: HexOwnershipStore.baseResolution)
+        guard displayedResolution == HexGridService.baseResolution else { return }
+        let cell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
         lastTappedCell = cell
-        store.toggle(cell)
+        Task {
+            do {
+                lastTappedVisit = try await store.recordVisit(cell)
+            } catch {
+                Logger().error("recordVisit failed: \(error)")
+            }
+        }
     }
 }

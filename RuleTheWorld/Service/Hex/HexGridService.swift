@@ -2,7 +2,9 @@ import CoreLocation
 import MapKit
 import SwiftyH3
 
-final class HexGridService: Sendable {
+nonisolated final class HexGridService: Sendable {
+    static let baseResolution = 10
+
     init() {}
 
     func cell(containing coordinate: CLLocationCoordinate2D, resolution: Int) -> HexCell {

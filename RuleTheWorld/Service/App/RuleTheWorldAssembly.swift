@@ -36,7 +36,15 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
 
     @MainActor
     private func registerStores(container: Container<TargetResolver>) {
-        container.register(HexOwnershipStore.self) { HexOwnershipStore(kvStore: $0.pKeyValueStore()) }
+        container.register(AppDatabase.self) { _ in
+            do {
+                return try self.purpose == .testing ? AppDatabase.inMemory() : AppDatabase.onDisk()
+            } catch {
+                fatalError("Failed to open database: \(error)")
+            }
+        }
+        .inObjectScope(.container)
+        container.register(HexVisitStore.self) { HexVisitStore(database: $0.appDatabase()) }
             .inObjectScope(.container)
     }
 

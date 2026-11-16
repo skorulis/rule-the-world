@@ -1,10 +1,14 @@
 import Foundation
 
-struct HexOwnershipSnapshot: Sendable, Equatable {
-    var states: [HexCell: HexState]
+struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
+    nonisolated var states: [HexCell: HexState]
 
-    func aggregated(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {
-        if resolution == HexOwnershipStore.baseResolution {
+    nonisolated static func == (lhs: HexOwnershipSnapshot, rhs: HexOwnershipSnapshot) -> Bool {
+        lhs.states == rhs.states
+    }
+
+    nonisolated func aggregated(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {
+        if resolution == HexGridService.baseResolution {
             return states
         }
         var groups: [HexCell: [HexState: Int]] = [:]
@@ -19,7 +23,7 @@ struct HexOwnershipSnapshot: Sendable, Equatable {
         return result
     }
 
-    private static func majorityState(counts: [HexState: Int]) -> HexState {
+    private nonisolated static func majorityState(counts: [HexState: Int]) -> HexState {
         var best: HexState = .mine
         var bestCount = -1
         for state in HexState.allCases where state != .unclaimed {
