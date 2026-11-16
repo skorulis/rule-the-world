@@ -37,11 +37,11 @@ final class HexVisitStore {
 
     func reload() async {
         do {
-            let cells = try await database.writer.read { db in
-                try HexVisit.select(Column("hexId"), as: HexCell.self).fetchAll(db)
+            let visits = try await database.writer.read { db in
+                try HexVisit.fetchAll(db)
             }
             snapshot = HexOwnershipSnapshot(
-                states: Dictionary(uniqueKeysWithValues: cells.map { ($0, HexState.mine) })
+                states: Dictionary(uniqueKeysWithValues: visits.map { ($0.cell, HexState.forScore($0.score)) })
             )
         } catch {
             Logger().error("HexVisitStore reload failed: \(error)")

@@ -24,11 +24,11 @@ struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     }
 
     private nonisolated static func majorityState(counts: [HexState: Int]) -> HexState {
-        var best: HexState = .mine
-        var bestCount = -1
+        var best: HexState = .unclaimed
+        var bestCount = 0
         for state in HexState.allCases where state != .unclaimed {
             let count = counts[state] ?? 0
-            if count > bestCount {
+            if count > bestCount || (count == bestCount && state > best) {
                 best = state
                 bestCount = count
             }

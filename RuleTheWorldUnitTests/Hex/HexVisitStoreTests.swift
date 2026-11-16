@@ -53,6 +53,14 @@ struct HexVisitStoreTests {
         let store = try makeStore()
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         _ = try await store.recordVisit(cell)
-        #expect(store.snapshot.states[cell] == .mine)
+        #expect(store.snapshot.states[cell] == .visited)
+    }
+
+    @MainActor
+    @Test func snapshotMarksLowScoreCellAsPartialVisit() async throws {
+        let store = try makeStore()
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        _ = try await store.recordVisit(cell, score: 0.5)
+        #expect(store.snapshot.states[cell] == .partialVisit)
     }
 }
