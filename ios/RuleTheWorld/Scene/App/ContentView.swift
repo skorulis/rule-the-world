@@ -4,14 +4,13 @@ struct ContentView: View {
     @State var model: ContentViewModel
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(model.title)
-                .font(.title2)
-            Button("Refresh") {
-                model.refreshTitle()
+        TabView {
+            Tab("Map", systemImage: "map") {
+                HexMapView(model: model.hexMap)
             }
-                .buttonStyle(.borderedProminent)
+            Tab("Visits", systemImage: "list.bullet") {
+                HexVisitLogListView(model: model.visitLog)
+            }
         }
-        .padding()
     }
 }

@@ -14,15 +14,20 @@ struct UserMapStatusTests {
         )
     }
 
-    @Test func movingSampleUsesCourse() {
+    @Test func movingSampleKeepsCompassHeading() {
         let status = UserMapStatus.make(sample: sample(speed: 4, course: 90), heading: 45)
-        #expect(status?.directionDegrees == 90)
+        #expect(status?.directionDegrees == 45)
         #expect(status?.speedKmh == 14.4)
     }
 
     @Test func stationarySampleUsesHeading() {
         let status = UserMapStatus.make(sample: sample(speed: 0.2, course: 90), heading: 45)
         #expect(status?.directionDegrees == 45)
+    }
+
+    @Test func movingWithoutHeadingHasNilDirection() {
+        let status = UserMapStatus.make(sample: sample(speed: 4, course: 90), heading: nil)
+        #expect(status?.directionDegrees == nil)
     }
 
     @Test func stationaryWithoutHeadingHasNilDirection() {

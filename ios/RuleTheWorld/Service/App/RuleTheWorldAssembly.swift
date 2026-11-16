@@ -64,6 +64,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     private func registerViewModels(container: Container<TargetResolver>) {
         container.register(ContentViewModel.self) { ContentViewModel.make(resolver: $0) }
         container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
+        container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
     }
 }
 

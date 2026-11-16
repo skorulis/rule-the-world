@@ -4,15 +4,14 @@ import KnitMacros
 import Observation
 
 @Observable
+@MainActor
 final class ContentViewModel {
-    var title: String
+    let hexMap: HexMapViewModel
+    let visitLog: HexVisitLogListViewModel
 
     @Resolvable<Resolver>
-    init() {
-        title = "RuleTheWorld"
-    }
-
-    func refreshTitle() {
-        title = "RuleTheWorld (updated)"
+    init(hexMap: HexMapViewModel, visitLog: HexVisitLogListViewModel) {
+        self.hexMap = hexMap
+        self.visitLog = visitLog
     }
 }

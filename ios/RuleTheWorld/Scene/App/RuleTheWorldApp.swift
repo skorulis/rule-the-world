@@ -36,7 +36,7 @@ struct RuleTheWorldApp: App {
             if ProcessInfo.isRunningTests {
                 Color.clear
             } else {
-                CoordinatorView(coordinator: Coordinator(root: MainPath.hexMap))
+                CoordinatorView(coordinator: Coordinator(root: MainPath.content))
                     .withRenderers(resolver: assembler.resolver)
                     .environment(\.resolver, assembler.resolver)
             }

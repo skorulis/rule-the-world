@@ -16,16 +16,10 @@ struct UserMapStatus: Equatable, Sendable {
     nonisolated static func make(sample: LocationSample?, heading: Double?) -> UserMapStatus? {
         guard let sample else { return nil }
         let speedKmh = sample.speed.map { $0 * 3.6 }.flatMap { $0 > 0 ? $0 : nil }
-        let direction: Double?
-        if let speed = sample.speed, speed > 0.5, let course = sample.course {
-            direction = course
-        } else {
-            direction = heading
-        }
         return UserMapStatus(
             latitude: sample.latitude,
             longitude: sample.longitude,
-            directionDegrees: direction,
+            directionDegrees: heading,
             speedKmh: speedKmh
         )
     }
