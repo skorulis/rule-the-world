@@ -1,0 +1,16 @@
+name: rule-the-world-web
+
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ruletheworld
+      POSTGRES_PASSWORD: ruletheworld
+      POSTGRES_DB: ruletheworld
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

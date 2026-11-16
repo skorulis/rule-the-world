@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+
+export type Session = NonNullable<
+  Awaited<ReturnType<typeof auth.api.getSession>>
+>;
 
 export function jsonError(error: string, status: number): NextResponse {
   return NextResponse.json({ error }, { status });
@@ -11,6 +16,17 @@ export function serverError(
 ): NextResponse {
   console.error(logMessage, error);
   return jsonError(publicMessage, 500);
+}
+
+/** Returns the signed-in session, or a 401 response to return as-is. */
+export async function requireSession(
+  request: Request,
+): Promise<Session | NextResponse> {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user.id) {
+    return jsonError("Unauthorized", 401);
+  }
+  return session;
 }
 
 /** Parses the JSON body, or returns a 400 response to return as-is. */
