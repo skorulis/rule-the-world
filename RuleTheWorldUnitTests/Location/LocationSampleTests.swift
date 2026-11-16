@@ -25,11 +25,24 @@ struct LocationSampleTests {
             altitude: 0,
             horizontalAccuracy: 10,
             verticalAccuracy: 10,
-            course: 0,
+            course: 90,
             speed: 5,
             timestamp: Date(timeIntervalSince1970: 1_700_000_000)
         )
         let sample = LocationSample(location: location)
         #expect(sample.speed == 5)
+        #expect(sample.course == 90)
+    }
+
+    @Test func unknownCourseMapsToNil() {
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
+            altitude: 0,
+            horizontalAccuracy: 10,
+            verticalAccuracy: 10,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let sample = LocationSample(location: location)
+        #expect(sample.course == nil)
     }
 }

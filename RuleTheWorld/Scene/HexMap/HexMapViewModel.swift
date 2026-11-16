@@ -46,6 +46,10 @@ final class HexMapViewModel {
         locationService.latestSample
     }
 
+    var userStatus: UserMapStatus? {
+        UserMapStatus.make(sample: locationService.latestSample, heading: locationService.heading)
+    }
+
     var authorizationDescription: String {
         switch authorizationStatus {
         case .notDetermined: return "Not determined"

@@ -10,6 +10,7 @@ struct HexMapView: View {
             snapshot: model.snapshot,
             showGrid: model.showGrid,
             grid: model.grid,
+            userStatus: model.userStatus,
             onCameraChange: { zoomScale, latitude in
                 model.cameraChanged(zoomScale: zoomScale, latitude: latitude)
             },

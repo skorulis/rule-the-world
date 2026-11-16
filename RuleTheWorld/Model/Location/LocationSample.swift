@@ -5,6 +5,7 @@ struct LocationSample: Sendable, Equatable {
     let latitude: Double
     let longitude: Double
     let speed: Double?
+    let course: Double?
     let horizontalAccuracy: Double
     let timestamp: Date
 
@@ -16,12 +17,14 @@ struct LocationSample: Sendable, Equatable {
         latitude: Double,
         longitude: Double,
         speed: Double?,
+        course: Double?,
         horizontalAccuracy: Double,
         timestamp: Date
     ) {
         self.latitude = latitude
         self.longitude = longitude
         self.speed = speed
+        self.course = course
         self.horizontalAccuracy = horizontalAccuracy
         self.timestamp = timestamp
     }
@@ -30,6 +33,7 @@ struct LocationSample: Sendable, Equatable {
         self.latitude = location.coordinate.latitude
         self.longitude = location.coordinate.longitude
         self.speed = location.speed >= 0 ? location.speed : nil
+        self.course = location.course >= 0 ? location.course : nil
         self.horizontalAccuracy = location.horizontalAccuracy
         self.timestamp = location.timestamp
     }

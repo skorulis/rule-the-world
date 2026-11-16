@@ -6,6 +6,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let snapshot: HexOwnershipSnapshot
     let showGrid: Bool
     let grid: HexGridService
+    let userStatus: UserMapStatus?
     let onCameraChange: (MKZoomScale, CLLocationDegrees) -> Void
     let onTap: (CLLocationCoordinate2D) -> Void
 
@@ -29,6 +30,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         context.coordinator.onTap = onTap
         #endif
         context.coordinator.renderer?.update(snapshot: snapshot, showGrid: showGrid)
+        context.coordinator.apply(status: userStatus, to: mapView)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -42,6 +44,8 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         private(set) var renderer: HexGridOverlayRenderer?
         private let grid: HexGridService
         private var hasCenteredOnUser = false
+        private var statusAnnotation: UserStatusAnnotation?
+        private var status: UserMapStatus?
 
         init(grid: HexGridService) {
             self.grid = grid
@@ -58,10 +62,27 @@ struct HexMapViewRepresentable: UIViewRepresentable {
 
         func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
             reportCamera(mapView)
+            reapplyStatus(mapView)
         }
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             reportCamera(mapView)
+        }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard let statusAnnotation = annotation as? UserStatusAnnotation else {
+                return nil
+            }
+            let view = mapView.dequeueReusableAnnotationView(
+                withIdentifier: UserStatusAnnotationView.reuseIdentifier
+            ) as? UserStatusAnnotationView ?? UserStatusAnnotationView(
+                annotation: statusAnnotation,
+                reuseIdentifier: UserStatusAnnotationView.reuseIdentifier
+            )
+            if let status {
+                view.apply(status: status, mapHeading: mapView.camera.heading)
+            }
+            return view
         }
 
         func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
@@ -83,6 +104,29 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             onTap?(coordinate)
         }
         #endif
+
+        func apply(status: UserMapStatus?, to mapView: MKMapView) {
+            self.status = status
+            guard let status else { return }
+            let coordinate = CLLocationCoordinate2D(
+                latitude: status.latitude,
+                longitude: status.longitude
+            )
+            if let annotation = statusAnnotation {
+                annotation.coordinate = coordinate
+            } else {
+                let annotation = UserStatusAnnotation(coordinate: coordinate)
+                statusAnnotation = annotation
+                mapView.addAnnotation(annotation)
+            }
+            reapplyStatus(mapView)
+        }
+
+        private func reapplyStatus(_ mapView: MKMapView) {
+            guard let status, let annotation = statusAnnotation,
+                  let view = mapView.view(for: annotation) as? UserStatusAnnotationView else { return }
+            view.apply(status: status, mapHeading: mapView.camera.heading)
+        }
 
         private func reportCamera(_ mapView: MKMapView) {
             let width = mapView.visibleMapRect.width

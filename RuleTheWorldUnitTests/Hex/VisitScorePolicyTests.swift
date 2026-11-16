@@ -21,7 +21,14 @@ struct VisitScorePolicyTests {
 
     @Test func accuracyGate() {
         func sample(_ accuracy: Double) -> LocationSample {
-            LocationSample(latitude: 0, longitude: 0, speed: nil, horizontalAccuracy: accuracy, timestamp: .now)
+            LocationSample(
+                latitude: 0,
+                longitude: 0,
+                speed: nil,
+                course: nil,
+                horizontalAccuracy: accuracy,
+                timestamp: .now
+            )
         }
         #expect(VisitScorePolicy.isAcceptable(sample(10)))
         #expect(VisitScorePolicy.isAcceptable(sample(100)))

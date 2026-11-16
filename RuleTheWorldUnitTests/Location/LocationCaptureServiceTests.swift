@@ -20,6 +20,7 @@ struct LocationCaptureServiceTests {
             latitude: -33.89,
             longitude: 151.19,
             speed: speed,
+            course: nil,
             horizontalAccuracy: accuracy,
             timestamp: timestamp
         )

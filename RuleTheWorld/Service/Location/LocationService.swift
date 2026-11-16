@@ -13,6 +13,7 @@ final class LocationService: NSObject {
     let samples: AsyncStream<LocationSample>
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var latestSample: LocationSample?
+    private(set) var heading: Double?
 
     override init() {
         var continuation: AsyncStream<LocationSample>.Continuation!
@@ -43,16 +44,21 @@ final class LocationService: NSObject {
             object: nil
         )
         if UIApplication.shared.applicationState == .active {
-            manager.startUpdatingLocation()
+            appBecameActive()
         }
     }
 
     @objc private func appBecameActive() {
         manager.startUpdatingLocation()
+        if CLLocationManager.headingAvailable() {
+            manager.headingFilter = 5
+            manager.startUpdatingHeading()
+        }
     }
 
     @objc private func appEnteredBackground() {
         manager.stopUpdatingLocation()
+        manager.stopUpdatingHeading()
     }
 }
 
@@ -71,6 +77,19 @@ extension LocationService: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         MainActor.assumeIsolated {
             authorizationStatus = status
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        let heading: Double? = if newHeading.trueHeading >= 0 {
+            newHeading.trueHeading
+        } else if newHeading.magneticHeading >= 0 {
+            newHeading.magneticHeading
+        } else {
+            nil
+        }
+        MainActor.assumeIsolated {
+            self.heading = heading
         }
     }
 
