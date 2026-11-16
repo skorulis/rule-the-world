@@ -20,15 +20,25 @@ struct HexVisitStoreTests {
     }
 
     @MainActor
-    @Test func secondVisitIncrementsScore() async throws {
+    @Test func secondVisitSameDayDoesNotExceedDailyCap() async throws {
         let store = try makeStore()
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         _ = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
         let date = Date(timeIntervalSince1970: 1_700_000_100)
         let visit = try await store.recordVisit(cell, at: date)
-        #expect(visit.score == 2)
+        #expect(visit.score == 1)
         #expect(visit.lastScore == 1)
         #expect(visit.lastVisit == date)
+    }
+
+    @MainActor
+    @Test func visitOnLaterDayScoresAgain() async throws {
+        let store = try makeStore()
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        _ = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
+        let visit = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000 + 86_400 * 2))
+        #expect(visit.score == 2)
+        #expect(visit.lastScore == 1)
     }
 
     @MainActor

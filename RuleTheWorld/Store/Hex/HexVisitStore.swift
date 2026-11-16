@@ -19,11 +19,9 @@ final class HexVisitStore {
 
     func recordVisit(_ cell: HexCell, score: Double = 1, at date: Date = .now) async throws -> HexVisit {
         let visit = try await database.writer.write { db in
-            var visit = try HexVisit.fetchOne(db, key: cell)
-                ?? HexVisit(cell: cell, lastVisit: date, score: 0, lastScore: 0)
-            visit.lastVisit = date
-            visit.lastScore = score
-            visit.score += score
+            let existing = try HexVisit.fetchOne(db, key: cell)
+                ?? HexVisit(cell: cell, lastVisit: .distantPast, score: 0, lastScore: 0)
+            let visit = existing.recordingVisit(score: score, at: date)
             try visit.save(db)
             return visit
         }
