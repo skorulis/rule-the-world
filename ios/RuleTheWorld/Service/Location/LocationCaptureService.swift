@@ -5,6 +5,7 @@ import OSLog
 final class LocationCaptureService {
     private let grid: HexGridService
     let store: HexVisitStore
+    let logStore: HexVisitLogStore
     private var task: Task<Void, Never>?
 
     struct Recorded: Equatable {
@@ -15,9 +16,10 @@ final class LocationCaptureService {
 
     private(set) var lastRecorded: Recorded?
 
-    init(grid: HexGridService, store: HexVisitStore) {
+    init(grid: HexGridService, store: HexVisitStore, logStore: HexVisitLogStore) {
         self.grid = grid
         self.store = store
+        self.logStore = logStore
     }
 
     func start(samples: AsyncStream<LocationSample>) {
@@ -43,6 +45,7 @@ final class LocationCaptureService {
         }
         do {
             _ = try await store.recordVisit(cell, score: score, at: sample.timestamp)
+            _ = try await logStore.record(HexVisitLog(sample: sample, cell: cell, score: score))
             lastRecorded = Recorded(cell: cell, score: score, date: sample.timestamp)
         } catch {
             Logger().error("recordVisit failed: \(error)")

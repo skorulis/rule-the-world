@@ -35,7 +35,11 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(LocationService.self) { _ in LocationService() }
             .inObjectScope(.container)
         container.register(LocationCaptureService.self) {
-            LocationCaptureService(grid: $0.hexGridService(), store: $0.hexVisitStore())
+            LocationCaptureService(
+                grid: $0.hexGridService(),
+                store: $0.hexVisitStore(),
+                logStore: $0.hexVisitLogStore()
+            )
         }
         .inObjectScope(.container)
     }
@@ -51,6 +55,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         }
         .inObjectScope(.container)
         container.register(HexVisitStore.self) { HexVisitStore(database: $0.appDatabase()) }
+            .inObjectScope(.container)
+        container.register(HexVisitLogStore.self) { HexVisitLogStore(database: $0.appDatabase()) }
             .inObjectScope(.container)
     }
 

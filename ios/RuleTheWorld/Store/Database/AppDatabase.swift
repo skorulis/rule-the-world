@@ -15,6 +15,17 @@ final class AppDatabase: Sendable {
                 table.column("lastScore", .double).notNull()
             }
         }
+        migrator.registerMigration("v2 createHexVisitLog") { db in
+            try db.create(table: "hexVisitLog") { table in
+                table.autoIncrementedPrimaryKey("id")
+                table.column("timestamp", .datetime).notNull()
+                table.column("hexId", .integer).notNull().indexed()
+                table.column("latitude", .double).notNull()
+                table.column("longitude", .double).notNull()
+                table.column("speed", .double)
+                table.column("score", .double).notNull()
+            }
+        }
         try migrator.migrate(writer)
     }
 

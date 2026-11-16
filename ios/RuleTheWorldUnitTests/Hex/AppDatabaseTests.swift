@@ -12,6 +12,14 @@ struct AppDatabaseTests {
         #expect(exists)
     }
 
+    @Test func migrationCreatesHexVisitLogTable() throws {
+        let database = try AppDatabase.inMemory()
+        let exists = try database.writer.read { db in
+            try db.tableExists("hexVisitLog")
+        }
+        #expect(exists)
+    }
+
     @Test func hexCellRoundTripsThroughDatabase() throws {
         let database = try AppDatabase.inMemory()
         let grid = HexGridService()
