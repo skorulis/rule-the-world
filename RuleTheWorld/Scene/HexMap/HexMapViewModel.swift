@@ -17,11 +17,13 @@ final class HexMapViewModel {
 
     let grid: HexGridService
     private let store: HexVisitStore
+    private let locationService: LocationService
 
     @Resolvable<Resolver>
-    init(grid: HexGridService, store: HexVisitStore) {
+    init(grid: HexGridService, store: HexVisitStore, locationService: LocationService) {
         self.grid = grid
         self.store = store
+        self.locationService = locationService
         self.initialRegion = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -36,6 +38,25 @@ final class HexMapViewModel {
         displayedResolution == nil
     }
 
+    var authorizationStatus: CLAuthorizationStatus {
+        locationService.authorizationStatus
+    }
+
+    var latestSample: LocationSample? {
+        locationService.latestSample
+    }
+
+    var authorizationDescription: String {
+        switch authorizationStatus {
+        case .notDetermined: return "Not determined"
+        case .restricted: return "Restricted"
+        case .denied: return "Denied"
+        case .authorizedWhenInUse: return "While in use"
+        case .authorizedAlways: return "Always"
+        @unknown default: return "Unknown"
+        }
+    }
+
     func cameraChanged(zoomScale: MKZoomScale, latitude: CLLocationDegrees) {
         let resolution = HexZoomPolicy.resolution(forZoomScale: zoomScale, latitude: latitude)
         if resolution != displayedResolution {
@@ -43,6 +64,7 @@ final class HexMapViewModel {
         }
     }
 
+    #if DEBUG
     func tapped(coordinate: CLLocationCoordinate2D) {
         guard displayedResolution == HexGridService.baseResolution else { return }
         let cell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
@@ -55,4 +77,5 @@ final class HexMapViewModel {
             }
         }
     }
+    #endif
 }

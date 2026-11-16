@@ -4,6 +4,9 @@ struct HexMapHUD: View {
     let resolution: Int?
     let lastTappedCell: HexCell?
     let lastTappedVisit: HexVisit?
+    let authorizationDescription: String
+    let speedKmh: Double?
+    let accuracy: Double?
     @Binding var showGrid: Bool
 
     var body: some View {
@@ -14,10 +17,12 @@ struct HexMapHUD: View {
                 Text("Zoom in to see grid")
                     .font(.headline)
             }
+            #if DEBUG
             if let lastTappedCell {
                 LabeledContent("Last tapped", value: lastTappedCell.description)
                     .font(.caption)
             }
+            #endif
             if let lastTappedVisit {
                 LabeledContent("Score", value: "\(Int(lastTappedVisit.score))")
                 LabeledContent(
@@ -25,6 +30,16 @@ struct HexMapHUD: View {
                     value: lastTappedVisit.lastVisit.formatted(.relative(presentation: .named))
                 )
                 .font(.caption)
+            }
+            LabeledContent("Location", value: authorizationDescription)
+                .font(.caption)
+            if let speedKmh {
+                LabeledContent("Speed", value: "\(Int(speedKmh)) km/h")
+                    .font(.caption)
+            }
+            if let accuracy {
+                LabeledContent("Accuracy", value: "\(Int(accuracy)) m")
+                    .font(.caption)
             }
             Toggle("Show grid", isOn: $showGrid)
         }
@@ -44,6 +59,9 @@ struct HexMapHUD: View {
             score: 3,
             lastScore: 1
         ),
+        authorizationDescription: "Always",
+        speedKmh: 5,
+        accuracy: 10,
         showGrid: .constant(true)
     )
 }

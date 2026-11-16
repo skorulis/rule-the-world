@@ -1,7 +1,7 @@
 import Foundation
 
 struct HexVisit: Hashable, Codable, Sendable {
-    static let maxDailyScore: Double = 1
+    nonisolated static let maxDailyScore: Double = 1
 
     var cell: HexCell
     var lastVisit: Date

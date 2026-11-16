@@ -14,7 +14,9 @@ struct HexMapView: View {
                 model.cameraChanged(zoomScale: zoomScale, latitude: latitude)
             },
             onTap: { coordinate in
+                #if DEBUG
                 model.tapped(coordinate: coordinate)
+                #endif
             }
         )
         .ignoresSafeArea()
@@ -23,6 +25,9 @@ struct HexMapView: View {
                 resolution: model.displayedResolution,
                 lastTappedCell: model.lastTappedCell,
                 lastTappedVisit: model.lastTappedVisit,
+                authorizationDescription: model.authorizationDescription,
+                speedKmh: model.latestSample?.speed.map { $0 * 3.6 },
+                accuracy: model.latestSample?.horizontalAccuracy,
                 showGrid: $model.showGrid
             )
         }

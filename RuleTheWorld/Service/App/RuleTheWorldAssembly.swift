@@ -32,6 +32,12 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     private func registerServices(container: Container<TargetResolver>) {
         container.register(HexGridService.self) { _ in HexGridService() }
             .inObjectScope(.container)
+        container.register(LocationService.self) { _ in LocationService() }
+            .inObjectScope(.container)
+        container.register(LocationCaptureService.self) {
+            LocationCaptureService(grid: $0.hexGridService(), store: $0.hexVisitStore())
+        }
+        .inObjectScope(.container)
     }
 
     @MainActor
