@@ -1,30 +1,24 @@
+import ASKCore
 import Foundation
 import Testing
 @testable import RuleTheWorld
 
 @MainActor
 struct LoginViewModelTests {
-    private func makeModel(
-        service: AuthServicing = StubAuthService()
-    ) -> LoginViewModel {
-        LoginViewModel(authManager: AuthManager(
+    private func makeModel(status: Int = 200) -> LoginViewModel {
+        let service = AuthService(urlSession: FakeURLSession { request in
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: status,
+                httpVersion: nil,
+                headerFields: ["set-auth-token": "token"]
+            )!
+            return (Data(), response)
+        })
+        return LoginViewModel(authManager: AuthManager(
             service: service,
-            tokenStore: InMemoryAuthTokenStore()
+            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         ))
-    }
-
-    private struct StubAuthService: AuthServicing {
-        var error: Error?
-
-        func signIn(email: String, password: String) async throws -> String {
-            if let error { throw error }
-            return "token"
-        }
-
-        func signUp(name: String, email: String, password: String) async throws -> String {
-            if let error { throw error }
-            return "token"
-        }
     }
 
     @Test func cannotSubmitWithEmptyFields() {
@@ -64,24 +58,18 @@ struct LoginViewModelTests {
     }
 
     @Test func submitFailureSetsErrorMessage() async {
-        struct Failure: LocalizedError {
-            var errorDescription: String? { "boom" }
-        }
-        let model = makeModel(service: StubAuthService(error: Failure()))
+        let model = makeModel(status: 401)
         model.email = "a@b.c"
         model.password = "bad"
 
         await model.submit()
 
-        #expect(model.errorMessage == "boom")
+        #expect(model.errorMessage == AuthError.invalidCredentials.localizedDescription)
         #expect(model.isLoading == false)
     }
 
     @Test func toggleModeClearsError() async {
-        struct Failure: LocalizedError {
-            var errorDescription: String? { "boom" }
-        }
-        let model = makeModel(service: StubAuthService(error: Failure()))
+        let model = makeModel(status: 401)
         model.email = "a@b.c"
         model.password = "bad"
         await model.submit()

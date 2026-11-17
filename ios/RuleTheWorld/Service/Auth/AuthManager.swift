@@ -4,14 +4,14 @@ import Observation
 @Observable
 @MainActor
 final class AuthManager {
-    private let service: AuthServicing
-    private let tokenStore: AuthTokenStoring
+    private let service: AuthService
+    private let tokenStore: AuthTokenStore
     private(set) var isSignedIn: Bool
 
-    init(service: AuthServicing, tokenStore: AuthTokenStoring) {
+    init(service: AuthService, tokenStore: AuthTokenStore) {
         self.service = service
         self.tokenStore = tokenStore
-        self.isSignedIn = tokenStore.load() != nil
+        self.isSignedIn = tokenStore.token != nil
     }
 
     func signIn(email: String, password: String) async throws {

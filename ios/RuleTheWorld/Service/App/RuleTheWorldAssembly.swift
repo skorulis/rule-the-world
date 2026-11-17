@@ -44,10 +44,12 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         .inObjectScope(.container)
         container.register(AuthService.self) { _ in AuthService() }
             .inObjectScope(.container)
-        container.register(KeychainAuthTokenStore.self) { _ in KeychainAuthTokenStore() }
-            .inObjectScope(.container)
+        container.register(AuthTokenStore.self) {
+            AuthTokenStore(keyValueStore: $0.secureKeyValueStore())
+        }
+        .inObjectScope(.container)
         container.register(AuthManager.self) {
-            AuthManager(service: $0.authService(), tokenStore: $0.keychainAuthTokenStore())
+            AuthManager(service: $0.authService(), tokenStore: $0.authTokenStore())
         }
         .inObjectScope(.container)
     }
