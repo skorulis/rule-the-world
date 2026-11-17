@@ -39,11 +39,13 @@ struct HexVisitLogListView: View {
     private func detailLine(_ entry: HexVisitLog) -> String {
         let speedText = entry.speed.map { String(format: "%.1f km/h", $0 * 3.6) } ?? "—"
         return String(
-            format: "%.5f, %.5f  %@  Score %.2f",
+            format: "%.5f, %.5f  %@  %@  Score %.2f  ×%ld",
             entry.latitude,
             entry.longitude,
             speedText,
-            entry.score
+            entry.locationType.rawValue.capitalized,
+            entry.score,
+            entry.count
         )
     }
 }

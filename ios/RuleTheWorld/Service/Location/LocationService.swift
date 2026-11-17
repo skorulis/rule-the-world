@@ -14,6 +14,7 @@ final class LocationService: NSObject {
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var latestSample: LocationSample?
     private(set) var heading: Double?
+    private var standardUpdatesActive = false
 
     override init() {
         var continuation: AsyncStream<LocationSample>.Continuation!
@@ -50,6 +51,7 @@ final class LocationService: NSObject {
 
     @objc private func appBecameActive() {
         manager.startUpdatingLocation()
+        standardUpdatesActive = true
         if CLLocationManager.headingAvailable() {
             manager.headingFilter = 5
             manager.startUpdatingHeading()
@@ -59,14 +61,16 @@ final class LocationService: NSObject {
     @objc private func appEnteredBackground() {
         manager.stopUpdatingLocation()
         manager.stopUpdatingHeading()
+        standardUpdatesActive = false
     }
 }
 
 extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let samples = locations.map { LocationSample(location: $0) }
         MainActor.assumeIsolated {
-            for sample in samples {
+            let locationType: LocationType = standardUpdatesActive ? .foreground : .background
+            for location in locations {
+                let sample = LocationSample(location: location, locationType: locationType)
                 latestSample = sample
                 continuation?.yield(sample)
             }

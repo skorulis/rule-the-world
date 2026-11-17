@@ -73,6 +73,7 @@ struct AuthServiceTests {
         #expect(box.request?.url?.path == "/api/auth/sign-in/email")
         #expect(box.request?.httpMethod == "POST")
         #expect(box.request?.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        #expect(box.request?.value(forHTTPHeaderField: "Origin") == "http://localhost:3001")
         let json = try jsonBody(try #require(box.request))
         #expect(json["email"] == "a@b.c")
         #expect(json["password"] == "pw")

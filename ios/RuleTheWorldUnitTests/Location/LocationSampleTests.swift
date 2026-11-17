@@ -34,6 +34,29 @@ struct LocationSampleTests {
         #expect(sample.course == 90)
     }
 
+    @Test func locationTypeDefaultsToForeground() {
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
+            altitude: 0,
+            horizontalAccuracy: 10,
+            verticalAccuracy: 10,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        #expect(LocationSample(location: location).locationType == .foreground)
+    }
+
+    @Test func locationTypeIsCopied() {
+        let location = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
+            altitude: 0,
+            horizontalAccuracy: 10,
+            verticalAccuracy: 10,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let sample = LocationSample(location: location, locationType: .background)
+        #expect(sample.locationType == .background)
+    }
+
     @Test func unknownCourseMapsToNil() {
         let location = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),

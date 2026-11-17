@@ -20,6 +20,15 @@ struct AppDatabaseTests {
         #expect(exists)
     }
 
+    @Test func migrationAddsLocationTypeAndCountColumns() throws {
+        let database = try AppDatabase.inMemory()
+        let columns = try database.writer.read { db in
+            try db.columns(in: "hexVisitLog").map(\.name)
+        }
+        #expect(columns.contains("locationType"))
+        #expect(columns.contains("count"))
+    }
+
     @Test func hexCellRoundTripsThroughDatabase() throws {
         let database = try AppDatabase.inMemory()
         let grid = HexGridService()

@@ -19,11 +19,14 @@ enum AuthError: LocalizedError {
 }
 
 final class AuthService: HTTPService {
+    private let baseURL: String?
+
     init(
         baseURL: String? = "http://localhost:3001",
         urlSession: URLSessionProtocol = URLSession(configuration: .default)
     ) {
-        super.init(baseURL: baseURL, logger: nil, urlSession: urlSession)
+        self.baseURL = baseURL
+        super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
     }
 
     func signIn(email: String, password: String) async throws -> String {
@@ -43,7 +46,7 @@ final class AuthService: HTTPService {
 
     private func authenticate(endpoint: String, body: [String: String]) async throws -> String {
         do {
-            return try await execute(request: TokenRequest(endpoint: endpoint, body: body))
+            return try await execute(request: TokenRequest(endpoint: endpoint, body: body, origin: baseURL))
         } catch let error as URLError {
             if error.code == .badServerResponse {
                 throw AuthError.invalidCredentials
@@ -63,12 +66,17 @@ private struct TokenRequest<Body: Encodable>: HTTPRequest {
     let endpoint: String
     let method = "POST"
     let body: Data?
-    let headers = ["Content-Type": "application/json"]
+    let headers: [String: String]
     let params: [String: String] = [:]
 
-    init(endpoint: String, body: Body) {
+    init(endpoint: String, body: Body, origin: String?) {
         self.endpoint = endpoint
         self.body = try? JSONEncoder().encode(body)
+        var headers = ["Content-Type": "application/json"]
+        if let origin {
+            headers["Origin"] = origin
+        }
+        self.headers = headers
     }
 
     func decode(data: Data, response: URLResponse) throws -> String {
@@ -76,7 +84,7 @@ private struct TokenRequest<Body: Encodable>: HTTPRequest {
            let token = httpResponse.value(forHTTPHeaderField: "set-auth-token") {
             return token
         }
-        
+
         if let decoded = try? JSONDecoder().decode(TokenResponse.self, from: data),
            let token = decoded.token {
             return token

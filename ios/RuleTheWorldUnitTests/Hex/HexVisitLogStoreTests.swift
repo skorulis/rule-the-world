@@ -15,7 +15,8 @@ struct HexVisitLogStoreTests {
         cell: HexCell,
         score: Double = 1,
         speed: Double? = nil,
-        timestamp: Date = Date(timeIntervalSince1970: 1_700_000_000)
+        timestamp: Date = Date(timeIntervalSince1970: 1_700_000_000),
+        locationType: LocationType = .foreground
     ) -> HexVisitLog {
         HexVisitLog(
             timestamp: timestamp,
@@ -23,7 +24,8 @@ struct HexVisitLogStoreTests {
             latitude: -33.89,
             longitude: 151.19,
             speed: speed,
-            score: score
+            score: score,
+            locationType: locationType
         )
     }
 
@@ -31,6 +33,7 @@ struct HexVisitLogStoreTests {
         let store = try makeStore()
         let recorded = try await store.record(entry(cell: cellA))
         #expect(recorded.id != nil)
+        #expect(recorded.count == 1)
         let all = try await store.all()
         #expect(all.count == 1)
         #expect(all.first?.cell == cellA)
@@ -52,6 +55,24 @@ struct HexVisitLogStoreTests {
         let all = try await store.all()
         #expect(all.count == 1)
         #expect(all.first?.score == 1)
+    }
+
+    @Test func sameCellMergesIncrementCount() async throws {
+        let store = try makeStore()
+        _ = try await store.record(entry(cell: cellA, score: 0.5))
+        let second = try await store.record(entry(cell: cellA, score: 1))
+        #expect(second.count == 2)
+        let third = try await store.record(entry(cell: cellA, score: 0.75))
+        #expect(third.count == 3)
+        #expect(try await store.all().count == 1)
+    }
+
+    @Test func mergeTakesLocationTypeFromWinningEntry() async throws {
+        let store = try makeStore()
+        _ = try await store.record(entry(cell: cellA, score: 0.5, locationType: .foreground))
+        let merged = try await store.record(entry(cell: cellA, score: 1, locationType: .background))
+        #expect(merged.locationType == .background)
+        #expect(merged.score == 1)
     }
 
     @Test func differentCellAppendsNewRow() async throws {

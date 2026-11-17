@@ -11,7 +11,9 @@ struct HexVisitLogTests {
         timestamp: Date = Date(timeIntervalSince1970: 1_700_000_000),
         latitude: Double = -33.89,
         longitude: Double = 151.19,
-        id: Int64? = nil
+        id: Int64? = nil,
+        locationType: LocationType = .foreground,
+        count: Int = 1
     ) -> HexVisitLog {
         HexVisitLog(
             id: id,
@@ -20,7 +22,9 @@ struct HexVisitLogTests {
             latitude: latitude,
             longitude: longitude,
             speed: speed,
-            score: score
+            score: score,
+            locationType: locationType,
+            count: count
         )
     }
 
@@ -76,6 +80,25 @@ struct HexVisitLogTests {
         let reversed = fast.merging(slow)
         #expect(reversed.timestamp == slow.timestamp)
         #expect(reversed.latitude == slow.latitude)
+    }
+
+    @Test func mergeTakesLocationTypeFromHigherScoreEntry() {
+        let foreground = entry(score: 1, locationType: .foreground)
+        let background = entry(score: 0.5, locationType: .background)
+        #expect(foreground.merging(background).locationType == .foreground)
+        #expect(background.merging(foreground).locationType == .foreground)
+    }
+
+    @Test func mergeEqualScoreTakesLocationTypeFromLowerSpeedEntry() {
+        let slow = entry(score: 1, speed: 1, locationType: .background)
+        let fast = entry(score: 1, speed: 8, locationType: .foreground)
+        #expect(slow.merging(fast).locationType == .background)
+        #expect(fast.merging(slow).locationType == .background)
+    }
+
+    @Test func mergeIncrementsCount() {
+        #expect(entry(score: 0.5, count: 3).merging(entry(score: 1)).count == 4)
+        #expect(entry(score: 1).merging(entry(score: 0.5)).count == 2)
     }
 
     @Test func mergePreservesReceiverId() {

@@ -18,7 +18,8 @@ struct LocationCaptureServiceTests {
         accuracy: Double = 10,
         latitude: Double = -33.89,
         longitude: Double = 151.19,
-        timestamp: Date = .now
+        timestamp: Date = .now,
+        locationType: LocationType = .foreground
     ) -> LocationSample {
         LocationSample(
             latitude: latitude,
@@ -26,7 +27,8 @@ struct LocationCaptureServiceTests {
             speed: speed,
             course: nil,
             horizontalAccuracy: accuracy,
-            timestamp: timestamp
+            timestamp: timestamp,
+            locationType: locationType
         )
     }
 
@@ -100,6 +102,15 @@ struct LocationCaptureServiceTests {
         #expect(log.longitude == sample.longitude)
         #expect(log.speed == 1.0)
         #expect(log.score == 1)
+        #expect(log.locationType == .foreground)
+        #expect(log.count == 1)
+    }
+
+    @Test func backgroundSampleWritesBackgroundLog() async throws {
+        let service = try makeService()
+        await service.handle(sample(speed: nil, locationType: .background))
+        let log = try #require(try await service.logStore.all().first)
+        #expect(log.locationType == .background)
     }
 
     @Test func rejectedSampleWritesNoVisitLog() async throws {
@@ -124,6 +135,7 @@ struct LocationCaptureServiceTests {
         #expect(logs.count == 1)
         #expect(logs.first?.score == 1)
         #expect(logs.first?.speed == 1.0)
+        #expect(logs.first?.count == 2)
     }
 
     @Test func differentCellsAppendLogRows() async throws {

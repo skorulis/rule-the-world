@@ -26,6 +26,16 @@ final class AppDatabase: Sendable {
                 table.column("score", .double).notNull()
             }
         }
+        migrator.registerMigration("v3 hexVisitLogLocationTypeAndCount") { db in
+            try db.alter(table: "hexVisitLog") { table in
+                table.add(column: "locationType", .text)
+                    .notNull()
+                    .defaults(to: LocationType.foreground.rawValue)
+                table.add(column: "count", .integer)
+                    .notNull()
+                    .defaults(to: 1)
+            }
+        }
         try migrator.migrate(writer)
     }
 
