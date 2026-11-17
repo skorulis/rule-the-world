@@ -16,11 +16,13 @@ struct RuleTheWorldApp: App {
 
     private let locationService: LocationService?
     private let captureService: LocationCaptureService?
+    private let authManager: AuthManager?
 
     init() {
         guard !ProcessInfo.isRunningTests else {
             locationService = nil
             captureService = nil
+            authManager = nil
             return
         }
         let locationService = assembler.resolver.locationService()
@@ -29,16 +31,19 @@ struct RuleTheWorldApp: App {
         captureService.start(samples: locationService.samples)
         self.locationService = locationService
         self.captureService = captureService
+        self.authManager = assembler.resolver.authManager()
     }
 
     var body: some Scene {
         WindowGroup {
             if ProcessInfo.isRunningTests {
                 Color.clear
-            } else {
+            } else if let authManager, authManager.isSignedIn {
                 CoordinatorView(coordinator: Coordinator(root: MainPath.content))
                     .withRenderers(resolver: assembler.resolver)
                     .environment(\.resolver, assembler.resolver)
+            } else {
+                LoginView(model: LoginViewModel.make(resolver: assembler.resolver))
             }
         }
     }

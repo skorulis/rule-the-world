@@ -45,7 +45,7 @@ struct HexOwnershipSnapshotTests {
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
         let snapshot = HexOwnershipSnapshot(states: [
             children[0]: .partialVisit,
-            children[1]: .visited,
+            children[1]: .visited
         ])
         let aggregated = snapshot.aggregated(at: 7, grid: grid)
         #expect(aggregated[parent] == .visited)

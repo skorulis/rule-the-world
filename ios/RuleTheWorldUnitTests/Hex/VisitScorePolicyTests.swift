@@ -9,7 +9,7 @@ struct VisitScorePolicyTests {
         (50.0, 0.25),
         (100.0, 0.25),
         (150.0, 0.0),
-        (200.0, 0.0),
+        (200.0, 0.0)
     ])
     func scoreForSpeed(kmh: Double, expected: Double) {
         #expect(VisitScorePolicy.score(forSpeed: kmh / 3.6) == expected)

@@ -32,7 +32,7 @@ nonisolated final class HexGridService: Sendable {
             H3LatLng(latitudeDegs: minLat, longitudeDegs: minLon),
             H3LatLng(latitudeDegs: minLat, longitudeDegs: maxLon),
             H3LatLng(latitudeDegs: maxLat, longitudeDegs: maxLon),
-            H3LatLng(latitudeDegs: maxLat, longitudeDegs: minLon),
+            H3LatLng(latitudeDegs: maxLat, longitudeDegs: minLon)
         ]
         let polygon = H3Polygon(corners)
         let cells = (try? polygon.cellsExperimental(at: res, containmentType: .overlapping)) ?? []

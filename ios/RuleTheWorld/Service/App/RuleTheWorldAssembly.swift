@@ -42,6 +42,14 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             )
         }
         .inObjectScope(.container)
+        container.register(AuthService.self) { _ in AuthService() }
+            .inObjectScope(.container)
+        container.register(KeychainAuthTokenStore.self) { _ in KeychainAuthTokenStore() }
+            .inObjectScope(.container)
+        container.register(AuthManager.self) {
+            AuthManager(service: $0.authService(), tokenStore: $0.keychainAuthTokenStore())
+        }
+        .inObjectScope(.container)
     }
 
     @MainActor
@@ -63,6 +71,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     @MainActor
     private func registerViewModels(container: Container<TargetResolver>) {
         container.register(ContentViewModel.self) { ContentViewModel.make(resolver: $0) }
+        container.register(LoginViewModel.self) { LoginViewModel.make(resolver: $0) }
         container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
         container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
     }
