@@ -89,6 +89,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
         container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
         container.register(ProfileViewModel.self) { ProfileViewModel.make(resolver: $0) }
+        container.register(DebugSettingsViewModel.self) { DebugSettingsViewModel.make(resolver: $0) }
     }
 }
 

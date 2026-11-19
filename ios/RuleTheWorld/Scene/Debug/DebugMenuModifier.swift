@@ -1,10 +1,11 @@
+import ASKCore
+import Knit
 import SwiftUI
 
 /// Shows the debug settings sheet after a long press anywhere in the app.
 struct DebugMenuModifier: ViewModifier {
     @State private var isPresented = false
-    let locationService: LocationService?
-    let captureService: LocationCaptureService?
+    let resolver: Resolver
 
     func body(content: Content) -> some View {
         content
@@ -14,14 +15,14 @@ struct DebugMenuModifier: ViewModifier {
             )
             .sheet(isPresented: $isPresented) {
                 NavigationStack {
-                    DebugSettingsView(locationService: locationService, captureService: captureService)
+                    DebugSettingsView(model: resolver.debugSettingsViewModel())
                 }
             }
     }
 }
 
 extension View {
-    func debugMenu(locationService: LocationService?, captureService: LocationCaptureService?) -> some View {
-        modifier(DebugMenuModifier(locationService: locationService, captureService: captureService))
+    func debugMenu(resolver: Resolver) -> some View {
+        modifier(DebugMenuModifier(resolver: resolver))
     }
 }

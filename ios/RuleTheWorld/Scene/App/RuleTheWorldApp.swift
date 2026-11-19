@@ -47,7 +47,7 @@ struct RuleTheWorldApp: App {
                     LoginView(model: LoginViewModel.make(resolver: assembler.resolver))
                 }
             }
-            .debugMenu(locationService: locationService, captureService: captureService)
+            .debugMenu(resolver: assembler.resolver)
         }
     }
 }
