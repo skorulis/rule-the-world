@@ -6,11 +6,13 @@ import Observation
 final class AuthManager {
     private let service: AuthService
     private let tokenStore: AuthTokenStore
+    private let database: AppDatabase
     private(set) var isSignedIn: Bool
 
-    init(service: AuthService, tokenStore: AuthTokenStore) {
+    init(service: AuthService, tokenStore: AuthTokenStore, database: AppDatabase) {
         self.service = service
         self.tokenStore = tokenStore
+        self.database = database
         self.isSignedIn = tokenStore.token != nil
     }
 
@@ -27,6 +29,7 @@ final class AuthManager {
     }
 
     func signOut() {
+        try? database.erase()
         tokenStore.clear()
         isSignedIn = false
     }

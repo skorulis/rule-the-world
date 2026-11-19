@@ -6,6 +6,15 @@ final class AppDatabase: Sendable {
 
     init(writer: any DatabaseWriter) throws {
         self.writer = writer
+        try Self.makeMigrator().migrate(writer)
+    }
+
+    func erase() throws {
+        try writer.erase()
+        try Self.makeMigrator().migrate(writer)
+    }
+
+    private static func makeMigrator() -> DatabaseMigrator {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1 createHexVisit") { db in
             try db.create(table: "hexVisit") { table in
@@ -36,7 +45,7 @@ final class AppDatabase: Sendable {
                     .defaults(to: 1)
             }
         }
-        try migrator.migrate(writer)
+        return migrator
     }
 
     static func onDisk() throws -> AppDatabase {

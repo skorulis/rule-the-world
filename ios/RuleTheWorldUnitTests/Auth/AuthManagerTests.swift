@@ -24,19 +24,31 @@ struct AuthManagerTests {
         })
     }
 
-    @Test func startsSignedOutWithoutStoredToken() {
-        let manager = AuthManager(service: makeService(), tokenStore: makeStore())
+    @Test func startsSignedOutWithoutStoredToken() throws {
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: makeStore(),
+            database: try AppDatabase.inMemory()
+        )
         #expect(manager.isSignedIn == false)
     }
 
-    @Test func startsSignedInWithStoredToken() {
-        let manager = AuthManager(service: makeService(), tokenStore: makeStore(token: "existing"))
+    @Test func startsSignedInWithStoredToken() throws {
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: makeStore(token: "existing"),
+            database: try AppDatabase.inMemory()
+        )
         #expect(manager.isSignedIn == true)
     }
 
     @Test func signInStoresTokenAndMarksSignedIn() async throws {
         let store = makeStore()
-        let manager = AuthManager(service: makeService(), tokenStore: store)
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: store,
+            database: try AppDatabase.inMemory()
+        )
 
         try await manager.signIn(email: "a@b.c", password: "pw")
 
@@ -46,7 +58,11 @@ struct AuthManagerTests {
 
     @Test func signUpStoresTokenAndMarksSignedIn() async throws {
         let store = makeStore()
-        let manager = AuthManager(service: makeService(), tokenStore: store)
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: store,
+            database: try AppDatabase.inMemory()
+        )
 
         try await manager.signUp(name: "Alex", email: "a@b.c", password: "pw")
 
@@ -54,9 +70,13 @@ struct AuthManagerTests {
         #expect(store.token == "sign-up-token")
     }
 
-    @Test func failedSignInStaysSignedOut() async {
+    @Test func failedSignInStaysSignedOut() async throws {
         let store = makeStore()
-        let manager = AuthManager(service: makeService(status: 401), tokenStore: store)
+        let manager = AuthManager(
+            service: makeService(status: 401),
+            tokenStore: store,
+            database: try AppDatabase.inMemory()
+        )
 
         await #expect(throws: AuthError.self) {
             try await manager.signIn(email: "a@b.c", password: "bad")
@@ -68,12 +88,32 @@ struct AuthManagerTests {
 
     @Test func signOutClearsToken() async throws {
         let store = makeStore()
-        let manager = AuthManager(service: makeService(), tokenStore: store)
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: store,
+            database: try AppDatabase.inMemory()
+        )
         try await manager.signIn(email: "a@b.c", password: "pw")
 
         manager.signOut()
 
         #expect(manager.isSignedIn == false)
         #expect(store.token == nil)
+    }
+
+    @Test func signOutErasesDatabase() async throws {
+        let database = try AppDatabase.inMemory()
+        let visitStore = HexVisitStore(database: database)
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        try await visitStore.recordVisit(cell)
+        let manager = AuthManager(
+            service: makeService(),
+            tokenStore: makeStore(),
+            database: database
+        )
+
+        manager.signOut()
+
+        #expect(try await visitStore.visit(for: cell) == nil)
     }
 }

@@ -5,7 +5,7 @@ import Testing
 
 @MainActor
 struct LoginViewModelTests {
-    private func makeModel(status: Int = 200) -> LoginViewModel {
+    private func makeModel(status: Int = 200) throws -> LoginViewModel {
         let service = AuthService(urlSession: FakeURLSession { request in
             let response = HTTPURLResponse(
                 url: request.url!,
@@ -17,12 +17,13 @@ struct LoginViewModelTests {
         })
         return LoginViewModel(authManager: AuthManager(
             service: service,
-            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
+            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
+            database: try AppDatabase.inMemory()
         ))
     }
 
-    @Test func cannotSubmitWithEmptyFields() {
-        let model = makeModel()
+    @Test func cannotSubmitWithEmptyFields() throws {
+        let model = try makeModel()
         #expect(model.canSubmit == false)
 
         model.email = "a@b.c"
@@ -32,8 +33,8 @@ struct LoginViewModelTests {
         #expect(model.canSubmit == true)
     }
 
-    @Test func signUpModeRequiresName() {
-        let model = makeModel()
+    @Test func signUpModeRequiresName() throws {
+        let model = try makeModel()
         model.isSignUpMode = true
         model.email = "a@b.c"
         model.password = "pw"
@@ -46,8 +47,8 @@ struct LoginViewModelTests {
         #expect(model.modeToggleTitle == "Already have an account? Sign in")
     }
 
-    @Test func submitCallsSignInAndClearsError() async {
-        let model = makeModel()
+    @Test func submitCallsSignInAndClearsError() async throws {
+        let model = try makeModel()
         model.email = "a@b.c"
         model.password = "pw"
 
@@ -57,8 +58,8 @@ struct LoginViewModelTests {
         #expect(model.isLoading == false)
     }
 
-    @Test func submitFailureSetsErrorMessage() async {
-        let model = makeModel(status: 401)
+    @Test func submitFailureSetsErrorMessage() async throws {
+        let model = try makeModel(status: 401)
         model.email = "a@b.c"
         model.password = "bad"
 
@@ -68,8 +69,8 @@ struct LoginViewModelTests {
         #expect(model.isLoading == false)
     }
 
-    @Test func toggleModeClearsError() async {
-        let model = makeModel(status: 401)
+    @Test func toggleModeClearsError() async throws {
+        let model = try makeModel(status: 401)
         model.email = "a@b.c"
         model.password = "bad"
         await model.submit()

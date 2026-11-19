@@ -57,7 +57,11 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         }
         .inObjectScope(.container)
         container.register(AuthManager.self) {
-            AuthManager(service: $0.authService(), tokenStore: $0.authTokenStore())
+            AuthManager(
+                service: $0.authService(),
+                tokenStore: $0.authTokenStore(),
+                database: $0.appDatabase()
+            )
         }
         .inObjectScope(.container)
     }

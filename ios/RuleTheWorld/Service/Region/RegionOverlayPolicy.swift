@@ -6,7 +6,7 @@ nonisolated enum RegionOverlayPolicy {
         case coarse
     }
 
-    static let minimumWidthMeters = 1_500_000.0
+    static let minimumWidthMeters = 750_000.0
     static let coarseWidthMeters = 6_000_000.0
     static let hysteresis = 0.08
 
