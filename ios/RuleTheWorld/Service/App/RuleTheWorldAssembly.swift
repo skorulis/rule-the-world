@@ -42,8 +42,14 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             )
         }
         .inObjectScope(.container)
-        container.register(AuthService.self) { _ in AuthService() }
-            .inObjectScope(.container)
+        container.register(URLSessionProtocol.self) { _ in
+            DebugSettings().endpoint.makeSession()
+        }
+        .inObjectScope(.container)
+        container.register(AuthService.self) {
+            AuthService(urlSession: $0.urlSessionProtocol())
+        }
+        .inObjectScope(.container)
         container.register(AuthTokenStore.self) {
             AuthTokenStore(keyValueStore: $0.secureKeyValueStore())
         }

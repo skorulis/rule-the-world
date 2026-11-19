@@ -32,7 +32,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		000000000000000000000010 /* RuleTheWorld */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = ( Mocks, ); path = RuleTheWorld; sourceTree = "<group>"; };
+		000000000000000000000010 /* RuleTheWorld */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (Mocks, ); path = RuleTheWorld; sourceTree = "<group>"; };
 		FAFA327130AA4EAC0020E36D /* RuleTheWorldUnitTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = RuleTheWorldUnitTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 

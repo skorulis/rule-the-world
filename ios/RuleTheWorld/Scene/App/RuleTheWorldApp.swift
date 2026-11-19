@@ -36,15 +36,18 @@ struct RuleTheWorldApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if ProcessInfo.isRunningTests {
-                Color.clear
-            } else if let authManager, authManager.isSignedIn {
-                CoordinatorView(coordinator: Coordinator(root: MainPath.content))
-                    .withRenderers(resolver: assembler.resolver)
-                    .environment(\.resolver, assembler.resolver)
-            } else {
-                LoginView(model: LoginViewModel.make(resolver: assembler.resolver))
+            Group {
+                if ProcessInfo.isRunningTests {
+                    Color.clear
+                } else if let authManager, authManager.isSignedIn {
+                    CoordinatorView(coordinator: Coordinator(root: MainPath.content))
+                        .withRenderers(resolver: assembler.resolver)
+                        .environment(\.resolver, assembler.resolver)
+                } else {
+                    LoginView(model: LoginViewModel.make(resolver: assembler.resolver))
+                }
             }
+            .debugMenu()
         }
     }
 }
