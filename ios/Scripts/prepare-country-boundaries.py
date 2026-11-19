@@ -6,8 +6,8 @@ import subprocess
 import tempfile
 import urllib.request
 
-ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "RuleTheWorld/Resource/Regions"
+ROOT = Path(__file__).resolve().parents[2]
+OUTPUT = ROOT / "data/regions"
 REVISION = "9380cca83db5f9aef52d5e762765100745f84b27"
 SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/50m_cultural/ne_50m_admin_0_countries"
 TOOL = "mapshaper@0.7.101"

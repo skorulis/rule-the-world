@@ -1,0 +1,29 @@
+{
+  "source": "Natural Earth Admin 0 Countries, 1:50 million",
+  "version": "5.1.1",
+  "revision": "9380cca83db5f9aef52d5e762765100745f84b27",
+  "url": "https://www.naturalearthdata.com/downloads/50m-cultural-vectors/50m-admin-0-countries-2/",
+  "license": "Public domain",
+  "licenseURL": "https://www.naturalearthdata.com/about/terms-of-use/",
+  "tool": "mapshaper@0.7.101",
+  "simplification": "spherical weighted Visvalingam; exploded parts with keep-shapes; shared topology",
+  "precisionDegrees": 1e-05,
+  "levels": {
+    "medium": {
+      "intervalMeters": 3000,
+      "countries": 242,
+      "polygonParts": 1620,
+      "vertices": 60169,
+      "bytes": 1273694,
+      "sha256": "9a93fa2e779761860466ac6c768fba4eb479547e4fb3ba7750278138267be4fb"
+    },
+    "coarse": {
+      "intervalMeters": 15000,
+      "countries": 242,
+      "polygonParts": 1620,
+      "vertices": 18242,
+      "bytes": 414684,
+      "sha256": "d1717a0bc4a66731945f60dcb51cf9c11e12b930a5ac5b75ef2fc2db6c2f64f7"
+    }
+  }
+}
