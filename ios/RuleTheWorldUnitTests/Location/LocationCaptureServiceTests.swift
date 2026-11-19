@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import Testing
 @testable import RuleTheWorld
@@ -144,6 +145,46 @@ struct LocationCaptureServiceTests {
         await service.handle(sample(speed: nil, latitude: -33.95, longitude: 151.19))
         let logs = try await service.logStore.all()
         #expect(logs.count == 2)
+    }
+
+    @Test func randomNearbyVisitsUpdateLogAndHexScores() async throws {
+        let service = try makeService()
+        let origin = sample(speed: 1)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        try await service.addRandomNearbyVisits(near: origin.coordinate, now: now)
+        let logs = try await service.logStore.all()
+        #expect(logs.count == 5)
+        #expect(Set(logs.map(\.cell)).count == 5)
+        for (index, log) in logs.enumerated() {
+            #expect(log.timestamp == now.addingTimeInterval(Double(index - 5) * 60))
+            let location = CLLocation(latitude: log.latitude, longitude: log.longitude)
+            let center = CLLocation(latitude: origin.latitude, longitude: origin.longitude)
+            #expect(location.distance(from: center) <= 505)
+            #expect(grid.cell(containing: location.coordinate, resolution: HexGridService.baseResolution) == log.cell)
+            #expect(log.score == 1)
+            #expect(log.count == 1)
+            let visit = try await service.store.visit(for: log.cell)
+            #expect(visit?.score == 1)
+            #expect(visit?.lastVisit == log.timestamp)
+            #expect(service.store.snapshot.states[log.cell] != nil)
+        }
+    }
+
+    @Test func repeatedRandomNearbyVisitsAddFiveLogEntriesEachTime() async throws {
+        let service = try makeService()
+        let origin = sample(speed: 1)
+        try await service.addRandomNearbyVisits(near: origin.coordinate)
+        try await service.addRandomNearbyVisits(near: origin.coordinate)
+        #expect(try await service.logStore.all().count == 10)
+    }
+
+    @Test func randomNearbyVisitsRejectInvalidLocation() async throws {
+        let service = try makeService()
+        await #expect(throws: (any Error).self) {
+            try await service.addRandomNearbyVisits(near: CLLocationCoordinate2D(latitude: 91, longitude: 0))
+        }
+        #expect(try await service.logStore.all().isEmpty)
+        #expect(service.store.snapshot.states.isEmpty)
     }
 
     private func store(of service: LocationCaptureService) -> HexVisitStore {

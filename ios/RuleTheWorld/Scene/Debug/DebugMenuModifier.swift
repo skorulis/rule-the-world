@@ -3,6 +3,8 @@ import SwiftUI
 /// Shows the debug settings sheet after a long press anywhere in the app.
 struct DebugMenuModifier: ViewModifier {
     @State private var isPresented = false
+    let locationService: LocationService?
+    let captureService: LocationCaptureService?
 
     func body(content: Content) -> some View {
         content
@@ -12,14 +14,14 @@ struct DebugMenuModifier: ViewModifier {
             )
             .sheet(isPresented: $isPresented) {
                 NavigationStack {
-                    DebugSettingsView()
+                    DebugSettingsView(locationService: locationService, captureService: captureService)
                 }
             }
     }
 }
 
 extension View {
-    func debugMenu() -> some View {
-        modifier(DebugMenuModifier())
+    func debugMenu(locationService: LocationService?, captureService: LocationCaptureService?) -> some View {
+        modifier(DebugMenuModifier(locationService: locationService, captureService: captureService))
     }
 }
