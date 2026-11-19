@@ -11,6 +11,9 @@ struct ContentView: View {
             Tab("Visits", systemImage: "list.bullet") {
                 HexVisitLogListView(model: model.visitLog)
             }
+            Tab("Profile", systemImage: "person.crop.circle") {
+                ProfileView(model: model.profile)
+            }
         }
     }
 }
