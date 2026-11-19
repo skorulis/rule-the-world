@@ -1,0 +1,8 @@
+{
+    "token": "mock-sign-in-token",
+    "user": {
+        "id": "mock-user-id",
+        "name": "Mock User",
+        "email": "mock@example.com"
+    }
+}
