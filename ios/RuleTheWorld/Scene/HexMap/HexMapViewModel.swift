@@ -15,15 +15,37 @@ final class HexMapViewModel {
     var lastTappedVisit: HexVisit?
     var showGrid = true
 
+    private(set) var selectedRegion: MapRegionSelection?
+    private(set) var isLoadingRegions = false
+
     let grid: HexGridService
     private let store: HexVisitStore
     private let locationService: LocationService
+    private let boundaries: any RegionBoundaryProviding
+    private var regionLevel: RegionOverlayPolicy.Level?
+    @ObservationIgnored private var selectionTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingCamera: RegionCameraRequest?
+    @ObservationIgnored private var cameraRevision = 0
+    @ObservationIgnored private var regionLoadFailed = false
+
+    private struct RegionCameraRequest {
+        let latitude: Double
+        let longitude: Double
+        let level: RegionOverlayPolicy.Level
+        let revision: Int
+    }
 
     @Resolvable<Resolver>
-    init(grid: HexGridService, store: HexVisitStore, locationService: LocationService) {
+    init(
+        grid: HexGridService,
+        store: HexVisitStore,
+        locationService: LocationService,
+        boundaries: RegionBoundaryProviding
+    ) {
         self.grid = grid
         self.store = store
         self.locationService = locationService
+        self.boundaries = boundaries
         self.initialRegion = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -61,11 +83,62 @@ final class HexMapViewModel {
         }
     }
 
-    func cameraChanged(zoomScale: MKZoomScale, latitude: CLLocationDegrees) {
-        let resolution = HexZoomPolicy.resolution(forZoomScale: zoomScale, latitude: latitude)
+    func cameraChanged(zoomScale: MKZoomScale, center: CLLocationCoordinate2D, visibleWidthMeters: Double) {
+        let resolution = HexZoomPolicy.resolution(forZoomScale: zoomScale, latitude: center.latitude)
         if resolution != displayedResolution {
             displayedResolution = resolution
         }
+        cameraRevision += 1
+        regionLevel = RegionOverlayPolicy.level(visibleWidthMeters: visibleWidthMeters, previous: regionLevel)
+        guard let regionLevel, !regionLoadFailed else {
+            cancelRegionSelection()
+            return
+        }
+        pendingCamera = RegionCameraRequest(
+            latitude: center.latitude, longitude: center.longitude, level: regionLevel, revision: cameraRevision
+        )
+        guard selectionTask == nil else { return }
+        selectionTask = Task { [weak self] in
+            await self?.updateRegionSelection()
+        }
+    }
+
+    func cancelRegionSelection() {
+        cameraRevision += 1
+        selectionTask?.cancel()
+        selectionTask = nil
+        pendingCamera = nil
+        isLoadingRegions = false
+        if selectedRegion != nil {
+            selectedRegion = nil
+        }
+        regionLevel = nil
+    }
+
+    private func updateRegionSelection() async {
+        guard !Task.isCancelled else { return }
+        while let request = pendingCamera {
+            pendingCamera = nil
+            isLoadingRegions = true
+            do {
+                let selection = try await boundaries.selection(
+                    latitude: request.latitude, longitude: request.longitude, level: request.level
+                )
+                guard !Task.isCancelled else { return }
+                if request.revision == cameraRevision, selection != selectedRegion {
+                    selectedRegion = selection
+                }
+                isLoadingRegions = false
+                try await Task.sleep(for: .milliseconds(100))
+            } catch {
+                guard !Task.isCancelled else { return }
+                Logger().error("Country boundary lookup failed: \(error)")
+                regionLoadFailed = true
+                cancelRegionSelection()
+                return
+            }
+        }
+        selectionTask = nil
     }
 
     #if DEBUG

@@ -57,5 +57,6 @@ struct LoginView: View {
             Spacer()
         }
         .padding()
+        .contentShape(Rectangle())
     }
 }

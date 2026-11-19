@@ -11,8 +11,9 @@ struct HexMapView: View {
             showGrid: model.showGrid,
             grid: model.grid,
             userStatus: model.userStatus,
-            onCameraChange: { zoomScale, latitude in
-                model.cameraChanged(zoomScale: zoomScale, latitude: latitude)
+            selectedRegion: model.selectedRegion,
+            onCameraChange: { zoomScale, center, visibleWidthMeters in
+                model.cameraChanged(zoomScale: zoomScale, center: center, visibleWidthMeters: visibleWidthMeters)
             },
             onTap: { coordinate in
                 #if DEBUG
@@ -21,6 +22,7 @@ struct HexMapView: View {
             }
         )
         .ignoresSafeArea()
+        .onDisappear { model.cancelRegionSelection() }
         .overlay(alignment: .top) {
             HexMapHUD(
                 resolution: model.displayedResolution,

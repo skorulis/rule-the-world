@@ -7,7 +7,8 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let showGrid: Bool
     let grid: HexGridService
     let userStatus: UserMapStatus?
-    let onCameraChange: (MKZoomScale, CLLocationDegrees) -> Void
+    let selectedRegion: MapRegionSelection?
+    let onCameraChange: (MKZoomScale, CLLocationCoordinate2D, Double) -> Void
     let onTap: (CLLocationCoordinate2D) -> Void
 
     func makeUIView(context: Context) -> MKMapView {
@@ -31,6 +32,13 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         #endif
         context.coordinator.renderer?.update(snapshot: snapshot, showGrid: showGrid)
         context.coordinator.apply(status: userStatus, to: mapView)
+        context.coordinator.apply(region: selectedRegion, to: mapView)
+    }
+
+    static func dismantleUIView(_ mapView: MKMapView, coordinator: Coordinator) {
+        coordinator.onCameraChange = nil
+        coordinator.onTap = nil
+        mapView.delegate = nil
     }
 
     func makeCoordinator() -> Coordinator {
@@ -38,7 +46,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        var onCameraChange: ((MKZoomScale, CLLocationDegrees) -> Void)?
+        var onCameraChange: ((MKZoomScale, CLLocationCoordinate2D, Double) -> Void)?
         var onTap: ((CLLocationCoordinate2D) -> Void)?
 
         private(set) var renderer: HexGridOverlayRenderer?
@@ -46,18 +54,54 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         private var hasCenteredOnUser = false
         private var statusAnnotation: UserStatusAnnotation?
         private var status: UserMapStatus?
+        private var selectedRegion: MapRegionSelection?
+        private var countryOverlay: MKMultiPolygon?
 
         init(grid: HexGridService) {
             self.grid = grid
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let polygon = overlay as? MKMultiPolygon {
+                let renderer = MKMultiPolygonRenderer(multiPolygon: polygon)
+                renderer.fillColor = mapView.tintColor.withAlphaComponent(0.15)
+                renderer.strokeColor = mapView.tintColor
+                renderer.lineWidth = 2
+                return renderer
+            }
+            guard overlay is HexGridOverlay else { return MKOverlayRenderer(overlay: overlay) }
             if let renderer {
                 return renderer
             }
             let renderer = HexGridOverlayRenderer(overlay: overlay, grid: grid)
             self.renderer = renderer
             return renderer
+        }
+
+        func apply(region: MapRegionSelection?, to mapView: MKMapView) {
+            guard region != selectedRegion else { return }
+            selectedRegion = region
+            if let countryOverlay {
+                mapView.removeOverlay(countryOverlay)
+                self.countryOverlay = nil
+            }
+            guard let region else { return }
+            let polygons = region.boundary.polygons.map { polygon in
+                let holes = polygon.holes.map { makePolygon(ring: $0) }
+                return makePolygon(ring: polygon.exterior, holes: holes)
+            }
+            let overlay = MKMultiPolygon(polygons)
+            countryOverlay = overlay
+            mapView.addOverlay(overlay, level: .aboveRoads)
+        }
+
+        private func makePolygon(ring: MapRegionBoundary.Ring, holes: [MKPolygon] = []) -> MKPolygon {
+            let coordinates = ring.points.map {
+                CLLocationCoordinate2D(
+                    latitude: min(85.05112878, max(-85.05112878, $0.latitude)), longitude: $0.longitude
+                )
+            }
+            return MKPolygon(coordinates: coordinates, count: coordinates.count, interiorPolygons: holes)
         }
 
         func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
@@ -132,7 +176,9 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             let width = mapView.visibleMapRect.width
             guard width > 0, mapView.bounds.width > 0 else { return }
             let zoomScale = mapView.bounds.width / width
-            onCameraChange?(zoomScale, mapView.centerCoordinate.latitude)
+            let center = mapView.centerCoordinate
+            let visibleWidthMeters = width * MKMetersPerMapPointAtLatitude(center.latitude)
+            onCameraChange?(zoomScale, center, visibleWidthMeters)
         }
     }
 }
