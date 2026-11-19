@@ -2,6 +2,11 @@ import Foundation
 
 struct HexVisit: Hashable, Codable, Sendable {
     nonisolated static let maxDailyScore: Double = 1
+    nonisolated static var scoringCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        return calendar
+    }
 
     var cell: HexCell
     var lastVisit: Date
@@ -11,7 +16,7 @@ struct HexVisit: Hashable, Codable, Sendable {
     nonisolated func recordingVisit(
         score visitScore: Double,
         at date: Date,
-        calendar: Calendar = .current
+        calendar: Calendar = HexVisit.scoringCalendar
     ) -> HexVisit {
         let clamped = min(max(visitScore, 0), Self.maxDailyScore)
         let scoredToday = calendar.isDate(lastVisit, inSameDayAs: date) ? lastScore : 0

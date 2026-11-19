@@ -44,6 +44,14 @@ struct HexVisitScoringTests {
         #expect(abs(updated.lastScore - 1) < 0.000_001)
     }
 
+    @Test func defaultScoringCalendarMatchesServerUTC() {
+        let beforeMidnight = noon.addingTimeInterval(43_199)
+        let existing = visit(lastVisit: beforeMidnight, score: 1, lastScore: 1)
+        let updated = existing.recordingVisit(score: 1, at: beforeMidnight.addingTimeInterval(2))
+        #expect(HexVisit.scoringCalendar.timeZone.secondsFromGMT() == 0)
+        #expect(updated.score == 2)
+    }
+
     @Test func justBeforeMidnightAndJustAfterAreDifferentDays() {
         let beforeMidnight = noon.addingTimeInterval(43_199)
         let existing = visit(lastVisit: beforeMidnight, score: 1, lastScore: 1)

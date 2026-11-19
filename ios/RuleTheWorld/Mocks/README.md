@@ -9,3 +9,4 @@ For example, a request to `api/auth/sign-in/email` reads `api/auth/sign-in/email
 - Requests with no matching file get a 404 response with an empty body.
 - Mocks are method-agnostic: the same file serves GET, POST, etc.
 - Query strings are ignored; only the URL path is used for lookup.
+- `POST api/hex-visits/batch` uses its JSON file as a template and echoes the submitted visit IDs in `acceptedIds`.

@@ -5,6 +5,7 @@ export default function Page() {
     <main>
       <h1>Rule The World API</h1>
       <Link href="/health">Health check</Link>
+      <Link href="/api/stats">Stats</Link>
     </main>
   );
 }

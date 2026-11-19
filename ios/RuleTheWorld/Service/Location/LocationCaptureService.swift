@@ -92,7 +92,7 @@ final class LocationCaptureService {
         if let last = lastRecorded,
            last.cell == cell,
            score <= last.score,
-           Calendar.current.isDate(last.date, inSameDayAs: sample.timestamp) {
+           HexVisit.scoringCalendar.isDate(last.date, inSameDayAs: sample.timestamp) {
             return
         }
         do {

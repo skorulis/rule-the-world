@@ -14,6 +14,8 @@ extension HexVisitLog: FetchableRecord, MutablePersistableRecord {
         score = row["score"]
         locationType = LocationType(rawValue: row["locationType"]) ?? .foreground
         count = row["count"]
+        uploadID = row["uploadID"]
+        uploaded = row["uploaded"]
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) throws {
@@ -26,6 +28,8 @@ extension HexVisitLog: FetchableRecord, MutablePersistableRecord {
         container["score"] = score
         container["locationType"] = locationType.rawValue
         container["count"] = count
+        container["uploadID"] = uploadID
+        container["uploaded"] = uploaded
     }
 
     nonisolated mutating func didInsert(_ inserted: InsertionSuccess) {

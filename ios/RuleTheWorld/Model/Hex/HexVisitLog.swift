@@ -10,6 +10,8 @@ struct HexVisitLog: Hashable, Codable, Sendable {
     var score: Double
     var locationType: LocationType
     var count: Int
+    var uploadID: String
+    var uploaded: Bool
 
     nonisolated init(
         id: Int64? = nil,
@@ -20,7 +22,9 @@ struct HexVisitLog: Hashable, Codable, Sendable {
         speed: Double?,
         score: Double,
         locationType: LocationType = .foreground,
-        count: Int = 1
+        count: Int = 1,
+        uploadID: String = UUID().uuidString,
+        uploaded: Bool = false
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -31,6 +35,8 @@ struct HexVisitLog: Hashable, Codable, Sendable {
         self.score = score
         self.locationType = locationType
         self.count = count
+        self.uploadID = uploadID
+        self.uploaded = uploaded
     }
 
     nonisolated init(sample: LocationSample, cell: HexCell, score: Double) {
@@ -80,7 +86,8 @@ struct HexVisitLog: Hashable, Codable, Sendable {
             speed: mergedSpeed,
             score: max(score, other.score),
             locationType: winner.locationType,
-            count: max(count, other.count) + 1
+            count: max(count, other.count) + 1,
+            uploadID: uploadID
         )
     }
 }

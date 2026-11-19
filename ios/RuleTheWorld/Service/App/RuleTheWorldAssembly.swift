@@ -52,6 +52,18 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             AuthService(urlSession: $0.urlSessionProtocol())
         }
         .inObjectScope(.container)
+        container.register(HexVisitUploadService.self) {
+            HexVisitUploadService(urlSession: $0.urlSessionProtocol())
+        }
+        .inObjectScope(.container)
+        container.register(HexVisitSyncService.self) {
+            HexVisitSyncService(
+                store: $0.hexVisitLogStore(),
+                uploader: $0.hexVisitUploadService(),
+                tokenStore: $0.authTokenStore()
+            )
+        }
+        .inObjectScope(.container)
         container.register(AuthTokenStore.self) {
             AuthTokenStore(keyValueStore: $0.secureKeyValueStore())
         }

@@ -68,6 +68,27 @@ struct MockURLSessionTests {
         #expect(data.isEmpty)
     }
 
+    @Test func visitBatchMockAcknowledgesSubmittedIDsForBodyAndStream() async throws {
+        let directory = try makeMocksDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeMock("{\"acceptedIds\":[],\"visits\":[]}", at: "api/hex-visits/batch.json", in: directory)
+        let session = MockURLSession(directory: directory)
+        let body = Data("{\"visits\":[{\"id\":\"a\"},{\"id\":\"b\"}]}".utf8)
+        for usesStream in [false, true] {
+            var batchRequest = request("/api/hex-visits/batch")
+            batchRequest.httpMethod = "POST"
+            if usesStream {
+                batchRequest.httpBodyStream = InputStream(data: body)
+            } else {
+                batchRequest.httpBody = body
+            }
+            let (data, response) = try await session.data(for: batchRequest)
+            let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            #expect((response as? HTTPURLResponse)?.statusCode == 200)
+            #expect(json["acceptedIds"] as? [String] == ["a", "b"])
+        }
+    }
+
     @Test func returns404ForPathTraversal() async throws {
         let directory = try makeMocksDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

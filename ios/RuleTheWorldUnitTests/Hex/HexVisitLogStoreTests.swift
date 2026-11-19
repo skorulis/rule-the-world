@@ -93,4 +93,69 @@ struct HexVisitLogStoreTests {
         #expect(all.count == 3)
         #expect(all.map(\.cell) == [cellA, cellB, cellA])
     }
+
+    @Test func acknowledgedVisitsPersistAndAreExcludedFromPending() async throws {
+        let database = try AppDatabase.inMemory()
+        let store = HexVisitLogStore(database: database)
+        let first = try await store.record(entry(cell: cellA))
+        let second = try await store.record(entry(cell: cellB))
+        try await store.markUploaded([first, second], acceptedIDs: [first.uploadID])
+
+        let reopened = HexVisitLogStore(database: database)
+        #expect(try await reopened.pending().map(\.uploadID) == [second.uploadID])
+        #expect(try await reopened.all().first?.uploaded == true)
+    }
+
+    @Test func editsDuringUploadRemainPending() async throws {
+        let store = try makeStore()
+        let snapshot = try await store.record(entry(cell: cellA, score: 0.5))
+        let changed = try await store.record(entry(cell: cellA, score: 1))
+        try await store.markUploaded([snapshot], acceptedIDs: [snapshot.uploadID])
+        #expect(changed.uploadID == snapshot.uploadID)
+        #expect(try await store.pending().first?.count == 2)
+        try await store.markUploaded([changed], acceptedIDs: [changed.uploadID])
+        #expect(try await store.pending().isEmpty)
+    }
+
+    @Test func uploadedRowsAreNotMergedWithNewSamples() async throws {
+        let store = try makeStore()
+        let first = try await store.record(entry(cell: cellA))
+        try await store.markUploaded([first], acceptedIDs: [first.uploadID])
+        let second = try await store.record(entry(cell: cellA))
+        #expect(second.id != first.id)
+        #expect(second.uploadID != first.uploadID)
+        #expect(try await store.pending().map(\.uploadID) == [second.uploadID])
+    }
+
+    @Test func sameCellDoesNotMergeAcrossUTCMidnight() async throws {
+        let store = try makeStore()
+        let midnight = Date(timeIntervalSince1970: 1_700_006_400)
+        let first = try await store.record(entry(cell: cellA, timestamp: midnight.addingTimeInterval(-1)))
+        let second = try await store.record(entry(cell: cellA, timestamp: midnight))
+        #expect(second.id != first.id)
+        #expect(try await store.pending().count == 2)
+    }
+
+    @Test func pendingPaginationRespectsBoundsAndLimit() async throws {
+        let store = try makeStore()
+        let first = try await store.record(entry(cell: cellA))
+        let second = try await store.record(entry(cell: cellB))
+        let third = try await store.record(entry(cell: cellA))
+        #expect(try await store.pending(limit: 1).map(\.id) == [first.id])
+        let after = try #require(first.id)
+        let through = try #require(second.id)
+        #expect(try await store.pending(after: after, through: through).map(\.id) == [second.id])
+        #expect(third.id != second.id)
+    }
+
+    @Test func oldAcknowledgementsCannotMarkRowsAfterSignOutErase() async throws {
+        let database = try AppDatabase.inMemory()
+        let store = HexVisitLogStore(database: database)
+        let old = try await store.record(entry(cell: cellA))
+        try database.erase()
+        let new = try await store.record(entry(cell: cellA))
+        try await store.markUploaded([old], acceptedIDs: [old.uploadID])
+        #expect(new.uploadID != old.uploadID)
+        #expect(try await store.pending().map(\.uploadID) == [new.uploadID])
+    }
 }

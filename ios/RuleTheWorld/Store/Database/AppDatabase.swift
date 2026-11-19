@@ -45,6 +45,15 @@ final class AppDatabase: Sendable {
                     .defaults(to: 1)
             }
         }
+        migrator.registerMigration("v4 hexVisitLogUploadState") { db in
+            try db.alter(table: "hexVisitLog") { table in
+                table.add(column: "uploadID", .text).notNull().defaults(to: "")
+                table.add(column: "uploaded", .boolean).notNull().defaults(to: false)
+            }
+            try db.execute(sql: "UPDATE hexVisitLog SET uploadID = lower(hex(randomblob(16)))")
+            try db.create(index: "hexVisitLog_uploadID", on: "hexVisitLog", columns: ["uploadID"], unique: true)
+            try db.create(index: "hexVisitLog_pending", on: "hexVisitLog", columns: ["uploaded", "id"])
+        }
         return migrator
     }
 
