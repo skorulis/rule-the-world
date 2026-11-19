@@ -41,6 +41,27 @@ struct HexVisitStoreTests {
         #expect(visit.lastScore == 1)
     }
 
+    @Test func restoreIsIdempotentAndPreservesNewerLocalVisits() async throws {
+        let store = try makeStore()
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        let localDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let localOnly = HexCell(rawValue: 0x8A2830828007FFF)
+        _ = try await store.recordVisit(cell, at: localDate)
+        _ = try await store.recordVisit(localOnly, at: localDate)
+        let remote = HexVisit(
+            cell: cell, lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5
+        )
+
+        try await store.restore([remote])
+        try await store.restore([remote])
+
+        let restored = try #require(try await store.visit(for: cell))
+        #expect(restored.score == 10)
+        #expect(restored.lastVisit == localDate)
+        #expect(restored.lastScore == 1)
+        #expect(try await store.visit(for: localOnly) != nil)
+    }
+
     @MainActor
     @Test func visitForUnknownCellIsNil() async throws {
         let store = try makeStore()

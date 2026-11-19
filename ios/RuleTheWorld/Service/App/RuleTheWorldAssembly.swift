@@ -72,7 +72,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             AuthManager(
                 service: $0.authService(),
                 tokenStore: $0.authTokenStore(),
-                database: $0.appDatabase()
+                database: $0.appDatabase(),
+                visitStore: $0.hexVisitStore()
             )
         }
         .inObjectScope(.container)

@@ -11,8 +11,16 @@ struct AuthManagerTests {
         return store
     }
 
-    private func makeService(status: Int = 200) -> AuthService {
+    private func makeService(
+        status: Int = 200, visitsStatus: Int = 200, visitsBody: String = "{\"visits\":[]}"
+    ) -> AuthService {
         AuthService(urlSession: FakeURLSession { request in
+            if request.url?.path == "/api/hex-visits" {
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: visitsStatus, httpVersion: nil, headerFields: nil
+                )!
+                return (Data(visitsBody.utf8), response)
+            }
             let token = request.url?.path.contains("sign-up") == true ? "sign-up-token" : "sign-in-token"
             let response = HTTPURLResponse(
                 url: request.url!,
@@ -84,6 +92,42 @@ struct AuthManagerTests {
 
         #expect(manager.isSignedIn == false)
         #expect(store.token == nil)
+    }
+
+    @Test func signInRestoresVisitsAndRefreshesSharedSnapshot() async throws {
+        let database = try AppDatabase.inMemory()
+        let visits = HexVisitStore(database: database)
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        let manager = AuthManager(
+            service: makeService(visitsBody: """
+                {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
+                "score":12.5,"lastScore":0.5}]}
+                """),
+            tokenStore: makeStore(), database: database, visitStore: visits
+        )
+
+        try await manager.signIn(email: "a@b.c", password: "pw")
+
+        #expect(try await visits.visit(for: cell)?.score == 12.5)
+        #expect(try await visits.visit(for: cell)?.lastScore == 0.5)
+        #expect(visits.snapshot.states[cell] != nil)
+        #expect(try await HexVisitLogStore(database: database).all().isEmpty)
+        #expect(manager.isSignedIn)
+    }
+
+    @Test func failedRestoreLeavesLoginRetryableWithoutSavingToken() async throws {
+        let tokens = makeStore()
+        let manager = AuthManager(
+            service: makeService(visitsStatus: 500), tokenStore: tokens,
+            database: try AppDatabase.inMemory()
+        )
+
+        await #expect(throws: (any Error).self) {
+            try await manager.signIn(email: "a@b.c", password: "pw")
+        }
+
+        #expect(!manager.isSignedIn)
+        #expect(tokens.token == nil)
     }
 
     @Test func signOutClearsToken() async throws {

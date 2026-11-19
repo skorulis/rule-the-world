@@ -29,6 +29,25 @@ final class HexVisitStore {
         return visit
     }
 
+    func restore(_ visits: [HexVisit]) async throws {
+        try await database.writer.write { db in
+            for remote in visits {
+                var merged = remote
+                if let local = try HexVisit.fetchOne(db, key: remote.cell) {
+                    merged.score = max(local.score, remote.score)
+                    if HexVisit.scoringCalendar.isDate(local.lastVisit, inSameDayAs: remote.lastVisit) {
+                        merged.lastScore = max(local.lastScore, remote.lastScore)
+                    } else if local.lastVisit > remote.lastVisit {
+                        merged.lastScore = local.lastScore
+                    }
+                    merged.lastVisit = max(local.lastVisit, remote.lastVisit)
+                }
+                try merged.save(db)
+            }
+        }
+        await reload()
+    }
+
     func visit(for cell: HexCell) async throws -> HexVisit? {
         try await database.writer.read { db in
             try HexVisit.fetchOne(db, key: cell)

@@ -98,6 +98,47 @@ struct AuthServiceTests {
         #expect(json["name"] == "Alex")
     }
 
+    @Test func fetchVisitsUsesBearerTokenAndDecodesWireFormat() async throws {
+        let box = RequestBox()
+        let service = await makeService { request in
+            box.request = request
+            return jsonResponse(url: request.url!, status: 200, body: """
+                {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
+                "score":12.5,"lastScore":0.5}]}
+                """)
+        }
+
+        let visits = try await service.fetchVisits(token: "session-token")
+
+        #expect(box.request?.url?.path == "/api/hex-visits")
+        #expect(box.request?.httpMethod == "GET")
+        #expect(box.request?.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        #expect(visits.count == 1)
+        #expect(visits.first?.cell == HexCell(rawValue: 0x8A283082876FFFF))
+        #expect(visits.first?.score == 12.5)
+        #expect(visits.first?.lastScore == 0.5)
+        #expect(visits.first?.lastVisit == ISO8601DateFormatter().date(from: "2026-11-20T10:00:00Z"))
+    }
+
+    @Test func fetchVisitsRejectsFailedOrMalformedResponses() async {
+        for (status, body) in [
+            (401, "{\"visits\":[]}"),
+            (500, "{\"visits\":[]}"),
+            (200, "{}"),
+            (200, """
+                {"visits":[{"cell":"invalid","lastVisit":"2026-11-20T10:00:00Z",
+                "score":1,"lastScore":1}]}
+                """)
+        ] {
+            let service = await makeService { request in
+                jsonResponse(url: request.url!, status: status, body: body)
+            }
+            await #expect(throws: (any Error).self) {
+                _ = try await service.fetchVisits(token: "token")
+            }
+        }
+    }
+
     @Test func invalidCredentialsThrows() async {
         let service = await makeService { request in
             jsonResponse(url: request.url!, status: 401)

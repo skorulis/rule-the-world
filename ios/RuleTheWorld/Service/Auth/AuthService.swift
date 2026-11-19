@@ -44,6 +44,10 @@ final class AuthService: HTTPService {
         ])
     }
 
+    func fetchVisits(token: String) async throws -> [HexVisit] {
+        try await execute(request: VisitDownloadRequest(token: token))
+    }
+
     private func authenticate(endpoint: String, body: [String: String]) async throws -> String {
         do {
             return try await execute(request: TokenRequest(endpoint: endpoint, body: body, origin: baseURL))
@@ -52,6 +56,53 @@ final class AuthService: HTTPService {
                 throw AuthError.invalidCredentials
             }
             throw AuthError.transport(error)
+        }
+    }
+}
+
+nonisolated private struct VisitDownloadResponse: Decodable {
+    struct Visit: Decodable {
+        let cell: String
+        let lastVisit: String
+        let score: Double
+        let lastScore: Double
+    }
+
+    let visits: [Visit]
+}
+
+private struct VisitDownloadRequest: HTTPRequest {
+    typealias ResponseType = [HexVisit]
+
+    let endpoint = "api/hex-visits"
+    let method = "GET"
+    let params: [String: String] = [:]
+    let body: Data? = nil
+    let headers: [String: String]
+
+    init(token: String) {
+        headers = ["Authorization": "Bearer \(token)"]
+    }
+
+    func decode(data: Data, response: URLResponse) throws -> [HexVisit] {
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        let payload = try JSONDecoder().decode(VisitDownloadResponse.self, from: data)
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fallback = ISO8601DateFormatter()
+        return try payload.visits.map { visit in
+            guard let rawValue = UInt64(visit.cell, radix: 16),
+                  let date = formatter.date(from: visit.lastVisit) ?? fallback.date(from: visit.lastVisit),
+                  visit.score.isFinite, visit.score >= 0,
+                  visit.lastScore.isFinite, (0...1).contains(visit.lastScore) else {
+                throw URLError(.cannotParseResponse)
+            }
+            return HexVisit(
+                cell: HexCell(rawValue: rawValue), lastVisit: date,
+                score: visit.score, lastScore: visit.lastScore
+            )
         }
     }
 }

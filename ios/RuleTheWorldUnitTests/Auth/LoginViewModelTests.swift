@@ -13,7 +13,7 @@ struct LoginViewModelTests {
                 httpVersion: nil,
                 headerFields: ["set-auth-token": "token"]
             )!
-            return (Data(), response)
+            return (Data("{\"visits\":[]}".utf8), response)
         })
         return LoginViewModel(authManager: AuthManager(
             service: service,
