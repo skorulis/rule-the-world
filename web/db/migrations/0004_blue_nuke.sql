@@ -1,2 +1,0 @@
-ALTER TABLE "hex_region" ADD COLUMN "region_type" smallint NOT NULL;--> statement-breakpoint
-ALTER TABLE "hex_region" ADD CONSTRAINT "hex_region_region_type_range" CHECK ("hex_region"."region_type" BETWEEN 0 AND 2);

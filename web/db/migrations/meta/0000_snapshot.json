@@ -1,9 +1,267 @@
 {
-  "id": "fdd9496c-3df2-4ee3-9e06-62d6aa865142",
+  "id": "6bd933c0-a3e5-4338-aef4-9ea561175c33",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.hex_region": {
+      "name": "hex_region",
+      "schema": "",
+      "columns": {
+        "cell": {
+          "name": "cell",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "region": {
+          "name": "region",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "region_type": {
+          "name": "region_type",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "hex_region_region_nonnegative": {
+          "name": "hex_region_region_nonnegative",
+          "value": "\"hex_region\".\"region\" >= 0"
+        },
+        "hex_region_region_type_range": {
+          "name": "hex_region_region_type_range",
+          "value": "\"hex_region\".\"region_type\" BETWEEN 0 AND 2"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.hex_visit": {
+      "name": "hex_visit",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cell": {
+          "name": "cell",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_visit": {
+          "name": "last_visit",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "total": {
+          "name": "total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_score": {
+          "name": "last_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "hex_visit_user_id_user_id_fk": {
+          "name": "hex_visit_user_id_user_id_fk",
+          "tableFrom": "hex_visit",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "hex_visit_user_id_cell_pk": {
+          "name": "hex_visit_user_id_cell_pk",
+          "columns": [
+            "user_id",
+            "cell"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "hex_visit_total_nonnegative": {
+          "name": "hex_visit_total_nonnegative",
+          "value": "\"hex_visit\".\"total\" >= 0"
+        },
+        "hex_visit_score_nonnegative": {
+          "name": "hex_visit_score_nonnegative",
+          "value": "\"hex_visit\".\"score\" >= 0 AND \"hex_visit\".\"score\" < 'Infinity'::numeric"
+        },
+        "hex_visit_last_score_range": {
+          "name": "hex_visit_last_score_range",
+          "value": "\"hex_visit\".\"last_score\" BETWEEN 0 AND 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.hex_visit_day": {
+      "name": "hex_visit_day",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cell": {
+          "name": "cell",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "day": {
+          "name": "day",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "hex_visit_day_user_id_cell_hex_visit_user_id_cell_fk": {
+          "name": "hex_visit_day_user_id_cell_hex_visit_user_id_cell_fk",
+          "tableFrom": "hex_visit_day",
+          "tableTo": "hex_visit",
+          "columnsFrom": [
+            "user_id",
+            "cell"
+          ],
+          "columnsTo": [
+            "user_id",
+            "cell"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "hex_visit_day_user_id_cell_day_pk": {
+          "name": "hex_visit_day_user_id_cell_day_pk",
+          "columns": [
+            "user_id",
+            "cell",
+            "day"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "hex_visit_day_score_range": {
+          "name": "hex_visit_day_score_range",
+          "value": "\"hex_visit_day\".\"score\" BETWEEN 0 AND 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.hex_visit_upload": {
+      "name": "hex_visit_upload",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cell": {
+          "name": "cell",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "hex_visit_upload_user_id_user_id_fk": {
+          "name": "hex_visit_upload_user_id_user_id_fk",
+          "tableFrom": "hex_visit_upload",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "hex_visit_upload_user_id_id_pk": {
+          "name": "hex_visit_upload_user_id_id_pk",
+          "columns": [
+            "user_id",
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "hex_visit_upload_count_positive": {
+          "name": "hex_visit_upload_count_positive",
+          "value": "\"hex_visit_upload\".\"count\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.account": {
       "name": "account",
       "schema": "",
