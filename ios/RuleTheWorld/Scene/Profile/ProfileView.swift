@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @State var model: ProfileViewModel
+    @State private var showSignOutConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -11,11 +12,19 @@ struct ProfileView: View {
                 }
                 Section {
                     Button("Log out", role: .destructive) {
-                        model.signOut()
+                        showSignOutConfirmation = true
                     }
                 }
             }
             .navigationTitle("Profile")
+            .alert("Log out?", isPresented: $showSignOutConfirmation) {
+                Button("Log out", role: .destructive) {
+                    model.signOut()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to log out?")
+            }
         }
     }
 }
