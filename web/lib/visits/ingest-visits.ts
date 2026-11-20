@@ -1,7 +1,9 @@
+import { cellToLatLng } from "h3-js";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
-import { hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
+import { hexRegion, hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
 import { db } from "@/lib/db";
+import { regionIdForPoint } from "@/lib/regions/country-regions";
 import type { VisitBatch } from "./visit-batch";
 
 export async function ingestVisits(userId: string, batch: VisitBatch) {
@@ -11,6 +13,17 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
 
     await tx.insert(hexVisit).values(batch.cells.map(({ cell, lastVisit }) => ({ userId, cell, lastVisit })))
       .onConflictDoNothing();
+
+    const known = await tx.select({ cell: hexRegion.cell }).from(hexRegion)
+      .where(inArray(hexRegion.cell, batch.cells.map(({ cell }) => cell)));
+    const unknown = new Set(batch.cells.map(({ cell }) => cell));
+    for (const { cell } of known) unknown.delete(cell);
+    if (unknown.size) {
+      await tx.insert(hexRegion).values([...unknown].map((cell) => {
+        const [latitude, longitude] = cellToLatLng(cell);
+        return { cell, region: regionIdForPoint(latitude, longitude) };
+      })).onConflictDoNothing();
+    }
     const previous = await tx.select().from(hexVisitDay).where(and(
       eq(hexVisitDay.userId, userId),
       or(...batch.days.map(({ cell, day }) => and(eq(hexVisitDay.cell, cell), eq(hexVisitDay.day, day)))),

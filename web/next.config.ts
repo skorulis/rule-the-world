@@ -1,6 +1,12 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
+  outputFileTracingIncludes: {
+    "/api/hex-visits/batch": ["./data/regions/countries-medium.geojson"],
+  },
   async headers() {
     return [
       {

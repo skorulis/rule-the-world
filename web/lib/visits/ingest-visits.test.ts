@@ -3,9 +3,11 @@ import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
+vi.mock("@/lib/regions/country-regions", () => ({ regionIdForPoint: vi.fn(() => "42") }));
 
 import { db } from "@/lib/db";
-import { hexVisit } from "@/db/schema";
+import { hexRegion, hexVisit } from "@/db/schema";
+import { regionIdForPoint } from "@/lib/regions/country-regions";
 import { ingestVisits } from "./ingest-visits";
 import { parseVisitBatch } from "./visit-batch";
 
@@ -15,17 +17,21 @@ const batch = (score = 0.5, time = timestamp) => parseVisitBatch({ visits: [{ id
 const dialect = new PgDialect();
 const query = (value: SQL) => dialect.sqlToQuery(value);
 
-function harness(previous = "0", current = "0.5", latest = timestamp, uploaded: { id: string; cell: string; count: number }[] = []) {
+function harness(previous = "0", current = "0.5", latest = timestamp,
+  uploaded: { id: string; cell: string; count: number }[] = [], knownRegions: string[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
   const dayRows = previous === "0" ? [] : [{ userId: "u1", cell, day: "2026-11-20", score: previous }];
   const select = vi.fn()
     .mockReturnValueOnce({ from: () => ({ where: () => ({ for: lock }) }) })
+    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(knownRegions.map((c) => ({ cell: c }))) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(dayRows) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(uploaded) }) });
   const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell, day: "2026-11-20", score: current }]);
   const upsert = vi.fn().mockReturnValue({ returning: dailyReturning });
+  const regionConflict = vi.fn().mockResolvedValue([]);
   const insert = vi.fn()
     .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: vi.fn().mockResolvedValue([]) }) })
+    .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: regionConflict, onConflictDoUpdate: upsert }) })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: upsert }) })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: vi.fn().mockResolvedValue([]) }) });
   const returning = vi.fn().mockResolvedValue([{ cell, lastVisit: new Date(latest), score: current, lastScore: current, total: 1 }]);
@@ -34,7 +40,7 @@ function harness(previous = "0", current = "0.5", latest = timestamp, uploaded: 
   const update = vi.fn().mockReturnValue({ set });
   const tx = { select, insert, update };
   vi.mocked(db.transaction).mockImplementationOnce(async (callback) => callback(tx as never));
-  return { lock, select, insert, upsert, dailyReturning, returning, where, set };
+  return { lock, select, insert, regionConflict, upsert, dailyReturning, returning, where, set };
 }
 
 beforeEach(() => vi.resetAllMocks());
@@ -110,6 +116,26 @@ describe("visit ingestion SQL contract", () => {
     const mock = harness();
     await ingestVisits("other-player", batch());
     expect(query(mock.where.mock.calls[0][0]).params).toEqual(["other-player", cell]);
+  });
+
+  it("classifies unmapped cells into hex_region from the cell center", async () => {
+    const mock = harness();
+    await ingestVisits("u1", batch());
+    expect(regionIdForPoint).toHaveBeenCalledTimes(1);
+    const [latitude, longitude] = vi.mocked(regionIdForPoint).mock.calls[0];
+    expect(latitude).toBeGreaterThan(-90);
+    expect(latitude).toBeLessThan(90);
+    expect(longitude).toBeGreaterThan(-180);
+    expect(longitude).toBeLessThanOrEqual(180);
+    expect(mock.insert).toHaveBeenCalledWith(hexRegion);
+    expect(mock.regionConflict).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips region lookup for cells already classified", async () => {
+    const mock = harness("0", "0.5", timestamp, [], [cell]);
+    await ingestVisits("u1", batch());
+    expect(regionIdForPoint).not.toHaveBeenCalled();
+    expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexRegion);
   });
 
   it("propagates transaction failures without acknowledging", async () => {

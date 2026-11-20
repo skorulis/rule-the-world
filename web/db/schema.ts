@@ -17,6 +17,15 @@ export const hexVisit = pgTable("hex_visit", {
   check("hex_visit_last_score_range", sql`${table.lastScore} BETWEEN 0 AND 1`),
 ]);
 
+export const noRegion = "none";
+
+export const hexRegion = pgTable("hex_region", {
+  cell: text("cell").primaryKey(),
+  region: text("region").notNull(),
+}, (table) => [
+  check("hex_region_region_nonempty", sql`${table.region} <> ''`),
+]);
+
 export const hexVisitUpload = pgTable("hex_visit_upload", {
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   id: text("id").notNull(),
