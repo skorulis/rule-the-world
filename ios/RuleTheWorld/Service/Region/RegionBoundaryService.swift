@@ -83,7 +83,7 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
     private struct Properties: Decodable {
         let id: String
         let name: String
-        let kind: MapRegionBoundary.Kind
+        let kind: String
     }
 
     private struct Feature: Decodable {
@@ -92,7 +92,8 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
         let geometry: Geometry
 
         func boundary() throws -> MapRegionBoundary {
-            guard type == "Feature", !properties.id.isEmpty, !geometry.polygons.isEmpty else {
+            guard type == "Feature", !properties.id.isEmpty, !geometry.polygons.isEmpty,
+                  let kind = RegionType(name: properties.kind), kind != .none else {
                 throw RegionBoundaryError.invalidCollection
             }
             let polygons = try geometry.polygons.map { rings in
@@ -102,7 +103,7 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
                     holes: rings.dropFirst().map { try MapRegionBoundary.Ring(points: $0) }
                 )
             }
-            return MapRegionBoundary(id: properties.id, name: properties.name, kind: properties.kind, polygons: polygons)
+            return MapRegionBoundary(id: properties.id, name: properties.name, kind: kind, polygons: polygons)
         }
     }
 

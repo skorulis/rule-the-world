@@ -1,10 +1,6 @@
 import Foundation
 
 nonisolated struct MapRegionBoundary: Sendable, Identifiable {
-    enum Kind: String, Decodable, Sendable {
-        case country
-    }
-
     struct Point: Decodable, Sendable, Equatable {
         let longitude: Double
         let latitude: Double
@@ -80,7 +76,7 @@ nonisolated struct MapRegionBoundary: Sendable, Identifiable {
 
     let id: String
     let name: String
-    let kind: Kind
+    let kind: RegionType
     let polygons: [Polygon]
 
     func contains(latitude: Double, longitude: Double) -> Bool {
