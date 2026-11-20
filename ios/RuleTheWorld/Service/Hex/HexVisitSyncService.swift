@@ -4,14 +4,14 @@ import OSLog
 @MainActor
 final class HexVisitSyncService {
     private let store: HexVisitLogStore
-    private let uploader: any HexVisitUploading
+    private let uploader: AuthenticatedService
     private let tokenStore: AuthTokenStore
     private let waitForNextCheck: () async throws -> Void
     private var isSyncing = false
 
     init(
         store: HexVisitLogStore,
-        uploader: any HexVisitUploading,
+        uploader: AuthenticatedService,
         tokenStore: AuthTokenStore,
         waitForNextCheck: @escaping () async throws -> Void = { try await Task.sleep(for: .seconds(600)) }
     ) {

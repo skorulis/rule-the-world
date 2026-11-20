@@ -1,12 +1,7 @@
 import ASKCore
 import Foundation
 
-@MainActor
-protocol HexVisitUploading {
-    func upload(_ entries: [HexVisitLog]) async throws -> Set<String>
-}
-
-extension AuthenticatedService: HexVisitUploading {
+extension AuthenticatedService {
     func upload(_ entries: [HexVisitLog]) async throws -> Set<String> {
         let response = try await execute(request: VisitBatchRequest(entries: entries))
         let accepted = Set(response.acceptedIds)

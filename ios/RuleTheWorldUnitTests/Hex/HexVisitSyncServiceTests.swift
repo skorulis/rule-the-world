@@ -3,15 +3,41 @@ import Foundation
 import Testing
 @testable import RuleTheWorld
 
-@MainActor
-private final class VisitUploaderStub: HexVisitUploading {
-    var calls: [[HexVisitLog]] = []
-    var handler: (([HexVisitLog]) async throws -> Set<String>)?
+nonisolated private struct UploadedVisit: Decodable {
+    let id: String
+    var uploadID: String { id }
+}
 
-    func upload(_ entries: [HexVisitLog]) async throws -> Set<String> {
+nonisolated private struct UploadedVisitBatch: Decodable {
+    let visits: [UploadedVisit]
+}
+
+@MainActor
+private final class VisitUploadSession {
+    var calls: [[UploadedVisit]] = []
+    var handler: (([UploadedVisit]) async throws -> Set<String>)?
+
+    lazy var service: AuthenticatedService = {
+        let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
+        tokens.save("token")
+        return AuthenticatedService(tokenStore: tokens, urlSession: FakeURLSession { [weak self] request in
+            guard let self else { throw CancellationError() }
+            return try await self.respond(to: request)
+        })
+    }()
+
+    private func respond(to request: URLRequest) async throws -> (Data, URLResponse) {
+        let entries = try JSONDecoder().decode(UploadedVisitBatch.self, from: request.httpBody ?? Data()).visits
         calls.append(entries)
-        if let handler { return try await handler(entries) }
-        return Set(entries.map(\.uploadID))
+        let accepted: Set<String>
+        if let handler {
+            accepted = try await handler(entries)
+        } else {
+            accepted = Set(entries.map(\.uploadID))
+        }
+        let data = try JSONEncoder().encode(["acceptedIds": Array(accepted)])
+        let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        return (data, response)
     }
 }
 
@@ -32,9 +58,9 @@ struct HexVisitSyncServiceTests {
 
     @Test func emptyOrSignedOutQueuesDoNotMakeNetworkCalls() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         let tokens = tokenStore()
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokens)
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokens)
         try await sync.syncPendingVisits()
         _ = try await store.record(entry())
         tokens.clear()
@@ -45,8 +71,8 @@ struct HexVisitSyncServiceTests {
     @Test func successfulUploadsAreNotSentAgain() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let uploader = VisitUploadSession()
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         try await sync.syncPendingVisits()
         try await sync.syncPendingVisits()
         #expect(uploader.calls.count == 1)
@@ -56,9 +82,9 @@ struct HexVisitSyncServiceTests {
     @Test func failureLeavesVisitsPendingForRetry() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         uploader.handler = { _ in throw URLError(.notConnectedToInternet) }
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         await #expect(throws: URLError.self) { try await sync.syncPendingVisits() }
         #expect(try await store.pending().count == 1)
         uploader.handler = nil
@@ -72,8 +98,8 @@ struct HexVisitSyncServiceTests {
         for index in 0..<501 {
             _ = try await store.record(entry(cell: index.isMultiple(of: 2) ? 0x8A283082876FFFF : 0x8A283082872FFFF))
         }
-        let uploader = VisitUploaderStub()
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let uploader = VisitUploadSession()
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         try await sync.syncPendingVisits()
         #expect(uploader.calls.map(\.count) == [500, 1])
         #expect(try await store.pending().isEmpty)
@@ -83,9 +109,9 @@ struct HexVisitSyncServiceTests {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         let first = try await store.record(entry())
         let second = try await store.record(entry(cell: 0x8A283082872FFFF))
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         uploader.handler = { _ in [first.uploadID] }
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         try await sync.syncPendingVisits()
         #expect(try await store.pending().map(\.uploadID) == [second.uploadID])
     }
@@ -93,12 +119,12 @@ struct HexVisitSyncServiceTests {
     @Test func mutationDuringRequestIsSentOnTheNextCheck() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         uploader.handler = { entries in
             _ = try await store.record(entry(score: 1))
             return Set(entries.map(\.uploadID))
         }
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         try await sync.syncPendingVisits()
         #expect(try await store.pending().first?.score == 1)
         uploader.handler = nil
@@ -111,12 +137,12 @@ struct HexVisitSyncServiceTests {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
         let tokens = tokenStore()
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         uploader.handler = { entries in
             tokens.save("different-session")
             return Set(entries.map(\.uploadID))
         }
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokens)
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokens)
         try await sync.syncPendingVisits()
         #expect(try await store.pending().count == 1)
     }
@@ -124,8 +150,8 @@ struct HexVisitSyncServiceTests {
     @Test func overlappingChecksDoNotDuplicateRequests() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore())
+        let uploader = VisitUploadSession()
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore())
         uploader.handler = { entries in
             try await sync.syncPendingVisits()
             return Set(entries.map(\.uploadID))
@@ -137,10 +163,10 @@ struct HexVisitSyncServiceTests {
     @Test func periodicChecksContinueAfterNetworkFailure() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         uploader.handler = { _ in throw URLError(.notConnectedToInternet) }
         var waits = 0
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore()) {
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore()) {
             waits += 1
             if waits == 2 { throw CancellationError() }
             #expect(try await store.pending().count == 1)
@@ -154,9 +180,9 @@ struct HexVisitSyncServiceTests {
     @Test func runChecksImmediatelyThenAgainAfterTheInterval() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         _ = try await store.record(entry())
-        let uploader = VisitUploaderStub()
+        let uploader = VisitUploadSession()
         var waits = 0
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokenStore()) {
+        let sync = HexVisitSyncService(store: store, uploader: uploader.service, tokenStore: tokenStore()) {
             waits += 1
             if waits == 2 { throw CancellationError() }
             #expect(uploader.calls.count == 1)
