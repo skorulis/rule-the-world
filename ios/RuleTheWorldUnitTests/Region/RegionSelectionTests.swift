@@ -11,7 +11,7 @@ struct RegionSelectionTests {
         return HexMapViewModel(
             grid: HexGridService(), store: HexVisitStore(database: database),
             logStore: HexVisitLogStore(database: database),
-            locationService: LocationService(), boundaries: provider
+            locationService: LocationService(), boundaries: provider, totalsProvider: EmptyTotalsProvider()
         )
     }
 
@@ -113,6 +113,12 @@ struct RegionSelectionTests {
         await complete(latest, with: selection(id: "latest", level: .coarse), observing: model)
         #expect(model.selectedRegion?.boundary.id == "latest")
         #expect(model.selectedRegion?.level == .coarse)
+    }
+}
+
+private struct EmptyTotalsProvider: HexTotalsProviding {
+    func totals(for cell: HexCell) async throws -> HexTotals {
+        HexTotals(totalVisits: 0, rivalScore: 0, userVisit: nil)
     }
 }
 

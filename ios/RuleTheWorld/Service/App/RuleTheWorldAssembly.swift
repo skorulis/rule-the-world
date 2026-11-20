@@ -56,6 +56,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             AuthenticatedService(tokenStore: $0.authTokenStore(), urlSession: $0.urlSessionProtocol())
         }
         .inObjectScope(.container)
+        container.register(HexTotalsProviding.self) { $0.authenticatedService() }
+        .inObjectScope(.container)
         container.register(HexVisitSyncService.self) {
             HexVisitSyncService(
                 store: $0.hexVisitLogStore(),

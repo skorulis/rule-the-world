@@ -15,10 +15,18 @@ struct HexCellDetailView: View {
                     value: visit.lastVisit.formatted(.relative(presentation: .named))
                 )
             }
+            if model.isLoadingTotals {
+                ProgressView()
+            } else if let totals = model.totals {
+                LabeledContent("Total visits", value: "\(totals.totalVisits)")
+                if totals.rivalScore > 0 {
+                    LabeledContent("Rival score", value: "\(Int(totals.rivalScore))")
+                }
+            }
             Spacer()
         }
         .padding()
-        .presentationDetents([.height(180)])
+        .presentationDetents([.height(260)])
     }
 }
 
