@@ -58,13 +58,13 @@ class Polygon {
   }
 }
 
-type Region = { id: bigint; polygons: Polygon[] };
+type Region = { id: bigint; parent?: bigint; polygons: Polygon[] };
 
 type FeatureCollection = {
   type: string;
   features: {
     type: string;
-    properties: { id: string; name: string; kind: string };
+    properties: { id: string; name: string; kind: string; parent?: string };
     geometry: { type: string; coordinates: number[][][] | number[][][][] };
   }[];
 };
@@ -88,7 +88,9 @@ function parseRegions(collection: FeatureCollection): Region[] {
       : feature.geometry.type === "MultiPolygon"
         ? feature.geometry.coordinates as number[][][][]
         : null;
-    if (feature.type !== "Feature" || !/^\d+$/.test(feature.properties.id) || !rawPolygons?.length) {
+    const parent = feature.properties.parent;
+    if (feature.type !== "Feature" || !/^\d+$/.test(feature.properties.id)
+      || (parent !== undefined && !/^\d+$/.test(parent)) || !rawPolygons?.length) {
       throw new Error("Invalid region collection");
     }
     const polygons = rawPolygons.map((rings) => {
@@ -96,7 +98,11 @@ function parseRegions(collection: FeatureCollection): Region[] {
       if (!exterior) throw new Error("Invalid region ring");
       return new Polygon(exterior, holes);
     });
-    return { id: BigInt(feature.properties.id), polygons };
+    return {
+      id: BigInt(feature.properties.id),
+      parent: parent === undefined ? undefined : BigInt(parent),
+      polygons,
+    };
   });
   if (new Set(regions.map((region) => region.id)).size !== regions.length) {
     throw new Error("Invalid region collection");
@@ -104,11 +110,11 @@ function parseRegions(collection: FeatureCollection): Region[] {
   return regions.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
-function geoJsonPath(): string {
+function geoJsonPath(fileName: string): string {
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    path.resolve(moduleDir, "../../data/regions/countries-medium.geojson"),
-    path.resolve(process.cwd(), "data/regions/countries-medium.geojson"),
+    path.resolve(moduleDir, `../../data/regions/${fileName}`),
+    path.resolve(process.cwd(), `data/regions/${fileName}`),
   ];
   return candidates.find((candidate) => {
     try {
@@ -120,13 +126,30 @@ function geoJsonPath(): string {
   }) ?? candidates[0];
 }
 
-let regions: Region[] | undefined;
+const catalogs = new Map<string, Region[]>();
 
-function catalog(): Region[] {
+function catalog(fileName: string): Region[] {
+  let regions = catalogs.get(fileName);
   if (!regions) {
-    regions = parseRegions(JSON.parse(readFileSync(geoJsonPath(), "utf-8")));
+    regions = parseRegions(JSON.parse(readFileSync(geoJsonPath(fileName), "utf-8")));
+    catalogs.set(fileName, regions);
   }
   return regions;
+}
+
+let statesByParent: Map<bigint, Region[]> | undefined;
+
+function states(parent: bigint): Region[] {
+  if (!statesByParent) {
+    statesByParent = new Map();
+    for (const state of catalog("states-medium.geojson")) {
+      if (state.parent === undefined) throw new Error("Invalid region collection");
+      const siblings = statesByParent.get(state.parent) ?? [];
+      siblings.push(state);
+      statesByParent.set(state.parent, siblings);
+    }
+  }
+  return statesByParent.get(parent) ?? [];
 }
 
 function regionContains(region: Region, latitude: number, longitude: number): boolean {
@@ -140,5 +163,11 @@ function regionContains(region: Region, latitude: number, longitude: number): bo
 }
 
 export function regionIdForPoint(latitude: number, longitude: number): bigint {
-  return catalog().find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
+  return catalog("countries-medium.geojson")
+    .find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
+}
+
+export function stateIdForPoint(parent: bigint, latitude: number, longitude: number): bigint {
+  if (parent === noRegion) return noRegion;
+  return states(parent).find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
 }

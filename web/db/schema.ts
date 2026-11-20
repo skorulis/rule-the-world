@@ -23,10 +23,11 @@ export const regionType = { none: 0, country: 1, state: 2 } as const;
 export type RegionType = (typeof regionType)[keyof typeof regionType];
 
 export const hexRegion = pgTable("hex_region", {
-  cell: bigint("cell", { mode: "bigint" }).primaryKey(),
+  cell: bigint("cell", { mode: "bigint" }).notNull(),
   region: bigint("region", { mode: "bigint" }).notNull(),
   regionType: smallint("region_type").notNull().$type<RegionType>(),
 }, (table) => [
+  primaryKey({ columns: [table.cell, table.regionType] }),
   check("hex_region_region_nonnegative", sql`${table.region} >= 0`),
   check("hex_region_region_type_range", sql`${table.regionType} BETWEEN 0 AND 2`),
 ]);

@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { hexRegion, hexVisit } from "@/db/schema";
+import { hexRegion, hexVisit, regionType } from "@/db/schema";
 import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
 
@@ -13,33 +13,46 @@ export async function GET(request: Request) {
 
     const rows = await db.execute<{
       region: string | null;
+      kind: number | null;
       overall: number;
       visited: string;
       owned: string;
     }>(sql`
       with user_cells as (
-        select ${hexRegion.region} as region,
+        select ${hexVisit.cell} as cell,
           ${hexVisit.score} > coalesce((
             select max(rival.score) from ${hexVisit} as rival
             where rival.cell = ${hexVisit.cell} and rival.user_id <> ${session.user.id}
           ), 0) as owned
         from ${hexVisit}
-        left join ${hexRegion} on ${hexRegion.cell} = ${hexVisit.cell}
         where ${hexVisit.userId} = ${session.user.id}
+      ), region_counts as (
+        select ${hexRegion.region} as region, ${hexRegion.regionType} as kind,
+          count(*)::text as visited,
+          count(*) filter (where user_cells.owned)::text as owned
+        from user_cells
+        left join ${hexRegion} on ${hexRegion.cell} = user_cells.cell
+        where ${hexRegion.region} > 0
+        group by ${hexRegion.region}, ${hexRegion.regionType}
       )
-      select region::text, grouping(region) as overall,
+      select region::text, kind, 0 as overall, visited, owned from region_counts
+      union all
+      select null, null, 1,
         count(*)::text as visited,
         count(*) filter (where owned)::text as owned
       from user_cells
-      group by grouping sets ((), (region))
-      having grouping(region) = 1 or region > 0
-      order by user_cells.region nulls first
+      order by overall desc, region nulls first
     `);
     const total = rows.find((row) => Number(row.overall) === 1);
+    const kinds = new Map<number, string>([
+      [regionType.country, "country"],
+      [regionType.state, "state"],
+    ]);
     const regions = rows.flatMap((row) => {
       const id = Number(row.region);
-      return Number(row.overall) === 0 && Number.isSafeInteger(id) && id > 0
-        ? [{ id, visited: Number(row.visited), owned: Number(row.owned) }]
+      const kind = row.kind === null ? undefined : kinds.get(Number(row.kind));
+      return Number(row.overall) === 0 && Number.isSafeInteger(id) && id > 0 && kind !== undefined
+        ? [{ id, kind, visited: Number(row.visited), owned: Number(row.owned) }]
         : [];
     });
     const { id, name, email, createdAt } = session.user;

@@ -10,9 +10,12 @@ struct RegionBoundaryTests {
         return try RegionBoundaryCatalog(data: [.medium: data, .coarse: data])
     }
 
-    private func feature(id: String, geometry: String, type: String = "Polygon") -> String {
-        """
-        {"type":"Feature","properties":{"id":"\(id)","name":"\(id)","kind":"country"},
+    private func feature(
+        id: String, geometry: String, type: String = "Polygon", kind: String = "country", parent: String? = nil
+    ) -> String {
+        let parentProperty = parent.map { ",\"parent\":\"\($0)\"" } ?? ""
+        return """
+        {"type":"Feature","properties":{"id":"\(id)","name":"\(id)","kind":"\(kind)"\(parentProperty)},
         "geometry":{"type":"\(type)","coordinates":\(geometry)}}
         """
     }
@@ -75,6 +78,38 @@ struct RegionBoundaryTests {
         #expect(throws: RegionBoundaryError.self) { try catalog(features: "\(valid),\(valid)") }
     }
 
+    @Test func stateSelectionIsScopedToTheContainingCountry() throws {
+        let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
+        let states = feature(
+            id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "state", parent: "land"
+        )
+        let countryData = Data("""
+        {"type":"FeatureCollection","features":[\(countries)]}
+        """.utf8)
+        let stateData = Data("""
+        {"type":"FeatureCollection","features":[\(states)]}
+        """.utf8)
+        let catalog = try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .state: stateData])
+        #expect(catalog.selection(latitude: 5, longitude: 2, level: .state)?.boundary.id == "child")
+        #expect(catalog.selection(latitude: 5, longitude: 7, level: .state) == nil)
+        #expect(catalog.selection(latitude: 5, longitude: 2, level: .medium)?.boundary.id == "land")
+        #expect(catalog.selection(latitude: 20, longitude: 20, level: .state) == nil)
+    }
+
+    @Test func stateCollectionsRequireParents() {
+        let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
+        let orphan = feature(id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "state")
+        let countryData = Data("""
+        {"type":"FeatureCollection","features":[\(countries)]}
+        """.utf8)
+        let stateData = Data("""
+        {"type":"FeatureCollection","features":[\(orphan)]}
+        """.utf8)
+        #expect(throws: RegionBoundaryError.self) {
+            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .state: stateData])
+        }
+    }
+
     @Test func bundledCountriesDecodeAndSelectConsistentlyAcrossLevels() async throws {
         let service = RegionBoundaryService(bundle: Bundle(for: HexMapViewModel.self))
         let locations: [String: MapRegionBoundary.Point] = [
@@ -97,6 +132,18 @@ struct RegionBoundaryTests {
         let fijiAcrossDateline = try await service.selection(latitude: -16.8, longitude: -179.9, level: .medium)
         #expect(fijiAcrossDateline?.boundary.name == "Fiji")
         let ocean = try await service.selection(latitude: 0, longitude: -140, level: .medium)
+        #expect(ocean == nil)
+    }
+
+    @Test func bundledStatesSelectWithinTheirParentCountry() async throws {
+        let service = RegionBoundaryService(bundle: Bundle(for: HexMapViewModel.self))
+        let sydney = try await service.selection(latitude: -33.8, longitude: 151.2, level: .state)
+        #expect(sydney?.boundary.name == "New South Wales")
+        #expect(sydney?.boundary.kind == .state)
+        #expect(sydney?.boundary.parent != nil)
+        let paris = try await service.selection(latitude: 48.85, longitude: 2.35, level: .state)
+        #expect(paris == nil)
+        let ocean = try await service.selection(latitude: 0, longitude: -140, level: .state)
         #expect(ocean == nil)
     }
 }

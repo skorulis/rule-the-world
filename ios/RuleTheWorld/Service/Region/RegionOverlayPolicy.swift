@@ -4,6 +4,7 @@ nonisolated enum RegionOverlayPolicy {
     enum Level: String, CaseIterable, Sendable {
         case medium
         case coarse
+        case state
     }
 
     static let minimumWidthMeters = 750_000.0
@@ -12,8 +13,9 @@ nonisolated enum RegionOverlayPolicy {
 
     static func level(visibleWidthMeters width: Double, previous: Level?) -> Level? {
         guard width.isFinite, width > 0 else { return nil }
-        let minimum = minimumWidthMeters * (previous == nil ? 1 : 1 - hysteresis)
-        guard width >= minimum else { return nil }
+        let minimum = minimumWidthMeters
+            * (previous == .state ? 1 + hysteresis : previous == nil ? 1 : 1 - hysteresis)
+        guard width >= minimum else { return .state }
         let coarse = coarseWidthMeters * (previous == .coarse ? 1 - hysteresis : 1)
         return width >= coarse ? .coarse : .medium
     }

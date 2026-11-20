@@ -7,6 +7,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
 
     struct Region: Decodable, Sendable {
         let id: Int64
+        let kind: String?
         let visited: Int
         let owned: Int
     }

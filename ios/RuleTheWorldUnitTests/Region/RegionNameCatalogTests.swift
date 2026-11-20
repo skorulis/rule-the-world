@@ -30,6 +30,19 @@ struct RegionNameCatalogTests {
         }
     }
 
+    @Test func bundledLookupCoversEveryStateWithItsCanonicalName() throws {
+        let bundle = Bundle(for: HexMapViewModel.self)
+        let url = try #require(bundle.url(forResource: "states-medium", withExtension: "geojson")
+            ?? bundle.url(forResource: "states-medium", withExtension: "geojson", subdirectory: "Regions"))
+        let collection = try JSONDecoder().decode(Collection.self, from: Data(contentsOf: url))
+        let catalog = RegionNameCatalog(bundle: bundle)
+        #expect(collection.features.count == 9)
+        for feature in collection.features {
+            let id = try #require(Int64(feature.properties.id))
+            #expect(catalog.name(for: id) == feature.properties.name)
+        }
+    }
+
     private struct Collection: Decodable {
         let features: [Feature]
     }

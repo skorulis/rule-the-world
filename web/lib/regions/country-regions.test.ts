@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { regionIdForPoint } from "./country-regions";
+import { regionIdForPoint, stateIdForPoint } from "./country-regions";
 
 const NONE = BigInt(0);
 
@@ -30,5 +30,34 @@ describe("regionIdForPoint", () => {
 
   it("handles antimeridian longitude wrap", () => {
     expect(regionIdForPoint(48.85, 182.35)).toBe(regionIdForPoint(48.85, -177.65));
+  });
+});
+
+describe("stateIdForPoint", () => {
+  const AUSTRALIA = regionIdForPoint(-25, 134);
+
+  it("returns a state id for a point inside an Australian state", () => {
+    expect(AUSTRALIA).not.toBe(NONE);
+    expect(stateIdForPoint(AUSTRALIA, -33.8, 151.2)).not.toBe(NONE);
+  });
+
+  it("returns different ids for different states", () => {
+    expect(stateIdForPoint(AUSTRALIA, -33.8, 151.2))
+      .not.toBe(stateIdForPoint(AUSTRALIA, -37.8, 145.0));
+  });
+
+  it("returns 'none' for a point outside every state of the parent", () => {
+    expect(stateIdForPoint(AUSTRALIA, -30, -40)).toBe(NONE);
+    expect(stateIdForPoint(AUSTRALIA, 48.85, 2.35)).toBe(NONE);
+  });
+
+  it("returns 'none' for a country without states", () => {
+    const france = regionIdForPoint(48.85, 2.35);
+    expect(france).not.toBe(NONE);
+    expect(stateIdForPoint(france, 48.85, 2.35)).toBe(NONE);
+  });
+
+  it("returns 'none' for the 'none' region", () => {
+    expect(stateIdForPoint(NONE, -33.8, 151.2)).toBe(NONE);
   });
 });

@@ -1,0 +1,32 @@
+{
+  "source": "Natural Earth Admin 1 States/Provinces, 1:50 million",
+  "version": "5.1.1",
+  "revision": "9380cca83db5f9aef52d5e762765100745f84b27",
+  "url": "https://www.naturalearthdata.com/downloads/50m-cultural-vectors/50m-admin-1-states-provinces/",
+  "license": "Public domain",
+  "licenseURL": "https://www.naturalearthdata.com/about/terms-of-use/",
+  "tool": "mapshaper@0.7.101",
+  "simplification": "spherical weighted Visvalingam; exploded parts with keep-shapes; shared topology",
+  "precisionDegrees": 1e-05,
+  "parents": {
+    "Australia": "1159320355"
+  },
+  "levels": {
+    "medium": {
+      "intervalMeters": 3000,
+      "states": 9,
+      "polygonParts": 48,
+      "vertices": 1603,
+      "bytes": 36674,
+      "sha256": "44fecb674d6f6ef8257f0c840199988aeeebd491320849657314a47949eb4f22"
+    },
+    "coarse": {
+      "intervalMeters": 15000,
+      "states": 9,
+      "polygonParts": 48,
+      "vertices": 533,
+      "bytes": 13362,
+      "sha256": "48d496605c4eb83f9f3036f7f336f45185db7082c8ca2f5c217ffb2894bf97af"
+    }
+  }
+}

@@ -60,8 +60,11 @@ struct RegionSelectionTests {
         let landAgain = await provider.nextRequest()
         await complete(landAgain, with: selection(id: "land"), observing: model)
         move(model, longitude: 1, width: 100_000)
-        #expect(model.selectedRegion == nil)
-        #expect(!model.isLoadingRegions)
+        let zoomed = await provider.nextRequest()
+        #expect(zoomed.level == .state)
+        await complete(zoomed, with: selection(id: "state", level: .state), observing: model)
+        #expect(model.selectedRegion?.boundary.id == "state")
+        #expect(model.selectedRegion?.level == .state)
     }
 
     @Test func cancellingBeforeWorkerStartsDoesNotConsumeNextCamera() async throws {

@@ -3,11 +3,14 @@ import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
-vi.mock("@/lib/regions/country-regions", () => ({ regionIdForPoint: vi.fn(() => BigInt(42)) }));
+vi.mock("@/lib/regions/country-regions", () => ({
+  regionIdForPoint: vi.fn(() => BigInt(42)),
+  stateIdForPoint: vi.fn(() => BigInt(0)),
+}));
 
 import { db } from "@/lib/db";
-import { hexRegion, hexVisit } from "@/db/schema";
-import { regionIdForPoint } from "@/lib/regions/country-regions";
+import { hexRegion, hexVisit, regionType } from "@/db/schema";
+import { regionIdForPoint, stateIdForPoint } from "@/lib/regions/country-regions";
 import { ingestVisits } from "./ingest-visits";
 import { parseVisitBatch } from "./visit-batch";
 
@@ -19,12 +22,13 @@ const dialect = new PgDialect();
 const query = (value: SQL) => dialect.sqlToQuery(value);
 
 function harness(previous = "0", current = "0.5", latest = timestamp,
-  uploaded: { id: string; cell: bigint; count: number }[] = [], knownRegions: bigint[] = []) {
+  uploaded: { id: string; cell: bigint; count: number }[] = [],
+  knownRegions: { cell: bigint; region: bigint; regionType: number }[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
   const dayRows = previous === "0" ? [] : [{ userId: "u1", cell: cellId, day: "2026-11-20", score: previous }];
   const select = vi.fn()
     .mockReturnValueOnce({ from: () => ({ where: () => ({ for: lock }) }) })
-    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(knownRegions.map((c) => ({ cell: c }))) }) })
+    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(knownRegions) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(dayRows) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(uploaded) }) });
   const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell: cellId, day: "2026-11-20", score: current }]);
@@ -134,10 +138,34 @@ describe("visit ingestion SQL contract", () => {
   });
 
   it("skips region lookup for cells already classified", async () => {
-    const mock = harness("0", "0.5", timestamp, [], [cellId]);
+    const mock = harness("0", "0.5", timestamp, [], [
+      { cell: cellId, region: BigInt(42), regionType: regionType.country },
+      { cell: cellId, region: BigInt(7), regionType: regionType.state },
+    ]);
     await ingestVisits("u1", batch());
     expect(regionIdForPoint).not.toHaveBeenCalled();
+    expect(stateIdForPoint).not.toHaveBeenCalled();
     expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexRegion);
+  });
+
+  it("writes a state row alongside the country row when a state matches", async () => {
+    vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
+    const mock = harness();
+    await ingestVisits("u1", batch());
+    expect(stateIdForPoint).toHaveBeenCalledWith(BigInt(42), expect.any(Number), expect.any(Number));
+    expect(mock.regionConflict).toHaveBeenCalledTimes(1);
+    expect(mock.insert).toHaveBeenCalledWith(hexRegion);
+  });
+
+  it("backfills a missing state row for a cell with only a country row", async () => {
+    vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
+    const mock = harness("0", "0.5", timestamp, [], [
+      { cell: cellId, region: BigInt(42), regionType: regionType.country },
+    ]);
+    await ingestVisits("u1", batch());
+    expect(regionIdForPoint).not.toHaveBeenCalled();
+    expect(stateIdForPoint).toHaveBeenCalledWith(BigInt(42), expect.any(Number), expect.any(Number));
+    expect(mock.regionConflict).toHaveBeenCalledTimes(1);
   });
 
   it("propagates transaction failures without acknowledging", async () => {

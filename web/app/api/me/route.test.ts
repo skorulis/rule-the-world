@@ -26,9 +26,10 @@ describe("GET /api/me", () => {
 
   it("preserves user data and returns overall and regional counts", async () => {
     vi.mocked(db.execute).mockResolvedValueOnce([
-      { region: null, overall: 1, visited: "20", owned: "8" },
-      { region: "1234", overall: 0, visited: "10", owned: "5" },
-      { region: "2345", overall: 0, visited: "4", owned: "0" },
+      { region: "1234", kind: 1, overall: 0, visited: "10", owned: "5" },
+      { region: "2345", kind: 1, overall: 0, visited: "4", owned: "0" },
+      { region: "3456", kind: 2, overall: 0, visited: "6", owned: "2" },
+      { region: null, kind: null, overall: 1, visited: "20", owned: "8" },
     ] as never);
     const response = await GET(request());
     expect(response.status).toBe(200);
@@ -36,7 +37,11 @@ describe("GET /api/me", () => {
     expect(await response.json()).toEqual({
       user: { ...user, createdAt: user.createdAt.toISOString() },
       visited: 20, owned: 8,
-      regions: [{ id: 1234, visited: 10, owned: 5 }, { id: 2345, visited: 4, owned: 0 }],
+      regions: [
+        { id: 1234, kind: "country", visited: 10, owned: 5 },
+        { id: 2345, kind: "country", visited: 4, owned: 0 },
+        { id: 3456, kind: "state", visited: 6, owned: 2 },
+      ],
     });
   });
 
@@ -47,8 +52,9 @@ describe("GET /api/me", () => {
 
   it("drops invalid and unsafe region IDs without losing overall counts", async () => {
     vi.mocked(db.execute).mockResolvedValueOnce([
-      { region: null, overall: 1, visited: "3", owned: "1" },
-      ...[null, "0", "-1", "9007199254740993"].map((region) => ({ region, overall: 0, visited: "1", owned: "0" })),
+      { region: null, kind: null, overall: 1, visited: "3", owned: "1" },
+      ...[null, "0", "-1", "9007199254740993"].map((region) => ({ region, kind: 1, overall: 0, visited: "1", owned: "0" })),
+      { region: "42", kind: 9, overall: 0, visited: "2", owned: "1" },
     ] as never);
     expect(await (await GET(request())).json()).toMatchObject({ visited: 3, owned: 1, regions: [] });
   });
@@ -65,9 +71,9 @@ describe("GET /api/me", () => {
     expect(query.sql).toContain('rival.cell = "hex_visit"."cell" and rival.user_id <>');
     expect(query.sql).toContain('left join "hex_region"');
     expect(query.sql).toContain('count(*) filter (where owned)');
-    expect(query.sql).toContain('group by grouping sets ((), (region))');
-    expect(query.sql).toContain('having grouping(region) = 1 or region > 0');
-    expect(query.sql).toContain('order by user_cells.region nulls first');
+    expect(query.sql).toContain('"hex_region"."region" > 0');
+    expect(query.sql).toContain('union all');
+    expect(query.sql).toContain('from user_cells');
   });
 
   it("sanitizes database failures", async () => {

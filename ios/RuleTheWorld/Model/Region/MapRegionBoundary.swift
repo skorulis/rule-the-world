@@ -77,7 +77,16 @@ nonisolated struct MapRegionBoundary: Sendable, Identifiable {
     let id: String
     let name: String
     let kind: RegionType
+    let parent: String?
     let polygons: [Polygon]
+
+    init(id: String, name: String, kind: RegionType, parent: String? = nil, polygons: [Polygon]) {
+        self.id = id
+        self.name = name
+        self.kind = kind
+        self.parent = parent
+        self.polygons = polygons
+    }
 
     func contains(latitude: Double, longitude: Double) -> Bool {
         guard latitude.isFinite, longitude.isFinite, (-90...90).contains(latitude) else { return false }
