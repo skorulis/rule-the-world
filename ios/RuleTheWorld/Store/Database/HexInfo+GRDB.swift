@@ -8,7 +8,7 @@ extension HexInfo: FetchableRecord, PersistableRecord {
         let cell: HexCell = row["hexId"]
         let data: Data = row["json"]
         self = (try? JSONDecoder().decode(HexInfo.self, from: data))
-            ?? HexInfo(cell: cell, totalVisits: 0, rivalScore: 0, userVisit: nil)
+            ?? HexInfo(cell: cell, totals: nil, userVisit: nil)
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) throws {

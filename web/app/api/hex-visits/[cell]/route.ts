@@ -26,8 +26,12 @@ export async function GET(request: Request, ctx: RouteContext<"/api/hex-visits/[
     ]);
 
     return NextResponse.json({
-      totalVisits: Number(totals?.totalVisits ?? 0),
-      rivalScore: Number(rival?.rivalScore ?? 0),
+      totals: totals?.totalVisits == null
+        ? null
+        : {
+            totalVisits: Number(totals.totalVisits),
+            rivalScore: Number(rival?.rivalScore ?? 0),
+          },
       userVisit: visit
         ? {
             ...visit,

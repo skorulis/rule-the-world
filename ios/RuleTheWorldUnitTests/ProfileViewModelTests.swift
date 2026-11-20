@@ -48,7 +48,7 @@ struct ProfileViewModelTests {
         _ = try await store.recordVisit(cellA)
         let visits = [cellA, cellB].map {
             HexInfo(
-                cell: $0, totalVisits: 1, rivalScore: 0,
+                cell: $0, totals: HexTotals(totalVisits: 1, rivalScore: 0),
                 userVisit: HexVisit(lastVisit: .now, score: 1, lastScore: 1)
             )
         }

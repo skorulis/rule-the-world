@@ -40,8 +40,8 @@ describe("GET /api/hex-visits", () => {
     expect(where).toHaveBeenCalledWith(eq(hexVisit.userId, "u1"));
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({ visits: [
-      { totalVisits: 105, rivalScore: 30.25, userVisit: { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", total: 42, score: 12.5, lastScore: 0.5 } },
-      { totalVisits: 3, rivalScore: 0, userVisit: { cell: "8a283082876ffff", lastVisit: "2026-11-19T10:00:00.000Z", total: 3, score: 2, lastScore: 1 } },
+      { totals: { totalVisits: 105, rivalScore: 30.25 }, userVisit: { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", total: 42, score: 12.5, lastScore: 0.5 } },
+      { totals: { totalVisits: 3, rivalScore: 0 }, userVisit: { cell: "8a283082876ffff", lastVisit: "2026-11-19T10:00:00.000Z", total: 3, score: 2, lastScore: 1 } },
     ] });
   });
 

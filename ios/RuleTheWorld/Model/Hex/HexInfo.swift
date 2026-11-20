@@ -4,25 +4,22 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
     nonisolated static let cellUserInfoKey = CodingUserInfoKey(rawValue: "hexCell")!
 
     var cell: HexCell
-    var totalVisits: Int
-    var rivalScore: Double
+    var totals: HexTotals?
     var userVisit: HexVisit?
 
-    init(cell: HexCell, totalVisits: Int, rivalScore: Double, userVisit: HexVisit?) {
+    init(cell: HexCell, totals: HexTotals?, userVisit: HexVisit?) {
         self.cell = cell
-        self.totalVisits = totalVisits
-        self.rivalScore = rivalScore
+        self.totals = totals
         self.userVisit = userVisit
     }
 
     private enum CodingKeys: String, CodingKey {
-        case cell, totalVisits, rivalScore, userVisit
+        case cell, totals, userVisit
     }
 
     nonisolated init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        totalVisits = try container.decode(Int.self, forKey: .totalVisits)
-        rivalScore = try container.decode(Double.self, forKey: .rivalScore)
+        totals = try container.decodeIfPresent(HexTotals.self, forKey: .totals)
         userVisit = try container.decodeIfPresent(HexVisit.self, forKey: .userVisit)
         if let rawValue = try container.decodeIfPresent(String.self, forKey: .cell) {
             cell = try Self.parseCell(rawValue, forKey: .cell, in: container)
@@ -47,8 +44,7 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
     nonisolated func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(cell.description, forKey: .cell)
-        try container.encode(totalVisits, forKey: .totalVisits)
-        try container.encode(rivalScore, forKey: .rivalScore)
+        try container.encodeIfPresent(totals, forKey: .totals)
         try container.encodeIfPresent(userVisit, forKey: .userVisit)
     }
 

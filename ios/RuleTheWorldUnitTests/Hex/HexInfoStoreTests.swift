@@ -51,7 +51,7 @@ struct HexInfoStoreTests {
         _ = try await store.recordVisit(cell, at: localDate)
         _ = try await store.recordVisit(localOnly, at: localDate)
         let remote = HexInfo(
-            cell: cell, totalVisits: 50, rivalScore: 3,
+            cell: cell, totals: HexTotals(totalVisits: 50, rivalScore: 3),
             userVisit: HexVisit(
                 lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5, total: 42
             )
@@ -66,8 +66,8 @@ struct HexInfoStoreTests {
         #expect(restoredVisit.total == 42)
         #expect(restoredVisit.lastVisit == localDate)
         #expect(restoredVisit.lastScore == 1)
-        #expect(restored.totalVisits == 50)
-        #expect(restored.rivalScore == 3)
+        #expect(restored.totals?.totalVisits == 50)
+        #expect(restored.totals?.rivalScore == 3)
         #expect(try await store.info(for: localOnly) != nil)
     }
 
@@ -77,13 +77,13 @@ struct HexInfoStoreTests {
         let visit = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
 
         let saved = try await store.save(
-            HexInfo(cell: cell, totalVisits: 7, rivalScore: 9, userVisit: nil)
+            HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 9), userVisit: nil)
         )
 
         #expect(saved.userVisit == visit)
-        #expect(saved.totalVisits == 7)
-        #expect(saved.rivalScore == 9)
-        #expect(try await store.info(for: cell)?.rivalScore == 9)
+        #expect(saved.totals?.totalVisits == 7)
+        #expect(saved.totals?.rivalScore == 9)
+        #expect(try await store.info(for: cell)?.totals?.rivalScore == 9)
     }
 
     @MainActor
@@ -102,10 +102,28 @@ struct HexInfoStoreTests {
     }
 
     @MainActor
-    @Test func snapshotMarksLowScoreCellAsPartialVisit() async throws {
+    @Test func snapshotMarksCellWithoutTotalsAsVisited() async throws {
         let store = try makeStore()
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         _ = try await store.recordVisit(cell, score: 0.5)
-        #expect(store.snapshot.states[cell] == .partialVisit)
+        #expect(store.snapshot.states[cell] == .visited)
+    }
+
+    @MainActor
+    @Test func snapshotMarksCellAsOwnedOnlyWhenTotalsAreAvailable() async throws {
+        let store = try makeStore()
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        _ = try await store.recordVisit(cell)
+        #expect(store.snapshot.states[cell] == .visited)
+
+        _ = try await store.save(
+            HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 0), userVisit: nil)
+        )
+        #expect(store.snapshot.states[cell] == .owned)
+
+        _ = try await store.save(
+            HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 99), userVisit: nil)
+        )
+        #expect(store.snapshot.states[cell] == .visited)
     }
 }

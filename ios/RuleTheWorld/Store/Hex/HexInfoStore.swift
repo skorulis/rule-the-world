@@ -20,11 +20,11 @@ final class HexInfoStore {
     func recordVisit(_ cell: HexCell, score: Double = 1, at date: Date = .now) async throws -> HexVisit {
         let visit = try await database.writer.write { db in
             var info = try HexInfo.fetchOne(db, key: cell)
-                ?? HexInfo(cell: cell, totalVisits: 0, rivalScore: 0, userVisit: nil)
+                ?? HexInfo(cell: cell, totals: nil, userVisit: nil)
             let visit = (info.userVisit ?? HexVisit(lastVisit: .distantPast, score: 0, lastScore: 0))
                 .recordingVisit(score: score, at: date)
             info.userVisit = visit
-            info.totalVisits += 1
+            info.totals?.totalVisits += 1
             try info.save(db)
             return visit
         }
@@ -69,7 +69,9 @@ final class HexInfoStore {
             }
             snapshot = HexOwnershipSnapshot(
                 states: Dictionary(uniqueKeysWithValues: infos.compactMap { info in
-                    info.userVisit.map { (info.cell, HexState.forScore($0.score, rivalScore: info.rivalScore)) }
+                    info.userVisit.map {
+                        (info.cell, HexState.forScore($0.score, rivalScore: info.totals?.rivalScore))
+                    }
                 })
             )
         } catch {
@@ -80,6 +82,7 @@ final class HexInfoStore {
     private nonisolated func merged(remote: HexInfo, local: HexInfo?) -> HexInfo {
         var merged = remote
         guard let local else { return merged }
+        merged.totals = remote.totals ?? local.totals
         switch (remote.userVisit, local.userVisit) {
         case (nil, let localVisit?):
             merged.userVisit = localVisit

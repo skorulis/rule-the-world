@@ -7,7 +7,8 @@ enum HexState: String, Codable, CaseIterable, Comparable {
     case owned
     case contested
 
-    nonisolated static func forScore(_ score: Double, rivalScore: Double) -> HexState {
+    nonisolated static func forScore(_ score: Double, rivalScore: Double?) -> HexState {
+        guard let rivalScore else { return .visited }
         if score > rivalScore { return .owned }
         if rivalScore > score { return .visited }
         return .contested

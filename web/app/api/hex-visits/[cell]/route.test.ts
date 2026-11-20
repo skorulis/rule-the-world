@@ -50,8 +50,7 @@ describe("GET /api/hex-visits/[cell]", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({
-      totalVisits: 105,
-      rivalScore: 30.25,
+      totals: { totalVisits: 105, rivalScore: 30.25 },
       userVisit: {
         cell,
         lastVisit: "2026-11-20T10:00:00.000Z",
@@ -81,21 +80,19 @@ describe("GET /api/hex-visits/[cell]", () => {
       .mockResolvedValueOnce([{ rivalScore: "9" }])
       .mockResolvedValueOnce([]);
     expect(await (await GET(request(), ctx)).json()).toEqual({
-      totalVisits: 7,
-      rivalScore: 9,
+      totals: { totalVisits: 7, rivalScore: 9 },
       userVisit: null,
     });
   });
 
-  it("returns zeroed totals for an unseen cell", async () => {
+  it("returns null totals for an unseen cell", async () => {
     where.mockReset();
     where
       .mockResolvedValueOnce([{ totalVisits: null }])
       .mockResolvedValueOnce([{ rivalScore: null }])
       .mockResolvedValueOnce([]);
     expect(await (await GET(request(), ctx)).json()).toEqual({
-      totalVisits: 0,
-      rivalScore: 0,
+      totals: null,
       userVisit: null,
     });
   });

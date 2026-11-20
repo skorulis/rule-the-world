@@ -30,7 +30,7 @@ struct HexTotalsServiceTests {
             box.request = request
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             let body = """
-                {"totalVisits":105,"rivalScore":30.25,"userVisit":{
+                {"totals":{"totalVisits":105,"rivalScore":30.25},"userVisit":{
                     "cell":"8a2830828007fff","lastVisit":"2026-11-20T10:00:00.000Z",
                     "total":42,"score":12.5,"lastScore":0.5}}
                 """
@@ -41,8 +41,8 @@ struct HexTotalsServiceTests {
         #expect(request.url?.path == "/api/hex-visits/8a2830828007fff")
         #expect(request.httpMethod == "GET")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
-        #expect(totals.totalVisits == 105)
-        #expect(totals.rivalScore == 30.25)
+        #expect(totals.totals?.totalVisits == 105)
+        #expect(totals.totals?.rivalScore == 30.25)
         #expect(totals.cell == cell)
         #expect(totals.userVisit == HexVisit(
             lastVisit: Date(timeIntervalSince1970: 1_795_168_800),
@@ -51,23 +51,29 @@ struct HexTotalsServiceTests {
     }
 
     @Test func decodesMissingUserVisit() async throws {
-        let body = "{\"totalVisits\":7,\"rivalScore\":9,\"userVisit\":null}"
+        let body = "{\"totals\":{\"totalVisits\":7,\"rivalScore\":9},\"userVisit\":null}"
         let totals = try await service(body: body).totals(for: cell)
-        #expect(totals == HexInfo(cell: cell, totalVisits: 7, rivalScore: 9, userVisit: nil))
+        #expect(totals == HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 9), userVisit: nil))
+    }
+
+    @Test func decodesMissingTotals() async throws {
+        let body = "{\"totals\":null,\"userVisit\":null}"
+        let totals = try await service(body: body).totals(for: cell)
+        #expect(totals == HexInfo(cell: cell, totals: nil, userVisit: nil))
     }
 
     @Test func rejectsFailedRequestsAndMalformedPayloads() async {
         for service in [
             service(status: 401, body: "{}"),
-            service(status: 500, body: "{\"totalVisits\":1,\"rivalScore\":1,\"userVisit\":null}"),
-            service(body: "{}"),
-            service(body: "{\"totalVisits\":-1,\"rivalScore\":0,\"userVisit\":null}"),
-            service(body: "{\"totalVisits\":1,\"rivalScore\":-2,\"userVisit\":null}"),
+            service(status: 500, body: "{\"totals\":{\"totalVisits\":1,\"rivalScore\":1},\"userVisit\":null}"),
+            service(body: "not json"),
+            service(body: "{\"totals\":{\"totalVisits\":-1,\"rivalScore\":0},\"userVisit\":null}"),
+            service(body: "{\"totals\":{\"totalVisits\":1,\"rivalScore\":-2},\"userVisit\":null}"),
             service(body: """
-                {"totalVisits":1,"rivalScore":0,"userVisit":{
+                {"totals":{"totalVisits":1,"rivalScore":0},"userVisit":{
                     "cell":"not-a-cell","lastVisit":"2026-11-20T10:00:00.000Z",
                     "total":1,"score":1,"lastScore":0.5}}
-                """)
+                """),
         ] {
             await #expect(throws: (any Error).self) {
                 _ = try await service.totals(for: cell)

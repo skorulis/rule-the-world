@@ -77,7 +77,7 @@ struct AppDatabaseTests {
         )
         try database.writer.write { db in
             let info = HexInfo(
-                cell: cell, totalVisits: 12, rivalScore: 3.5,
+                cell: cell, totals: HexTotals(totalVisits: 12, rivalScore: 3.5),
                 userVisit: HexVisit(lastVisit: .now, score: 1, lastScore: 1, total: 7)
             )
             try info.save(db)
@@ -86,8 +86,8 @@ struct AppDatabaseTests {
             try HexInfo.fetchOne(db, key: cell)
         }
         #expect(fetched?.cell == cell)
-        #expect(fetched?.totalVisits == 12)
-        #expect(fetched?.rivalScore == 3.5)
+        #expect(fetched?.totals?.totalVisits == 12)
+        #expect(fetched?.totals?.rivalScore == 3.5)
         #expect(fetched?.userVisit?.total == 7)
     }
 }

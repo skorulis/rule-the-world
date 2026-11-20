@@ -25,8 +25,10 @@ export async function GET(request: Request) {
       .orderBy(hexVisit.cell);
     return NextResponse.json({
       visits: rows.map((visit) => ({
-        totalVisits: Number(visit.totalVisits ?? 0),
-        rivalScore: Number(visit.rivalScore ?? 0),
+        totals: {
+          totalVisits: Number(visit.totalVisits ?? 0),
+          rivalScore: Number(visit.rivalScore ?? 0),
+        },
         userVisit: {
           cell: visit.cell,
           total: visit.total,

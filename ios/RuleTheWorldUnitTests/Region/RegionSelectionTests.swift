@@ -118,7 +118,7 @@ struct RegionSelectionTests {
 
 private struct EmptyTotalsProvider: HexTotalsProviding {
     func totals(for cell: HexCell) async throws -> HexInfo {
-        HexInfo(cell: cell, totalVisits: 0, rivalScore: 0, userVisit: nil)
+        HexInfo(cell: cell, totals: HexTotals(totalVisits: 0, rivalScore: 0), userVisit: nil)
     }
 }
 

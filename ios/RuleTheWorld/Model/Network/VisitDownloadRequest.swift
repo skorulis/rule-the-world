@@ -15,11 +15,13 @@ struct VisitDownloadRequest: HTTPRequest {
             throw URLError(.badServerResponse)
         }
         let payload = try JSONDecoder().decode(VisitDownloadResponse.self, from: data)
-        return try payload.visits.map { totals in
-            guard totals.totalVisits >= 0, totals.rivalScore.isFinite, totals.rivalScore >= 0 else {
-                throw URLError(.cannotParseResponse)
+        return try payload.visits.map { info in
+            if let totals = info.totals {
+                guard totals.totalVisits >= 0, totals.rivalScore.isFinite, totals.rivalScore >= 0 else {
+                    throw URLError(.cannotParseResponse)
+                }
             }
-            return totals
+            return info
         }
     }
 }

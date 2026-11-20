@@ -17,6 +17,8 @@ struct HexOwnershipSnapshotTests {
         #expect(HexState.forScore(1, rivalScore: 3.5) == .visited)
         #expect(HexState.forScore(2, rivalScore: 2) == .contested)
         #expect(HexState.forScore(0, rivalScore: 0) == .contested)
+        #expect(HexState.forScore(3.5, rivalScore: nil) == .visited)
+        #expect(HexState.forScore(0, rivalScore: nil) == .visited)
     }
 
     @Test func baseResolutionAggregationReturnsStates() {
