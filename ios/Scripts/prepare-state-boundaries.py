@@ -4,12 +4,13 @@ import tempfile
 from pathlib import Path
 
 from region_pipeline import (
-    LEVELS, OUTPUT, REVISION, coverage_names, download, load_regions, regroup,
+    OUTPUT, REVISION, coverage_names, download, load_regions, regroup,
     simplify, validate_file, write_level,
 )
 
-SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/50m_cultural/ne_50m_admin_1_states_provinces"
+SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/10m_cultural/ne_10m_admin_1_states_provinces"
 PARENT = {"Australia": "1159320355"}
+LEVELS = {"medium": 500, "coarse": 3000}
 
 
 def each_expression():
@@ -20,10 +21,10 @@ def each_expression():
 def prepare():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     metadata = {
-        "source": "Natural Earth Admin 1 States/Provinces, 1:50 million",
+        "source": "Natural Earth Admin 1 States/Provinces, 1:10 million",
         "version": "5.1.1",
         "revision": REVISION,
-        "url": "https://www.naturalearthdata.com/downloads/50m-cultural-vectors/50m-admin-1-states-provinces/",
+        "url": "https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/",
         "license": "Public domain",
         "licenseURL": "https://www.naturalearthdata.com/about/terms-of-use/",
         "tool": "mapshaper@0.7.101",

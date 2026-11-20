@@ -36,7 +36,7 @@ struct RegionNameCatalogTests {
             ?? bundle.url(forResource: "states-medium", withExtension: "geojson", subdirectory: "Regions"))
         let collection = try JSONDecoder().decode(Collection.self, from: Data(contentsOf: url))
         let catalog = RegionNameCatalog(bundle: bundle)
-        #expect(collection.features.count == 9)
+        #expect(collection.features.count == 11)
         for feature in collection.features {
             let id = try #require(Int64(feature.properties.id))
             #expect(catalog.name(for: id) == feature.properties.name)
