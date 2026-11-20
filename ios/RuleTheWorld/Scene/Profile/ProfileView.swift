@@ -7,6 +7,9 @@ struct ProfileView: View {
         NavigationStack {
             List {
                 Section {
+                    LabeledContent("Hexes visited", value: model.visitedHexCount.formatted())
+                }
+                Section {
                     Button("Log out", role: .destructive) {
                         model.signOut()
                     }

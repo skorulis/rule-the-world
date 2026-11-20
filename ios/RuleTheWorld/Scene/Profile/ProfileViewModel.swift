@@ -8,10 +8,16 @@ import Observation
 @MainActor
 final class ProfileViewModel {
     private let authManager: AuthManager
+    private let store: HexVisitStore
 
     @Resolvable<Resolver>
-    init(authManager: AuthManager) {
+    init(authManager: AuthManager, store: HexVisitStore) {
         self.authManager = authManager
+        self.store = store
+    }
+
+    var visitedHexCount: Int {
+        store.snapshot.states.count
     }
 
     func signOut() {
