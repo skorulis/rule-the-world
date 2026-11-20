@@ -11,11 +11,14 @@ struct ProfileViewModelTests {
     private func makeModel() throws -> (ProfileViewModel, HexVisitStore) {
         let database = try AppDatabase.inMemory()
         let store = HexVisitStore(database: database)
+        let tokenStore = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
+        let session = FakeURLSession { _ in
+            throw URLError(.unsupportedURL)
+        }
         let manager = AuthManager(
-            service: AuthService(urlSession: FakeURLSession { _ in
-                throw URLError(.unsupportedURL)
-            }),
-            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
+            service: AuthService(urlSession: session),
+            authenticatedService: AuthenticatedService(tokenStore: tokenStore, urlSession: session),
+            tokenStore: tokenStore,
             database: database,
             visitStore: store
         )

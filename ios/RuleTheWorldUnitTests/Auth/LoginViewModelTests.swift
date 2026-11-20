@@ -6,7 +6,7 @@ import Testing
 @MainActor
 struct LoginViewModelTests {
     private func makeModel(status: Int = 200) throws -> LoginViewModel {
-        let service = AuthService(urlSession: FakeURLSession { request in
+        let session = FakeURLSession { request in
             let response = HTTPURLResponse(
                 url: request.url!,
                 statusCode: status,
@@ -14,10 +14,12 @@ struct LoginViewModelTests {
                 headerFields: ["set-auth-token": "token"]
             )!
             return (Data("{\"visits\":[]}".utf8), response)
-        })
+        }
+        let tokenStore = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         return LoginViewModel(authManager: AuthManager(
-            service: service,
-            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
+            service: AuthService(urlSession: session),
+            authenticatedService: AuthenticatedService(tokenStore: tokenStore, urlSession: session),
+            tokenStore: tokenStore,
             database: try AppDatabase.inMemory()
         ))
     }

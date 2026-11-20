@@ -17,6 +17,16 @@ private func makeService(
     )
 }
 
+@MainActor
+private func makeAuthenticatedService(
+    token: String? = "session-token",
+    handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)
+) -> AuthenticatedService {
+    let store = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
+    if let token { store.save(token) }
+    return AuthenticatedService(tokenStore: store, urlSession: FakeURLSession(handler: handler))
+}
+
 private func jsonResponse(
     url: URL,
     status: Int,
@@ -100,7 +110,7 @@ struct AuthServiceTests {
 
     @Test func fetchVisitsUsesBearerTokenAndDecodesWireFormat() async throws {
         let box = RequestBox()
-        let service = await makeService { request in
+        let service = await makeAuthenticatedService { request in
             box.request = request
             return jsonResponse(url: request.url!, status: 200, body: """
                 {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
@@ -108,7 +118,7 @@ struct AuthServiceTests {
                 """)
         }
 
-        let visits = try await service.fetchVisits(token: "session-token")
+        let visits = try await service.fetchVisits()
 
         #expect(box.request?.url?.path == "/api/hex-visits")
         #expect(box.request?.httpMethod == "GET")
@@ -131,13 +141,26 @@ struct AuthServiceTests {
                 "score":1,"lastScore":1}]}
                 """)
         ] {
-            let service = await makeService { request in
+            let service = await makeAuthenticatedService { request in
                 jsonResponse(url: request.url!, status: status, body: body)
             }
             await #expect(throws: (any Error).self) {
-                _ = try await service.fetchVisits(token: "token")
+                _ = try await service.fetchVisits()
             }
         }
+    }
+
+    @Test func fetchVisitsRequiresStoredToken() async {
+        let box = RequestBox()
+        let service = await makeAuthenticatedService(token: nil) { request in
+            box.request = request
+            return jsonResponse(url: request.url!, status: 200, body: "{\"visits\":[]}")
+        }
+
+        await #expect(throws: URLError.self) {
+            _ = try await service.fetchVisits()
+        }
+        #expect(box.request == nil)
     }
 
     @Test func invalidCredentialsThrows() async {

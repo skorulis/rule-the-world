@@ -13,6 +13,10 @@ final class AuthenticatedService: HTTPService {
         super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
     }
 
+    func fetchVisits() async throws -> [HexVisit] {
+        try await execute(request: VisitDownloadRequest())
+    }
+
     override func modify(request: inout URLRequest) throws {
         try super.modify(request: &request)
         guard let token = tokenStore.token else {

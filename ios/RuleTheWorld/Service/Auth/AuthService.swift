@@ -44,10 +44,6 @@ final class AuthService: HTTPService {
         ])
     }
 
-    func fetchVisits(token: String) async throws -> [HexVisit] {
-        try await execute(request: VisitDownloadRequest(token: token))
-    }
-
     private func authenticate(endpoint: String, body: [String: String]) async throws -> String {
         do {
             return try await execute(request: TokenRequest(endpoint: endpoint, body: body, origin: baseURL))

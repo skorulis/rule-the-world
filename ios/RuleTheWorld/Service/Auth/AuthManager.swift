@@ -5,16 +5,19 @@ import Observation
 @MainActor
 final class AuthManager {
     private let service: AuthService
+    private let authenticatedService: AuthenticatedService
     private let tokenStore: AuthTokenStore
     private let database: AppDatabase
     private let visitStore: HexVisitStore
     private(set) var isSignedIn: Bool
 
     init(
-        service: AuthService, tokenStore: AuthTokenStore, database: AppDatabase,
+        service: AuthService, authenticatedService: AuthenticatedService,
+        tokenStore: AuthTokenStore, database: AppDatabase,
         visitStore: HexVisitStore? = nil
     ) {
         self.service = service
+        self.authenticatedService = authenticatedService
         self.tokenStore = tokenStore
         self.database = database
         self.visitStore = visitStore ?? HexVisitStore(database: database)
@@ -32,11 +35,21 @@ final class AuthManager {
     }
 
     private func finishLogin(token: String) async throws {
-        let visits = try await service.fetchVisits(token: token)
-        try Task.checkCancellation()
-        try await visitStore.restore(visits)
+        let previousToken = tokenStore.token
         tokenStore.save(token)
-        isSignedIn = true
+        do {
+            let visits = try await authenticatedService.fetchVisits()
+            try Task.checkCancellation()
+            try await visitStore.restore(visits)
+            isSignedIn = true
+        } catch {
+            if let previousToken {
+                tokenStore.save(previousToken)
+            } else {
+                tokenStore.clear()
+            }
+            throw error
+        }
     }
 
     func signOut() {

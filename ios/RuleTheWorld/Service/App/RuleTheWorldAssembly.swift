@@ -73,6 +73,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(AuthManager.self) {
             AuthManager(
                 service: $0.authService(),
+                authenticatedService: $0.authenticatedService(),
                 tokenStore: $0.authTokenStore(),
                 database: $0.appDatabase(),
                 visitStore: $0.hexVisitStore()
