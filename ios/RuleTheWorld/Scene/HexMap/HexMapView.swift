@@ -22,11 +22,7 @@ struct HexMapView: View {
         .ignoresSafeArea()
         .onDisappear { model.cancelRegionSelection() }
         .sheet(item: $model.selectedCell) { cell in
-            HexCellDetailView(
-                cell: cell,
-                visit: model.selectedCellVisit,
-                visitCount: model.selectedCellVisitCount
-            )
+            HexCellDetailView(model: model.makeCellDetailViewModel(for: cell))
         }
     }
 }

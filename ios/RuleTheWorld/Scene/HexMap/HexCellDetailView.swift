@@ -1,16 +1,14 @@
 import SwiftUI
 
 struct HexCellDetailView: View {
-    let cell: HexCell
-    let visit: HexVisit?
-    let visitCount: Int
+    let model: HexCellDetailViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Hexagon")
                 .font(.headline)
-            LabeledContent("Visits", value: "\(visitCount)")
-            if let visit {
+            LabeledContent("Visits", value: "\(model.visitCount)")
+            if let visit = model.visit {
                 LabeledContent("Score", value: "\(Int(visit.score))")
                 LabeledContent(
                     "Last visit",
@@ -25,14 +23,15 @@ struct HexCellDetailView: View {
 }
 
 #Preview {
-    HexCellDetailView(
-        cell: HexCell(rawValue: 0x8928308280FFFFF),
-        visit: HexVisit(
-            cell: HexCell(rawValue: 0x8928308280FFFFF),
-            lastVisit: .now,
-            score: 3,
-            lastScore: 1
-        ),
-        visitCount: 7
-    )
+    if let database = try? AppDatabase.inMemory() {
+        HexCellDetailView(
+            model: HexCellDetailViewModel(
+                cell: HexCell(rawValue: 0x8928308280FFFFF),
+                store: HexVisitStore(database: database),
+                logStore: HexVisitLogStore(database: database)
+            )
+        )
+    } else {
+        Text("Preview unavailable")
+    }
 }

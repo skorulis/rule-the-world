@@ -12,8 +12,6 @@ final class HexMapViewModel {
     let initialRegion: MKCoordinateRegion
     var displayedResolution: Int?
     var selectedCell: HexCell?
-    private(set) var selectedCellVisit: HexVisit?
-    private(set) var selectedCellVisitCount = 0
     var showGrid = true
 
     private(set) var selectedRegion: MapRegionSelection?
@@ -124,21 +122,10 @@ final class HexMapViewModel {
 
     func tapped(coordinate: CLLocationCoordinate2D) {
         guard displayedResolution == HexGridService.baseResolution else { return }
-        let cell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
-        selectedCell = cell
-        selectedCellVisit = nil
-        selectedCellVisitCount = 0
-        Task {
-            do {
-                async let visit = store.visit(for: cell)
-                async let count = logStore.visitCount(for: cell)
-                let (visit1, count1) = try await (visit, count)
-                guard selectedCell == cell else { return }
-                selectedCellVisit = visit1
-                selectedCellVisitCount = count1
-            } catch {
-                Logger().error("Hex cell lookup failed: \(error)")
-            }
-        }
+        selectedCell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
+    }
+
+    func makeCellDetailViewModel(for cell: HexCell) -> HexCellDetailViewModel {
+        HexCellDetailViewModel(cell: cell, store: store, logStore: logStore)
     }
 }
