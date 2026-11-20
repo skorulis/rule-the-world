@@ -11,8 +11,9 @@ import SwiftUI
 final class HexMapViewModel {
     let initialRegion: MKCoordinateRegion
     var displayedResolution: Int?
-    var lastTappedCell: HexCell?
-    var lastTappedVisit: HexVisit?
+    var selectedCell: HexCell?
+    private(set) var selectedCellVisit: HexVisit?
+    private(set) var selectedCellVisitCount = 0
     var showGrid = true
 
     private(set) var selectedRegion: MapRegionSelection?
@@ -20,6 +21,7 @@ final class HexMapViewModel {
 
     let grid: HexGridService
     private let store: HexVisitStore
+    private let logStore: HexVisitLogStore
     private let locationService: LocationService
     private let boundaries: any RegionBoundaryProviding
     private var regionLevel: RegionOverlayPolicy.Level?
@@ -39,11 +41,13 @@ final class HexMapViewModel {
     init(
         grid: HexGridService,
         store: HexVisitStore,
+        logStore: HexVisitLogStore,
         locationService: LocationService,
         boundaries: RegionBoundaryProviding
     ) {
         self.grid = grid
         self.store = store
+        self.logStore = logStore
         self.locationService = locationService
         self.boundaries = boundaries
         self.initialRegion = MKCoordinateRegion(
@@ -56,31 +60,8 @@ final class HexMapViewModel {
         store.snapshot
     }
 
-    var showZoomInMessage: Bool {
-        displayedResolution == nil
-    }
-
-    var authorizationStatus: CLAuthorizationStatus {
-        locationService.authorizationStatus
-    }
-
-    var latestSample: LocationSample? {
-        locationService.latestSample
-    }
-
     var userStatus: UserMapStatus? {
         UserMapStatus.make(sample: locationService.latestSample, heading: locationService.heading)
-    }
-
-    var authorizationDescription: String {
-        switch authorizationStatus {
-        case .notDetermined: return "Not determined"
-        case .restricted: return "Restricted"
-        case .denied: return "Denied"
-        case .authorizedWhenInUse: return "While in use"
-        case .authorizedAlways: return "Always"
-        @unknown default: return "Unknown"
-        }
     }
 
     func cameraChanged(zoomScale: MKZoomScale, center: CLLocationCoordinate2D, visibleWidthMeters: Double) {
@@ -141,18 +122,23 @@ final class HexMapViewModel {
         selectionTask = nil
     }
 
-    #if DEBUG
     func tapped(coordinate: CLLocationCoordinate2D) {
         guard displayedResolution == HexGridService.baseResolution else { return }
         let cell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
-        lastTappedCell = cell
+        selectedCell = cell
+        selectedCellVisit = nil
+        selectedCellVisitCount = 0
         Task {
             do {
-                lastTappedVisit = try await store.recordVisit(cell)
+                async let visit = store.visit(for: cell)
+                async let count = logStore.visitCount(for: cell)
+                let (visit1, count1) = try await (visit, count)
+                guard selectedCell == cell else { return }
+                selectedCellVisit = visit1
+                selectedCellVisitCount = count1
             } catch {
-                Logger().error("recordVisit failed: \(error)")
+                Logger().error("Hex cell lookup failed: \(error)")
             }
         }
     }
-    #endif
 }

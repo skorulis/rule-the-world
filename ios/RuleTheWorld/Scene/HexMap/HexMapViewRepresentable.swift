@@ -18,18 +18,14 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         mapView.showsUserLocation = true
         mapView.setRegion(initialRegion, animated: false)
         mapView.addOverlay(HexGridOverlay(), level: .aboveRoads)
-        #if DEBUG
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         mapView.addGestureRecognizer(tap)
-        #endif
         return mapView
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onCameraChange = onCameraChange
-        #if DEBUG
         context.coordinator.onTap = onTap
-        #endif
         context.coordinator.renderer?.update(snapshot: snapshot, showGrid: showGrid)
         context.coordinator.apply(status: userStatus, to: mapView)
         context.coordinator.apply(region: selectedRegion, to: mapView)
@@ -141,13 +137,11 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             mapView.setRegion(region, animated: true)
         }
 
-        #if DEBUG
         @objc func handleTap(_ recognizer: UITapGestureRecognizer) {
             guard let mapView = recognizer.view as? MKMapView else { return }
             let coordinate = mapView.convert(recognizer.location(in: mapView), toCoordinateFrom: mapView)
             onTap?(coordinate)
         }
-        #endif
 
         func apply(status: UserMapStatus?, to mapView: MKMapView) {
             self.status = status

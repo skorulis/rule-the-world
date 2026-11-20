@@ -27,6 +27,16 @@ final class HexVisitLogStore {
         }
     }
 
+    func visitCount(for cell: HexCell) async throws -> Int {
+        try await database.writer.read { db in
+            try Int.fetchOne(
+                db,
+                sql: "SELECT COALESCE(SUM(count), 0) FROM hexVisitLog WHERE hexId = ?",
+                arguments: [cell]
+            ) ?? 0
+        }
+    }
+
     func pending(after id: Int64 = 0, through lastID: Int64 = .max, limit: Int = 500) async throws -> [HexVisitLog] {
         try await database.writer.read { db in
             try HexVisitLog.filter(Column("uploaded") == false)

@@ -7,8 +7,10 @@ import Testing
 @MainActor
 struct RegionSelectionTests {
     private func model(provider: ControlledRegionProvider) throws -> HexMapViewModel {
-        HexMapViewModel(
-            grid: HexGridService(), store: HexVisitStore(database: try AppDatabase.inMemory()),
+        let database = try AppDatabase.inMemory()
+        return HexMapViewModel(
+            grid: HexGridService(), store: HexVisitStore(database: database),
+            logStore: HexVisitLogStore(database: database),
             locationService: LocationService(), boundaries: provider
         )
     }

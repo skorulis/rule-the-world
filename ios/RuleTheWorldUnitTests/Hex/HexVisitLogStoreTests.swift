@@ -148,6 +148,17 @@ struct HexVisitLogStoreTests {
         #expect(third.id != second.id)
     }
 
+    @Test func visitCountSumsCountsForCellOnly() async throws {
+        let store = try makeStore()
+        _ = try await store.record(entry(cell: cellA))
+        _ = try await store.record(entry(cell: cellA))
+        _ = try await store.record(entry(cell: cellB))
+        _ = try await store.record(entry(cell: cellA))
+        #expect(try await store.visitCount(for: cellA) == 3)
+        #expect(try await store.visitCount(for: cellB) == 1)
+        #expect(try await store.visitCount(for: HexCell(rawValue: 1)) == 0)
+    }
+
     @Test func oldAcknowledgementsCannotMarkRowsAfterSignOutErase() async throws {
         let database = try AppDatabase.inMemory()
         let store = HexVisitLogStore(database: database)
