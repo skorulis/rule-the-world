@@ -1,7 +1,7 @@
 import { cellToLatLng } from "h3-js";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
-import { hexRegion, hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
+import { hexRegion, hexVisit, hexVisitDay, hexVisitUpload, noRegion, regionType } from "@/db/schema";
 import { db } from "@/lib/db";
 import { regionIdForPoint } from "@/lib/regions/country-regions";
 import type { VisitBatch } from "./visit-batch";
@@ -21,7 +21,8 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
     if (unknown.size) {
       await tx.insert(hexRegion).values([...unknown].map((cell) => {
         const [latitude, longitude] = cellToLatLng(cell);
-        return { cell, region: regionIdForPoint(latitude, longitude) };
+        const region = regionIdForPoint(latitude, longitude);
+        return { cell, region, regionType: region === noRegion ? regionType.none : regionType.country };
       })).onConflictDoNothing();
     }
     const previous = await tx.select().from(hexVisitDay).where(and(

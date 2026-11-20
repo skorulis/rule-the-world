@@ -1,6 +1,6 @@
 // App-specific tables go here. Auth tables live in auth-schema.ts.
 import { sql } from "drizzle-orm";
-import { check, date, foreignKey, integer, numeric, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { check, date, foreignKey, integer, numeric, pgTable, primaryKey, smallint, text, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const hexVisit = pgTable("hex_visit", {
@@ -19,11 +19,16 @@ export const hexVisit = pgTable("hex_visit", {
 
 export const noRegion = "none";
 
+export const regionType = { none: 0, country: 1, state: 2 } as const;
+export type RegionType = (typeof regionType)[keyof typeof regionType];
+
 export const hexRegion = pgTable("hex_region", {
   cell: text("cell").primaryKey(),
   region: text("region").notNull(),
+  regionType: smallint("region_type").notNull().$type<RegionType>(),
 }, (table) => [
   check("hex_region_region_nonempty", sql`${table.region} <> ''`),
+  check("hex_region_region_type_range", sql`${table.regionType} BETWEEN 0 AND 2`),
 ]);
 
 export const hexVisitUpload = pgTable("hex_visit_upload", {
