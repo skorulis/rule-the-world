@@ -13,6 +13,10 @@ final class AuthenticatedService: HTTPService {
         super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
     }
 
+    func fetchProfile() async throws -> ProfileSummary {
+        try await execute(request: ProfileRequest())
+    }
+
     func fetchVisits() async throws -> [HexInfo] {
         try await execute(request: VisitDownloadRequest())
     }

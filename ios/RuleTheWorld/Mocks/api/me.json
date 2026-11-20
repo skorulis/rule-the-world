@@ -1,0 +1,14 @@
+{
+  "user": {
+    "id": "mock-user-id",
+    "name": "Mock User",
+    "email": "mock@example.com",
+    "createdAt": "2026-01-02T03:04:05.000Z"
+  },
+  "visited": 24,
+  "owned": 12,
+  "regions": [
+    { "id": 1159320355, "visited": 18, "owned": 10 },
+    { "id": 1159320379, "visited": 6, "owned": 2 }
+  ]
+}

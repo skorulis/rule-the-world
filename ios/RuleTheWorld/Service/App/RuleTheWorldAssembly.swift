@@ -34,6 +34,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
 
         container.register(HexGridService.self) { _ in HexGridService() }
             .inObjectScope(.container)
+        container.register(RegionNameCatalog.self) { _ in RegionNameCatalog() }
+            .inObjectScope(.container)
         container.register(RegionBoundaryProviding.self) { _ in RegionBoundaryService() }
             .inObjectScope(.container)
         container.register(LocationService.self) { _ in LocationService() }
