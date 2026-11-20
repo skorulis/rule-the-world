@@ -111,8 +111,9 @@ struct AuthManagerTests {
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         let manager = makeManager(
             service: makeService(visitsBody: """
-                {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
-                "score":12.5,"lastScore":0.5,"total":42}]}
+                {"visits":[{"totalVisits":105,"rivalScore":30.25,"userVisit":{
+                "cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
+                "score":12.5,"lastScore":0.5,"total":42}}]}
                 """),
             tokenStore: makeStore(), database: database, visitStore: visits
         )

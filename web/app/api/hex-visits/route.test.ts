@@ -10,8 +10,10 @@ import { db } from "@/lib/db";
 import { GET } from "./route";
 
 const orderBy = vi.fn();
-const where = vi.fn(() => ({ orderBy }));
-const from = vi.fn(() => ({ where }));
+const groupBy = vi.fn(() => ({ orderBy }));
+const where = vi.fn(() => ({ groupBy }));
+const innerJoin = vi.fn(() => ({ where }));
+const from = vi.fn(() => ({ innerJoin }));
 const request = () => new Request("http://test/api/hex-visits?userId=someone-else");
 
 beforeEach(() => {
@@ -28,18 +30,18 @@ describe("GET /api/hex-visits", () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
-  it("returns every visit for the session user with numeric scores and ISO dates", async () => {
+  it("returns totals and the user visit for every cell visited by the session user", async () => {
     orderBy.mockResolvedValueOnce([
-      { cell: "8a2830828007fff", lastVisit: new Date("2026-11-20T10:00:00Z"), total: 42, score: "12.5", lastScore: "0.5" },
-      { cell: "8a283082876ffff", lastVisit: new Date("2026-11-19T10:00:00Z"), score: "2", lastScore: "1" },
+      { cell: "8a2830828007fff", lastVisit: new Date("2026-11-20T10:00:00Z"), total: 42, score: "12.5", lastScore: "0.5", totalVisits: "105", rivalScore: "30.25" },
+      { cell: "8a283082876ffff", lastVisit: new Date("2026-11-19T10:00:00Z"), total: 3, score: "2", lastScore: "1", totalVisits: "3", rivalScore: null },
     ]);
     const response = await GET(request());
     expect(response.status).toBe(200);
     expect(where).toHaveBeenCalledWith(eq(hexVisit.userId, "u1"));
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({ visits: [
-      { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", total: 42, score: 12.5, lastScore: 0.5 },
-      { cell: "8a283082876ffff", lastVisit: "2026-11-19T10:00:00.000Z", score: 2, lastScore: 1 },
+      { totalVisits: 105, rivalScore: 30.25, userVisit: { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", total: 42, score: 12.5, lastScore: 0.5 } },
+      { totalVisits: 3, rivalScore: 0, userVisit: { cell: "8a283082876ffff", lastVisit: "2026-11-19T10:00:00.000Z", total: 3, score: 2, lastScore: 1 } },
     ] });
   });
 

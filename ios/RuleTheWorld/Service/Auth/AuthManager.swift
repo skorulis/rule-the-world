@@ -40,7 +40,7 @@ final class AuthManager {
         do {
             let visits = try await authenticatedService.fetchVisits()
             try Task.checkCancellation()
-            try await visitStore.restore(visits)
+            try await visitStore.restore(visits.compactMap(\.userVisit))
             isSignedIn = true
         } catch {
             if let previousToken {

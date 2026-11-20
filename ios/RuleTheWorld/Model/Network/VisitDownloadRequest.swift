@@ -2,7 +2,7 @@ import ASKCore
 import Foundation
 
 struct VisitDownloadRequest: HTTPRequest {
-    typealias ResponseType = [HexVisit]
+    typealias ResponseType = [HexTotals]
 
     let endpoint = "api/hex-visits"
     let method = "GET"
@@ -10,10 +10,16 @@ struct VisitDownloadRequest: HTTPRequest {
     let body: Data? = nil
     let headers: [String: String] = [:]
 
-    func decode(data: Data, response: URLResponse) throws -> [HexVisit] {
+    func decode(data: Data, response: URLResponse) throws -> [HexTotals] {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
             throw URLError(.badServerResponse)
         }
-        return try JSONDecoder().decode(VisitDownloadResponse.self, from: data).visits
+        let payload = try JSONDecoder().decode(VisitDownloadResponse.self, from: data)
+        return try payload.visits.map { totals in
+            guard totals.totalVisits >= 0, totals.rivalScore.isFinite, totals.rivalScore >= 0 else {
+                throw URLError(.cannotParseResponse)
+            }
+            return totals
+        }
     }
 }

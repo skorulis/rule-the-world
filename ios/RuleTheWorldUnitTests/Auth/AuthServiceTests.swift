@@ -113,8 +113,9 @@ struct AuthServiceTests {
         let service = await makeAuthenticatedService { request in
             box.request = request
             return jsonResponse(url: request.url!, status: 200, body: """
-                {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
-                "score":12.5,"lastScore":0.5,"total":42}]}
+                {"visits":[{"totalVisits":105,"rivalScore":30.25,"userVisit":{
+                "cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
+                "score":12.5,"lastScore":0.5,"total":42}}]}
                 """)
         }
 
@@ -124,11 +125,13 @@ struct AuthServiceTests {
         #expect(box.request?.httpMethod == "GET")
         #expect(box.request?.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
         #expect(visits.count == 1)
-        #expect(visits.first?.cell == HexCell(rawValue: 0x8A283082876FFFF))
-        #expect(visits.first?.score == 12.5)
-        #expect(visits.first?.total == 42)
-        #expect(visits.first?.lastScore == 0.5)
-        #expect(visits.first?.lastVisit == ISO8601DateFormatter().date(from: "2026-11-20T10:00:00Z"))
+        #expect(visits.first?.totalVisits == 105)
+        #expect(visits.first?.rivalScore == 30.25)
+        #expect(visits.first?.userVisit?.cell == HexCell(rawValue: 0x8A283082876FFFF))
+        #expect(visits.first?.userVisit?.score == 12.5)
+        #expect(visits.first?.userVisit?.total == 42)
+        #expect(visits.first?.userVisit?.lastScore == 0.5)
+        #expect(visits.first?.userVisit?.lastVisit == ISO8601DateFormatter().date(from: "2026-11-20T10:00:00Z"))
     }
 
     @Test func fetchVisitsRejectsFailedOrMalformedResponses() async {
@@ -137,9 +140,12 @@ struct AuthServiceTests {
             (500, "{\"visits\":[]}"),
             (200, "{}"),
             (200, """
-                {"visits":[{"cell":"invalid","lastVisit":"2026-11-20T10:00:00Z",
-                "score":1,"lastScore":1}]}
-                """)
+                {"visits":[{"totalVisits":1,"rivalScore":0,"userVisit":{
+                "cell":"invalid","lastVisit":"2026-11-20T10:00:00Z",
+                "score":1,"lastScore":1,"total":1}}]}
+                """),
+            (200, "{\"visits\":[{\"totalVisits\":-1,\"rivalScore\":0,\"userVisit\":null}]}"),
+            (200, "{\"visits\":[{\"totalVisits\":1,\"rivalScore\":-2,\"userVisit\":null}]}")
         ] {
             let service = await makeAuthenticatedService { request in
                 jsonResponse(url: request.url!, status: status, body: body)

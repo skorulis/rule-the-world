@@ -18,10 +18,10 @@ struct HexTotalsRequest: HTTPRequest {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
             throw URLError(.badServerResponse)
         }
-        let payload = try JSONDecoder().decode(HexTotalsResponse.self, from: data)
+        let payload = try JSONDecoder().decode(HexTotals.self, from: data)
         guard payload.totalVisits >= 0, payload.rivalScore.isFinite, payload.rivalScore >= 0 else {
             throw URLError(.cannotParseResponse)
         }
-        return HexTotals(totalVisits: payload.totalVisits, rivalScore: payload.rivalScore, userVisit: payload.userVisit)
+        return payload
     }
 }
