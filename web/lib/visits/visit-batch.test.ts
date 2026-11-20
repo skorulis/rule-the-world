@@ -12,8 +12,17 @@ describe("visit batches", () => {
       { ...visit, id: "3", score: 0, timestamp: "2026-11-20T23:30:00-02:00" },
     ] });
     expect(result.acceptedIds).toEqual(["1", "2", "3"]);
+    expect(result.counts).toEqual([
+      { id: "1", cell, count: 1 }, { id: "2", cell, count: 1 }, { id: "3", cell, count: 1 },
+    ]);
     expect(result.days).toEqual([{ cell, day: "2026-11-20", score: 1 }, { cell, day: "2026-11-21", score: 0 }]);
     expect(result.cells).toEqual([{ cell, lastVisit: new Date("2026-11-21T01:30:00Z") }]);
+  });
+
+  it("preserves grouped visit counts independently of score", () => {
+    const result = parseVisitBatch({ visits: [{ ...visit, count: 7, score: 0 }] });
+    expect(result.counts).toEqual([{ id: "1", cell, count: 7 }]);
+    expect(result.days[0].score).toBe(0);
   });
 
   it("sorts cells and days independently of upload order", () => {
@@ -32,6 +41,7 @@ describe("visit batches", () => {
   it.each([
     { id: "" }, { id: " " }, { id: "x".repeat(129) }, { id: 1 },
     { cell: Number(BigInt(`0x${cell}`)) }, { cell: cell.toUpperCase() }, { cell: "89283082803ffff" },
+    { count: 0 }, { count: -1 }, { count: 1.5 }, { count: "2" }, { count: 2_147_483_648 },
     { score: -0.1 }, { score: 1.1 }, { score: NaN }, { score: Infinity }, { score: "1" },
     { timestamp: "2026-11-20T10:00:00" }, { timestamp: "2026-02-30T00:00:00Z" },
     { timestamp: "2026-11-20T24:00:00Z" }, { timestamp: "2026-11-20T00:00:00+24:00" },

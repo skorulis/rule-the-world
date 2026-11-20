@@ -34,6 +34,7 @@ final class HexVisitStore {
             for remote in visits {
                 var merged = remote
                 if let local = try HexVisit.fetchOne(db, key: remote.cell) {
+                    merged.total = max(local.total, remote.total)
                     merged.score = max(local.score, remote.score)
                     if HexVisit.scoringCalendar.isDate(local.lastVisit, inSameDayAs: remote.lastVisit) {
                         merged.lastScore = max(local.lastScore, remote.lastScore)

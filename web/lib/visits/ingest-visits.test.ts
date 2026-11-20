@@ -15,18 +15,20 @@ const batch = (score = 0.5, time = timestamp) => parseVisitBatch({ visits: [{ id
 const dialect = new PgDialect();
 const query = (value: SQL) => dialect.sqlToQuery(value);
 
-function harness(previous = "0", current = "0.5", latest = timestamp) {
+function harness(previous = "0", current = "0.5", latest = timestamp, uploaded: { id: string; cell: string; count: number }[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
   const dayRows = previous === "0" ? [] : [{ userId: "u1", cell, day: "2026-11-20", score: previous }];
   const select = vi.fn()
     .mockReturnValueOnce({ from: () => ({ where: () => ({ for: lock }) }) })
-    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(dayRows) }) });
+    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(dayRows) }) })
+    .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(uploaded) }) });
   const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell, day: "2026-11-20", score: current }]);
   const upsert = vi.fn().mockReturnValue({ returning: dailyReturning });
   const insert = vi.fn()
     .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: vi.fn().mockResolvedValue([]) }) })
-    .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: upsert }) });
-  const returning = vi.fn().mockResolvedValue([{ cell, lastVisit: new Date(latest), score: current, lastScore: current }]);
+    .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: upsert }) })
+    .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: vi.fn().mockResolvedValue([]) }) });
+  const returning = vi.fn().mockResolvedValue([{ cell, lastVisit: new Date(latest), score: current, lastScore: current, total: 1 }]);
   const where = vi.fn().mockReturnValue({ returning });
   const set = vi.fn().mockReturnValue({ where });
   const update = vi.fn().mockReturnValue({ set });
@@ -89,6 +91,15 @@ describe("visit ingestion SQL contract", () => {
     ]);
     expect(result.acceptedIds).toEqual(["1", "2", "3"]);
   });
+
+  it.each([[0, 7, 7], [7, 7, 0], [7, 10, 3], [10, 7, 0]])(
+    "counts only new visits for uploaded=%s, incoming=%s", async (previousCount, count, gain) => {
+      const mock = harness("0", "0", timestamp, previousCount ? [{ id: "1", cell, count: previousCount }] : []);
+      const result = await ingestVisits("u1", parseVisitBatch({ visits: [{ id: "1", cell, timestamp, score: 0, count }] }));
+      expect(query(mock.set.mock.calls[0][0].total).params).toEqual([gain]);
+      expect(result.visits[0].total).toBe(1);
+    },
+  );
 
   it("retains zero-score visits", async () => {
     harness("0", "0");

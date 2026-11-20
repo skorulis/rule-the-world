@@ -9,6 +9,7 @@ extension HexVisit: FetchableRecord, PersistableRecord {
         lastVisit = row["lastVisit"]
         score = row["score"]
         lastScore = row["lastScore"]
+        total = row["total"]
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) throws {
@@ -16,5 +17,6 @@ extension HexVisit: FetchableRecord, PersistableRecord {
         container["lastVisit"] = lastVisit
         container["score"] = score
         container["lastScore"] = lastScore
+        container["total"] = total
     }
 }

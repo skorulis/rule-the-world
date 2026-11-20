@@ -20,7 +20,8 @@ describe("visit score schema", () => {
   it("uses exact scores, bounded daily scores, and timezone-aware visit dates", () => {
     expect(hexVisit.score.getSQLType()).toBe("numeric");
     expect(hexVisit.lastVisit.getSQLType()).toBe("timestamp with time zone");
-    expect(getTableConfig(hexVisit).checks).toHaveLength(2);
+    expect(hexVisit.total.getSQLType()).toBe("integer");
+    expect(getTableConfig(hexVisit).checks).toHaveLength(3);
     expect(getTableConfig(hexVisitDay).checks).toHaveLength(1);
   });
 });

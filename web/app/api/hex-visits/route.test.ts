@@ -30,7 +30,7 @@ describe("GET /api/hex-visits", () => {
 
   it("returns every visit for the session user with numeric scores and ISO dates", async () => {
     orderBy.mockResolvedValueOnce([
-      { cell: "8a2830828007fff", lastVisit: new Date("2026-11-20T10:00:00Z"), score: "12.5", lastScore: "0.5" },
+      { cell: "8a2830828007fff", lastVisit: new Date("2026-11-20T10:00:00Z"), total: 42, score: "12.5", lastScore: "0.5" },
       { cell: "8a283082876ffff", lastVisit: new Date("2026-11-19T10:00:00Z"), score: "2", lastScore: "1" },
     ]);
     const response = await GET(request());
@@ -38,7 +38,7 @@ describe("GET /api/hex-visits", () => {
     expect(where).toHaveBeenCalledWith(eq(hexVisit.userId, "u1"));
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({ visits: [
-      { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", score: 12.5, lastScore: 0.5 },
+      { cell: "8a2830828007fff", lastVisit: "2026-11-20T10:00:00.000Z", total: 42, score: 12.5, lastScore: 0.5 },
       { cell: "8a283082876ffff", lastVisit: "2026-11-19T10:00:00.000Z", score: 2, lastScore: 1 },
     ] });
   });

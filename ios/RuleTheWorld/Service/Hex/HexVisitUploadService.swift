@@ -3,19 +3,12 @@ import Foundation
 
 @MainActor
 protocol HexVisitUploading {
-    func upload(_ entries: [HexVisitLog], token: String) async throws -> Set<String>
+    func upload(_ entries: [HexVisitLog]) async throws -> Set<String>
 }
 
-final class HexVisitUploadService: HTTPService, HexVisitUploading {
-    init(
-        baseURL: String? = "http://localhost:3001",
-        urlSession: URLSessionProtocol = URLSession(configuration: .default)
-    ) {
-        super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
-    }
-
-    func upload(_ entries: [HexVisitLog], token: String) async throws -> Set<String> {
-        let response = try await execute(request: VisitBatchRequest(entries: entries, token: token))
+extension AuthenticatedService: HexVisitUploading {
+    func upload(_ entries: [HexVisitLog]) async throws -> Set<String> {
+        let response = try await execute(request: VisitBatchRequest(entries: entries))
         let accepted = Set(response.acceptedIds)
         guard accepted.isSubset(of: Set(entries.map(\.uploadID))), accepted.count == response.acceptedIds.count else {
             throw URLError(.cannotParseResponse)
@@ -34,6 +27,7 @@ nonisolated private struct VisitBatchBody: Encodable {
         let cell: String
         let timestamp: String
         let score: Double
+        let count: Int
     }
 
     let visits: [Visit]
@@ -44,7 +38,7 @@ nonisolated private struct VisitBatchBody: Encodable {
         visits = entries.map {
             Visit(
                 id: $0.uploadID, cell: $0.cell.description,
-                timestamp: formatter.string(from: $0.timestamp), score: $0.score
+                timestamp: formatter.string(from: $0.timestamp), score: $0.score, count: $0.count
             )
         }
     }
@@ -56,11 +50,10 @@ private struct VisitBatchRequest: HTTPRequest {
     let endpoint = "api/hex-visits/batch"
     let method = "POST"
     let params: [String: String] = [:]
-    let headers: [String: String]
+    let headers = ["Content-Type": "application/json"]
     let body: Data?
 
-    init(entries: [HexVisitLog], token: String) throws {
-        headers = ["Content-Type": "application/json", "Authorization": "Bearer \(token)"]
+    init(entries: [HexVisitLog]) throws {
         body = try JSONEncoder().encode(VisitBatchBody(entries: entries))
     }
 

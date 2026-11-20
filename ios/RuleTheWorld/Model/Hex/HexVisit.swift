@@ -12,6 +12,7 @@ struct HexVisit: Hashable, Codable, Sendable {
     var lastVisit: Date
     var score: Double
     var lastScore: Double
+    var total: Int = 0
 
     nonisolated func recordingVisit(
         score visitScore: Double,
@@ -25,7 +26,8 @@ struct HexVisit: Hashable, Codable, Sendable {
             cell: cell,
             lastVisit: date,
             score: score + gain,
-            lastScore: scoredToday + gain
+            lastScore: scoredToday + gain,
+            total: total + 1
         )
     }
 }

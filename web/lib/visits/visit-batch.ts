@@ -7,10 +7,11 @@ export class VisitBatchError extends Error {
   }
 }
 
-export type VisitUpload = { id: string; cell: string; timestamp: string; score: number };
+export type VisitUpload = { id: string; cell: string; timestamp: string; score: number; count?: number };
 export type VisitDay = { cell: string; day: string; score: number };
 export type VisitBatch = {
   acceptedIds: string[];
+  counts: { id: string; cell: string; count: number }[];
   cells: { cell: string; lastVisit: Date }[];
   days: VisitDay[];
 };
@@ -49,17 +50,20 @@ export function parseVisitBatch(body: unknown): VisitBatch {
     throw new VisitBatchError(`visits must contain 1–${maxBatchSize} entries`);
   }
   const ids = new Set<string>();
+  const counts: VisitBatch["counts"] = [];
   const cells = new Map<string, Date>();
   const days = new Map<string, VisitDay>();
   for (const value of body.visits) {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new VisitBatchError("Invalid visit");
-    const { id, cell, timestamp, score } = value;
+    const { id, cell, timestamp, score, count = 1 } = value;
     const date = parseTimestamp(timestamp);
     if (typeof id !== "string" || !id.trim() || id.length > 128 || ids.has(id)
+      || !Number.isSafeInteger(count) || count < 1 || count > 2_147_483_647
       || !isVisitCell(cell) || !date || typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 1) {
       throw new VisitBatchError("Invalid visit fields or duplicate id");
     }
     ids.add(id);
+    counts.push({ id, cell, count });
     if (!cells.has(cell) || date > cells.get(cell)!) cells.set(cell, date);
     const day = date.toISOString().slice(0, 10);
     const key = `${cell}/${day}`;
@@ -67,6 +71,7 @@ export function parseVisitBatch(body: unknown): VisitBatch {
   }
   return {
     acceptedIds: [...ids],
+    counts,
     cells: [...cells].sort(([a], [b]) => a.localeCompare(b)).map(([cell, lastVisit]) => ({ cell, lastVisit })),
     days: [...days.values()].sort((a, b) => a.cell.localeCompare(b.cell) || a.day.localeCompare(b.day)),
   };

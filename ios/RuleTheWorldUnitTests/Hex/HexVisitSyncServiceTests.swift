@@ -6,12 +6,10 @@ import Testing
 @MainActor
 private final class VisitUploaderStub: HexVisitUploading {
     var calls: [[HexVisitLog]] = []
-    var tokens: [String] = []
     var handler: (([HexVisitLog]) async throws -> Set<String>)?
 
-    func upload(_ entries: [HexVisitLog], token: String) async throws -> Set<String> {
+    func upload(_ entries: [HexVisitLog]) async throws -> Set<String> {
         calls.append(entries)
-        tokens.append(token)
         if let handler { return try await handler(entries) }
         return Set(entries.map(\.uploadID))
     }
@@ -52,7 +50,6 @@ struct HexVisitSyncServiceTests {
         try await sync.syncPendingVisits()
         try await sync.syncPendingVisits()
         #expect(uploader.calls.count == 1)
-        #expect(uploader.tokens == ["token"])
         #expect(try await store.pending().isEmpty)
     }
 

@@ -54,6 +54,16 @@ final class AppDatabase: Sendable {
             try db.create(index: "hexVisitLog_uploadID", on: "hexVisitLog", columns: ["uploadID"], unique: true)
             try db.create(index: "hexVisitLog_pending", on: "hexVisitLog", columns: ["uploaded", "id"])
         }
+        migrator.registerMigration("v5 hexVisitTotal") { db in
+            try db.alter(table: "hexVisit") { table in
+                table.add(column: "total", .integer).notNull().defaults(to: 0)
+            }
+            try db.execute(sql: """
+                UPDATE hexVisit SET total = (
+                    SELECT COALESCE(SUM(count), 0) FROM hexVisitLog WHERE hexVisitLog.hexId = hexVisit.hexId
+                )
+                """)
+        }
         return migrator
     }
 

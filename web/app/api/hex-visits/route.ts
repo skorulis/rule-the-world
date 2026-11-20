@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     if (session instanceof NextResponse) return session;
     const rows = await db.select({
       cell: hexVisit.cell,
+      total: hexVisit.total,
       lastVisit: hexVisit.lastVisit,
       score: hexVisit.score,
       lastScore: hexVisit.lastScore,

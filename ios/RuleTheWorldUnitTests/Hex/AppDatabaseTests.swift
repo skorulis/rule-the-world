@@ -50,7 +50,10 @@ struct AppDatabaseTests {
                 ALTER TABLE hexVisitLog ADD COLUMN locationType TEXT NOT NULL DEFAULT 'foreground';
                 ALTER TABLE hexVisitLog ADD COLUMN count INTEGER NOT NULL DEFAULT 1;
                 INSERT INTO hexVisitLog (timestamp, hexId, latitude, longitude, score)
-                    VALUES ('2026-11-20 10:00:00', 1, 0, 0, 1), ('2026-11-20 11:00:00', 2, 0, 0, 0.5)
+                    VALUES ('2026-11-20 10:00:00', 1, 0, 0, 1), ('2026-11-20 11:00:00', 2, 0, 0, 0.5);
+                UPDATE hexVisitLog SET count = 4 WHERE hexId = 1;
+                INSERT INTO hexVisit (hexId, lastVisit, score, lastScore)
+                    VALUES (1, '2026-11-20 10:00:00', 1, 1), (3, '2026-11-20 10:00:00', 1, 1)
                 """)
         }
         try legacy.migrate(writer)
@@ -59,6 +62,9 @@ struct AppDatabaseTests {
         #expect(entries.count == 2)
         #expect(entries.allSatisfy { !$0.uploaded && !$0.uploadID.isEmpty })
         #expect(Set(entries.map(\.uploadID)).count == 2)
+        let visits = try database.writer.read { db in try HexVisit.fetchAll(db) }
+        #expect(visits.first { $0.cell == HexCell(rawValue: 1) }?.total == 4)
+        #expect(visits.first { $0.cell == HexCell(rawValue: 3) }?.total == 0)
     }
 
     @Test func hexCellRoundTripsThroughDatabase() throws {
@@ -69,12 +75,13 @@ struct AppDatabaseTests {
             resolution: HexGridService.baseResolution
         )
         try database.writer.write { db in
-            let visit = HexVisit(cell: cell, lastVisit: .now, score: 1, lastScore: 1)
+            let visit = HexVisit(cell: cell, lastVisit: .now, score: 1, lastScore: 1, total: 7)
             try visit.save(db)
         }
         let fetched = try database.writer.read { db in
             try HexVisit.fetchOne(db, key: cell)
         }
         #expect(fetched?.cell == cell)
+        #expect(fetched?.total == 7)
     }
 }

@@ -15,6 +15,7 @@ struct HexVisitStoreTests {
         let date = Date(timeIntervalSince1970: 1_700_000_000)
         let visit = try await store.recordVisit(cell, at: date)
         #expect(visit.score == 1)
+        #expect(visit.total == 1)
         #expect(visit.lastScore == 1)
         #expect(visit.lastVisit == date)
     }
@@ -26,6 +27,7 @@ struct HexVisitStoreTests {
         _ = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
         let date = Date(timeIntervalSince1970: 1_700_000_100)
         let visit = try await store.recordVisit(cell, at: date)
+        #expect(visit.total == 2)
         #expect(visit.score == 1)
         #expect(visit.lastScore == 1)
         #expect(visit.lastVisit == date)
@@ -49,7 +51,7 @@ struct HexVisitStoreTests {
         _ = try await store.recordVisit(cell, at: localDate)
         _ = try await store.recordVisit(localOnly, at: localDate)
         let remote = HexVisit(
-            cell: cell, lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5
+            cell: cell, lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5, total: 42
         )
 
         try await store.restore([remote])
@@ -57,6 +59,7 @@ struct HexVisitStoreTests {
 
         let restored = try #require(try await store.visit(for: cell))
         #expect(restored.score == 10)
+        #expect(restored.total == 42)
         #expect(restored.lastVisit == localDate)
         #expect(restored.lastScore == 1)
         #expect(try await store.visit(for: localOnly) != nil)

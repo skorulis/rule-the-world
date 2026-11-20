@@ -52,14 +52,14 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             AuthService(urlSession: $0.urlSessionProtocol())
         }
         .inObjectScope(.container)
-        container.register(HexVisitUploadService.self) {
-            HexVisitUploadService(urlSession: $0.urlSessionProtocol())
+        container.register(AuthenticatedService.self) {
+            AuthenticatedService(tokenStore: $0.authTokenStore(), urlSession: $0.urlSessionProtocol())
         }
         .inObjectScope(.container)
         container.register(HexVisitSyncService.self) {
             HexVisitSyncService(
                 store: $0.hexVisitLogStore(),
-                uploader: $0.hexVisitUploadService(),
+                uploader: $0.authenticatedService(),
                 tokenStore: $0.authTokenStore()
             )
         }

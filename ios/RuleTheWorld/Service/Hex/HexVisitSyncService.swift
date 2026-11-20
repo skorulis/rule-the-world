@@ -50,7 +50,7 @@ final class HexVisitSyncService {
             let entries = try await store.pending(after: afterID, through: lastID)
             try Task.checkCancellation()
             guard tokenStore.token == token, let nextID = entries.last?.id else { return }
-            let accepted = try await uploader.upload(entries, token: token)
+            let accepted = try await uploader.upload(entries)
             try Task.checkCancellation()
             guard tokenStore.token == token else { return }
             try await store.markUploaded(entries, acceptedIDs: accepted)

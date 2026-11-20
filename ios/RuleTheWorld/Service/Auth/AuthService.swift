@@ -66,6 +66,7 @@ nonisolated private struct VisitDownloadResponse: Decodable {
         let lastVisit: String
         let score: Double
         let lastScore: Double
+        let total: Int
     }
 
     let visits: [Visit]
@@ -95,13 +96,13 @@ private struct VisitDownloadRequest: HTTPRequest {
         return try payload.visits.map { visit in
             guard let rawValue = UInt64(visit.cell, radix: 16),
                   let date = formatter.date(from: visit.lastVisit) ?? fallback.date(from: visit.lastVisit),
-                  visit.score.isFinite, visit.score >= 0,
+                  visit.total >= 0, visit.score.isFinite, visit.score >= 0,
                   visit.lastScore.isFinite, (0...1).contains(visit.lastScore) else {
                 throw URLError(.cannotParseResponse)
             }
             return HexVisit(
                 cell: HexCell(rawValue: rawValue), lastVisit: date,
-                score: visit.score, lastScore: visit.lastScore
+                score: visit.score, lastScore: visit.lastScore, total: visit.total
             )
         }
     }

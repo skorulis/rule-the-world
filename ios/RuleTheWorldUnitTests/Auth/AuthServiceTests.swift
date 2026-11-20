@@ -104,7 +104,7 @@ struct AuthServiceTests {
             box.request = request
             return jsonResponse(url: request.url!, status: 200, body: """
                 {"visits":[{"cell":"8a283082876ffff","lastVisit":"2026-11-20T10:00:00.000Z",
-                "score":12.5,"lastScore":0.5}]}
+                "score":12.5,"lastScore":0.5,"total":42}]}
                 """)
         }
 
@@ -116,6 +116,7 @@ struct AuthServiceTests {
         #expect(visits.count == 1)
         #expect(visits.first?.cell == HexCell(rawValue: 0x8A283082876FFFF))
         #expect(visits.first?.score == 12.5)
+        #expect(visits.first?.total == 42)
         #expect(visits.first?.lastScore == 0.5)
         #expect(visits.first?.lastVisit == ISO8601DateFormatter().date(from: "2026-11-20T10:00:00Z"))
     }
