@@ -12,11 +12,12 @@ import { GET } from "./route";
 const where = vi.fn();
 const from = vi.fn(() => ({ where }));
 const cell = "8a2830828007fff";
+const cellId = BigInt(`0x${cell}`);
 const request = () => new Request(`http://test/api/hex-visits/${cell}`);
 const ctx = { params: Promise.resolve({ cell }) };
 
 const visitRow = {
-  cell,
+  cell: cellId,
   lastVisit: new Date("2026-11-20T10:00:00Z"),
   total: 42,
   score: "12.5",
@@ -37,6 +38,14 @@ describe("GET /api/hex-visits/[cell]", () => {
   it("requires authentication before querying visits", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValueOnce(null);
     expect((await GET(request(), ctx)).status).toBe(401);
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid cell without querying", async () => {
+    const response = await GET(new Request("http://test/api/hex-visits/nope"), {
+      params: Promise.resolve({ cell: "nope" }),
+    });
+    expect(response.status).toBe(400);
     expect(db.select).not.toHaveBeenCalled();
   });
 
@@ -69,7 +78,7 @@ describe("GET /api/hex-visits/[cell]", () => {
       .mockResolvedValueOnce([visitRow]);
     await GET(request(), ctx);
     expect(where).toHaveBeenCalledWith(
-      and(eq(hexVisit.cell, cell), ne(hexVisit.userId, "u1")),
+      and(eq(hexVisit.cell, cellId), ne(hexVisit.userId, "u1")),
     );
   });
 

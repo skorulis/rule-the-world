@@ -58,7 +58,7 @@ class Polygon {
   }
 }
 
-type Region = { id: string; polygons: Polygon[] };
+type Region = { id: bigint; polygons: Polygon[] };
 
 type FeatureCollection = {
   type: string;
@@ -88,7 +88,7 @@ function parseRegions(collection: FeatureCollection): Region[] {
       : feature.geometry.type === "MultiPolygon"
         ? feature.geometry.coordinates as number[][][][]
         : null;
-    if (feature.type !== "Feature" || !feature.properties.id || !rawPolygons?.length) {
+    if (feature.type !== "Feature" || !/^\d+$/.test(feature.properties.id) || !rawPolygons?.length) {
       throw new Error("Invalid region collection");
     }
     const polygons = rawPolygons.map((rings) => {
@@ -96,12 +96,12 @@ function parseRegions(collection: FeatureCollection): Region[] {
       if (!exterior) throw new Error("Invalid region ring");
       return new Polygon(exterior, holes);
     });
-    return { id: feature.properties.id, polygons };
+    return { id: BigInt(feature.properties.id), polygons };
   });
   if (new Set(regions.map((region) => region.id)).size !== regions.length) {
     throw new Error("Invalid region collection");
   }
-  return regions.sort((a, b) => a.id.localeCompare(b.id));
+  return regions.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 function geoJsonPath(): string {
@@ -139,6 +139,6 @@ function regionContains(region: Region, latitude: number, longitude: number): bo
     || (wrapped === -180 && polygon.contains({ longitude: 180, latitude })));
 }
 
-export function regionIdForPoint(latitude: number, longitude: number): string {
+export function regionIdForPoint(latitude: number, longitude: number): bigint {
   return catalog().find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
 }

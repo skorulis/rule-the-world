@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { regionIdForPoint } from "./country-regions";
 
-const NONE = "none";
+const NONE = BigInt(0);
 
 describe("regionIdForPoint", () => {
   it("returns a region id for a point inside a country", () => {

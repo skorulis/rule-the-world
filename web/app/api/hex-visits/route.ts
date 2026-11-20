@@ -30,7 +30,7 @@ export async function GET(request: Request) {
           rivalScore: Number(visit.rivalScore ?? 0),
         },
         userVisit: {
-          cell: visit.cell,
+          cell: visit.cell.toString(16),
           total: visit.total,
           lastVisit: visit.lastVisit.toISOString(),
           score: Number(visit.score),

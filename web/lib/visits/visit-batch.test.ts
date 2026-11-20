@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isVisitCell, maxBatchSize, maxBodyBytes, parseVisitBatch, readVisitBody } from "./visit-batch";
 
 const cell = "8a2830828007fff";
+const cellId = BigInt(`0x${cell}`);
 const visit = { id: "1", cell, timestamp: "2026-11-20T10:00:00Z", score: 0.5 };
 
 describe("visit batches", () => {
@@ -13,15 +14,15 @@ describe("visit batches", () => {
     ] });
     expect(result.acceptedIds).toEqual(["1", "2", "3"]);
     expect(result.counts).toEqual([
-      { id: "1", cell, count: 1 }, { id: "2", cell, count: 1 }, { id: "3", cell, count: 1 },
+      { id: "1", cell: cellId, count: 1 }, { id: "2", cell: cellId, count: 1 }, { id: "3", cell: cellId, count: 1 },
     ]);
-    expect(result.days).toEqual([{ cell, day: "2026-11-20", score: 1 }, { cell, day: "2026-11-21", score: 0 }]);
-    expect(result.cells).toEqual([{ cell, lastVisit: new Date("2026-11-21T01:30:00Z") }]);
+    expect(result.days).toEqual([{ cell: cellId, day: "2026-11-20", score: 1 }, { cell: cellId, day: "2026-11-21", score: 0 }]);
+    expect(result.cells).toEqual([{ cell: cellId, lastVisit: new Date("2026-11-21T01:30:00Z") }]);
   });
 
   it("preserves grouped visit counts independently of score", () => {
     const result = parseVisitBatch({ visits: [{ ...visit, count: 7, score: 0 }] });
-    expect(result.counts).toEqual([{ id: "1", cell, count: 7 }]);
+    expect(result.counts).toEqual([{ id: "1", cell: cellId, count: 7 }]);
     expect(result.days[0].score).toBe(0);
   });
 
@@ -31,7 +32,7 @@ describe("visit batches", () => {
       { ...visit, cell: other },
       { ...visit, id: "2", timestamp: "2026-11-19T10:00:00Z" },
     ] });
-    expect(result.cells.map((row) => row.cell)).toEqual([cell, other]);
+    expect(result.cells.map((row) => row.cell)).toEqual([cellId, BigInt(`0x${other}`)]);
   });
 
   it.each([null, [], {}, { visits: [] }, { visits: [null] }, { visits: Array(maxBatchSize + 1).fill(visit) }])(

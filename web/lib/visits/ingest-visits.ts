@@ -20,7 +20,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
     for (const { cell } of known) unknown.delete(cell);
     if (unknown.size) {
       await tx.insert(hexRegion).values([...unknown].map((cell) => {
-        const [latitude, longitude] = cellToLatLng(cell);
+        const [latitude, longitude] = cellToLatLng(cell.toString(16));
         const region = regionIdForPoint(latitude, longitude);
         return { cell, region, regionType: region === noRegion ? regionType.none : regionType.country };
       })).onConflictDoNothing();
@@ -41,7 +41,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
       eq(hexVisitUpload.userId, userId), inArray(hexVisitUpload.id, batch.acceptedIds),
     ));
     const previousUploads = new Map(uploaded.map((row) => [row.id, row]));
-    const totals = new Map<string, number>();
+    const totals = new Map<bigint, number>();
     for (const entry of batch.counts) {
       const previous = previousUploads.get(entry.id);
       if (previous && previous.cell !== entry.cell) throw new Error("Upload cell cannot change");
@@ -67,7 +67,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
           and ${hexVisitDay.day} = (${latest} at time zone 'UTC')::date)`,
       }).where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, cell))).returning();
       visits.push({
-        cell: visit.cell,
+        cell: visit.cell.toString(16),
         total: visit.total,
         lastVisit: visit.lastVisit.toISOString(),
         score: Number(visit.score),

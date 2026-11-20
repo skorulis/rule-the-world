@@ -3,7 +3,7 @@ import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
-vi.mock("@/lib/regions/country-regions", () => ({ regionIdForPoint: vi.fn(() => "42") }));
+vi.mock("@/lib/regions/country-regions", () => ({ regionIdForPoint: vi.fn(() => BigInt(42)) }));
 
 import { db } from "@/lib/db";
 import { hexRegion, hexVisit } from "@/db/schema";
@@ -12,21 +12,22 @@ import { ingestVisits } from "./ingest-visits";
 import { parseVisitBatch } from "./visit-batch";
 
 const cell = "8a2830828007fff";
+const cellId = BigInt(`0x${cell}`);
 const timestamp = "2026-11-20T10:00:00Z";
 const batch = (score = 0.5, time = timestamp) => parseVisitBatch({ visits: [{ id: "1", cell, timestamp: time, score }] });
 const dialect = new PgDialect();
 const query = (value: SQL) => dialect.sqlToQuery(value);
 
 function harness(previous = "0", current = "0.5", latest = timestamp,
-  uploaded: { id: string; cell: string; count: number }[] = [], knownRegions: string[] = []) {
+  uploaded: { id: string; cell: bigint; count: number }[] = [], knownRegions: bigint[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
-  const dayRows = previous === "0" ? [] : [{ userId: "u1", cell, day: "2026-11-20", score: previous }];
+  const dayRows = previous === "0" ? [] : [{ userId: "u1", cell: cellId, day: "2026-11-20", score: previous }];
   const select = vi.fn()
     .mockReturnValueOnce({ from: () => ({ where: () => ({ for: lock }) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(knownRegions.map((c) => ({ cell: c }))) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(dayRows) }) })
     .mockReturnValueOnce({ from: () => ({ where: vi.fn().mockResolvedValue(uploaded) }) });
-  const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell, day: "2026-11-20", score: current }]);
+  const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell: cellId, day: "2026-11-20", score: current }]);
   const upsert = vi.fn().mockReturnValue({ returning: dailyReturning });
   const regionConflict = vi.fn().mockResolvedValue([]);
   const insert = vi.fn()
@@ -34,7 +35,7 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
     .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: regionConflict, onConflictDoUpdate: upsert }) })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: upsert }) })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: vi.fn().mockResolvedValue([]) }) });
-  const returning = vi.fn().mockResolvedValue([{ cell, lastVisit: new Date(latest), score: current, lastScore: current, total: 1 }]);
+  const returning = vi.fn().mockResolvedValue([{ cell: cellId, lastVisit: new Date(latest), score: current, lastScore: current, total: 1 }]);
   const where = vi.fn().mockReturnValue({ returning });
   const set = vi.fn().mockReturnValue({ where });
   const update = vi.fn().mockReturnValue({ set });
@@ -76,15 +77,16 @@ describe("visit ingestion SQL contract", () => {
 
   it("separates per-cell deltas across overlapping days and multiple cells", async () => {
     const other = "8a2830828017fff";
+    const otherId = BigInt(`0x${other}`);
     const mock = harness("0.5", "1");
     mock.dailyReturning.mockResolvedValueOnce([
-      { userId: "u1", cell, day: "2026-11-19", score: "0.25" },
-      { userId: "u1", cell, day: "2026-11-20", score: "1" },
-      { userId: "u1", cell: other, day: "2026-11-20", score: "0.5" },
+      { userId: "u1", cell: cellId, day: "2026-11-19", score: "0.25" },
+      { userId: "u1", cell: cellId, day: "2026-11-20", score: "1" },
+      { userId: "u1", cell: otherId, day: "2026-11-20", score: "0.5" },
     ]);
     mock.returning
-      .mockResolvedValueOnce([{ cell, lastVisit: new Date(timestamp), score: "1.25", lastScore: "1" }])
-      .mockResolvedValueOnce([{ cell: other, lastVisit: new Date(timestamp), score: "0.5", lastScore: "0.5" }]);
+      .mockResolvedValueOnce([{ cell: cellId, lastVisit: new Date(timestamp), score: "1.25", lastScore: "1" }])
+      .mockResolvedValueOnce([{ cell: otherId, lastVisit: new Date(timestamp), score: "0.5", lastScore: "0.5" }]);
     const result = await ingestVisits("u1", parseVisitBatch({ visits: [
       { id: "1", cell: other, timestamp, score: 0.5 },
       { id: "2", cell, timestamp, score: 1 },
@@ -100,7 +102,7 @@ describe("visit ingestion SQL contract", () => {
 
   it.each([[0, 7, 7], [7, 7, 0], [7, 10, 3], [10, 7, 0]])(
     "counts only new visits for uploaded=%s, incoming=%s", async (previousCount, count, gain) => {
-      const mock = harness("0", "0", timestamp, previousCount ? [{ id: "1", cell, count: previousCount }] : []);
+      const mock = harness("0", "0", timestamp, previousCount ? [{ id: "1", cell: cellId, count: previousCount }] : []);
       const result = await ingestVisits("u1", parseVisitBatch({ visits: [{ id: "1", cell, timestamp, score: 0, count }] }));
       expect(query(mock.set.mock.calls[0][0].total).params).toEqual([gain]);
       expect(result.visits[0].total).toBe(1);
@@ -115,7 +117,7 @@ describe("visit ingestion SQL contract", () => {
   it("scopes aggregate updates to the authenticated player", async () => {
     const mock = harness();
     await ingestVisits("other-player", batch());
-    expect(query(mock.where.mock.calls[0][0]).params).toEqual(["other-player", cell]);
+    expect(query(mock.where.mock.calls[0][0]).params).toEqual(["other-player", cellId]);
   });
 
   it("classifies unmapped cells into hex_region from the cell center", async () => {
@@ -132,7 +134,7 @@ describe("visit ingestion SQL contract", () => {
   });
 
   it("skips region lookup for cells already classified", async () => {
-    const mock = harness("0", "0.5", timestamp, [], [cell]);
+    const mock = harness("0", "0.5", timestamp, [], [cellId]);
     await ingestVisits("u1", batch());
     expect(regionIdForPoint).not.toHaveBeenCalled();
     expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexRegion);

@@ -13,5 +13,8 @@ export async function GET() {
       .groupBy(hexRegion.region)
       .orderBy(desc(count())),
   ]);
-  return NextResponse.json({ hexVisits, hexRegions, regions });
+  return NextResponse.json({
+    hexVisits, hexRegions,
+    regions: regions.map(({ region, hexes }) => ({ region: region.toString(), hexes })),
+  });
 }

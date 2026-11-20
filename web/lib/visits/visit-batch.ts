@@ -8,11 +8,11 @@ export class VisitBatchError extends Error {
 }
 
 export type VisitUpload = { id: string; cell: string; timestamp: string; score: number; count?: number };
-export type VisitDay = { cell: string; day: string; score: number };
+export type VisitDay = { cell: bigint; day: string; score: number };
 export type VisitBatch = {
   acceptedIds: string[];
-  counts: { id: string; cell: string; count: number }[];
-  cells: { cell: string; lastVisit: Date }[];
+  counts: { id: string; cell: bigint; count: number }[];
+  cells: { cell: bigint; lastVisit: Date }[];
   days: VisitDay[];
 };
 
@@ -51,7 +51,7 @@ export function parseVisitBatch(body: unknown): VisitBatch {
   }
   const ids = new Set<string>();
   const counts: VisitBatch["counts"] = [];
-  const cells = new Map<string, Date>();
+  const cells = new Map<bigint, Date>();
   const days = new Map<string, VisitDay>();
   for (const value of body.visits) {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new VisitBatchError("Invalid visit");
@@ -62,18 +62,20 @@ export function parseVisitBatch(body: unknown): VisitBatch {
       || !isVisitCell(cell) || !date || typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 1) {
       throw new VisitBatchError("Invalid visit fields or duplicate id");
     }
+    const cellId = BigInt(`0x${cell}`);
     ids.add(id);
-    counts.push({ id, cell, count });
-    if (!cells.has(cell) || date > cells.get(cell)!) cells.set(cell, date);
+    counts.push({ id, cell: cellId, count });
+    if (!cells.has(cellId) || date > cells.get(cellId)!) cells.set(cellId, date);
     const day = date.toISOString().slice(0, 10);
-    const key = `${cell}/${day}`;
-    days.set(key, { cell, day, score: Math.max(score, days.get(key)?.score ?? 0) });
+    const key = `${cellId}/${day}`;
+    days.set(key, { cell: cellId, day, score: Math.max(score, days.get(key)?.score ?? 0) });
   }
+  const compareCells = (a: bigint, b: bigint) => (a < b ? -1 : a > b ? 1 : 0);
   return {
     acceptedIds: [...ids],
     counts,
-    cells: [...cells].sort(([a], [b]) => a.localeCompare(b)).map(([cell, lastVisit]) => ({ cell, lastVisit })),
-    days: [...days.values()].sort((a, b) => a.cell.localeCompare(b.cell) || a.day.localeCompare(b.day)),
+    cells: [...cells].sort(([a], [b]) => compareCells(a, b)).map(([cell, lastVisit]) => ({ cell, lastVisit })),
+    days: [...days.values()].sort((a, b) => compareCells(a.cell, b.cell) || a.day.localeCompare(b.day)),
   };
 }
 
