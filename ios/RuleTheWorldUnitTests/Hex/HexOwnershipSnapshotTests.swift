@@ -13,10 +13,10 @@ struct HexOwnershipSnapshotTests {
     }
 
     @Test func stateForScore() {
-        #expect(HexState.forScore(0) == .partialVisit)
-        #expect(HexState.forScore(0.75) == .partialVisit)
-        #expect(HexState.forScore(1) == .visited)
-        #expect(HexState.forScore(3.5) == .visited)
+        #expect(HexState.forScore(3.5, rivalScore: 1) == .owned)
+        #expect(HexState.forScore(1, rivalScore: 3.5) == .visited)
+        #expect(HexState.forScore(2, rivalScore: 2) == .contested)
+        #expect(HexState.forScore(0, rivalScore: 0) == .contested)
     }
 
     @Test func baseResolutionAggregationReturnsStates() {

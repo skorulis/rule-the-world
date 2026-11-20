@@ -30,6 +30,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
 
     @MainActor
     private func registerServices(container: Container<TargetResolver>) {
+        let endpoint = DebugSettings().endpoint
+
         container.register(HexGridService.self) { _ in HexGridService() }
             .inObjectScope(.container)
         container.register(RegionBoundaryProviding.self) { _ in RegionBoundaryService() }
@@ -45,15 +47,19 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         }
         .inObjectScope(.container)
         container.register(URLSessionProtocol.self) { _ in
-            DebugSettings().endpoint.makeSession()
+            endpoint.makeSession()
         }
         .inObjectScope(.container)
         container.register(AuthService.self) {
-            AuthService(urlSession: $0.urlSessionProtocol())
+            AuthService(baseURL: endpoint.baseURL, urlSession: $0.urlSessionProtocol())
         }
         .inObjectScope(.container)
         container.register(AuthenticatedService.self) {
-            AuthenticatedService(tokenStore: $0.authTokenStore(), urlSession: $0.urlSessionProtocol())
+            AuthenticatedService(
+                tokenStore: $0.authTokenStore(),
+                baseURL: endpoint.baseURL,
+                urlSession: $0.urlSessionProtocol()
+            )
         }
         .inObjectScope(.container)
         container.register(HexTotalsProviding.self) { $0.authenticatedService() }

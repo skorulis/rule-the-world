@@ -3,6 +3,7 @@ import Foundation
 
 enum NetworkEndpoint: String, CaseIterable, Identifiable {
     case local
+    case production
     case mock
 
     var id: String { rawValue }
@@ -10,13 +11,21 @@ enum NetworkEndpoint: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .local: "Local server (localhost:3001)"
+        case .production: "Production (rule-the-world.vercel.app)"
         case .mock: "Mocked responses"
+        }
+    }
+
+    var baseURL: String {
+        switch self {
+        case .local, .mock: "http://localhost:3001"
+        case .production: "https://rule-the-world.vercel.app"
         }
     }
 
     func makeSession() -> URLSessionProtocol {
         switch self {
-        case .local:
+        case .local, .production:
             return URLSession(configuration: .default)
         case .mock:
             return MockURLSession()

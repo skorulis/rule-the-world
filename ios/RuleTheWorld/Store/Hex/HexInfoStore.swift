@@ -69,7 +69,7 @@ final class HexInfoStore {
             }
             snapshot = HexOwnershipSnapshot(
                 states: Dictionary(uniqueKeysWithValues: infos.compactMap { info in
-                    info.userVisit.map { (info.cell, HexState.forScore($0.score)) }
+                    info.userVisit.map { (info.cell, HexState.forScore($0.score, rivalScore: info.rivalScore)) }
                 })
             )
         } catch {

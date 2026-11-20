@@ -7,8 +7,10 @@ enum HexState: String, Codable, CaseIterable, Comparable {
     case owned
     case contested
 
-    nonisolated static func forScore(_ score: Double) -> HexState {
-        score >= HexVisit.maxDailyScore ? .visited : .partialVisit
+    nonisolated static func forScore(_ score: Double, rivalScore: Double) -> HexState {
+        if score > rivalScore { return .owned }
+        if rivalScore > score { return .visited }
+        return .contested
     }
 
     nonisolated var color: Color? {
@@ -20,9 +22,9 @@ enum HexState: String, Codable, CaseIterable, Comparable {
         case .visited:
             return .blue
         case .owned:
-            return .indigo
+            return Color(red: 0.8, green: 0.6, blue: 0)
         case .contested:
-            return .orange
+            return .red
         }
     }
 
