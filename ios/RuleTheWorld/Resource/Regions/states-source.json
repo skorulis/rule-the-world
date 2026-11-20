@@ -21,12 +21,12 @@
       "sha256": "06e4d16190990f21341845cd1ac65c992e71d8443d4d0bbf32f2fed26af3b921"
     },
     "coarse": {
-      "intervalMeters": 3000,
+      "intervalMeters": 6000,
       "states": 11,
       "polygonParts": 101,
-      "vertices": 2761,
-      "bytes": 62362,
-      "sha256": "42a7ded8659b422090e31e72df61871d3bfc9901ca8cb9da38659802d68c91fe"
+      "vertices": 1527,
+      "bytes": 35481,
+      "sha256": "ac1e3d8e09e1e48328ed3c508d3d3918a0a07cd558c56fd438b64589de49376e"
     }
   }
 }

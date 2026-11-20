@@ -10,7 +10,7 @@ from region_pipeline import (
 
 SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/10m_cultural/ne_10m_admin_1_states_provinces"
 PARENT = {"Australia": "1159320355"}
-LEVELS = {"medium": 500, "coarse": 3000}
+LEVELS = {"medium": 500, "coarse": 6000}
 
 
 def each_expression():

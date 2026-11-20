@@ -14,7 +14,7 @@ actor RegionBoundaryService: RegionBoundaryProviding {
 
     init(bundle: Bundle = .main) {
         urls = Dictionary(uniqueKeysWithValues: RegionOverlayPolicy.Level.allCases.compactMap { level in
-            let name = level == .state ? "states-medium" : "countries-\(level.rawValue)"
+            let name = level == .state ? "states-coarse" : "countries-\(level.rawValue)"
             let url = bundle.url(forResource: name, withExtension: "geojson")
                 ?? bundle.url(forResource: name, withExtension: "geojson", subdirectory: "Regions")
             return url.map { (level, $0) }
