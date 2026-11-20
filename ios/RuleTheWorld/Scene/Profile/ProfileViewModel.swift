@@ -8,10 +8,10 @@ import Observation
 @MainActor
 final class ProfileViewModel {
     private let authManager: AuthManager
-    private let store: HexVisitStore
+    private let store: HexInfoStore
 
     @Resolvable<Resolver>
-    init(authManager: AuthManager, store: HexVisitStore) {
+    init(authManager: AuthManager, store: HexInfoStore) {
         self.authManager = authManager
         self.store = store
     }

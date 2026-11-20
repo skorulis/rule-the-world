@@ -3,9 +3,9 @@ import Testing
 @testable import RuleTheWorld
 
 @MainActor
-struct HexVisitStoreTests {
-    private func makeStore() throws -> HexVisitStore {
-        try HexVisitStore(database: AppDatabase.inMemory())
+struct HexInfoStoreTests {
+    private func makeStore() throws -> HexInfoStore {
+        try HexInfoStore(database: AppDatabase.inMemory())
     }
 
     @MainActor
@@ -50,26 +50,47 @@ struct HexVisitStoreTests {
         let localOnly = HexCell(rawValue: 0x8A2830828007FFF)
         _ = try await store.recordVisit(cell, at: localDate)
         _ = try await store.recordVisit(localOnly, at: localDate)
-        let remote = HexVisit(
-            cell: cell, lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5, total: 42
+        let remote = HexInfo(
+            cell: cell, totalVisits: 50, rivalScore: 3,
+            userVisit: HexVisit(
+                lastVisit: localDate.addingTimeInterval(-86_400), score: 10, lastScore: 0.5, total: 42
+            )
         )
 
         try await store.restore([remote])
         try await store.restore([remote])
 
-        let restored = try #require(try await store.visit(for: cell))
-        #expect(restored.score == 10)
-        #expect(restored.total == 42)
-        #expect(restored.lastVisit == localDate)
-        #expect(restored.lastScore == 1)
-        #expect(try await store.visit(for: localOnly) != nil)
+        let restored = try #require(try await store.info(for: cell))
+        let restoredVisit = try #require(restored.userVisit)
+        #expect(restoredVisit.score == 10)
+        #expect(restoredVisit.total == 42)
+        #expect(restoredVisit.lastVisit == localDate)
+        #expect(restoredVisit.lastScore == 1)
+        #expect(restored.totalVisits == 50)
+        #expect(restored.rivalScore == 3)
+        #expect(try await store.info(for: localOnly) != nil)
+    }
+
+    @Test func saveKeepsLocalVisitWhenRemoteHasNone() async throws {
+        let store = try makeStore()
+        let cell = HexCell(rawValue: 0x8A283082876FFFF)
+        let visit = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
+
+        let saved = try await store.save(
+            HexInfo(cell: cell, totalVisits: 7, rivalScore: 9, userVisit: nil)
+        )
+
+        #expect(saved.userVisit == visit)
+        #expect(saved.totalVisits == 7)
+        #expect(saved.rivalScore == 9)
+        #expect(try await store.info(for: cell)?.rivalScore == 9)
     }
 
     @MainActor
-    @Test func visitForUnknownCellIsNil() async throws {
+    @Test func infoForUnknownCellIsNil() async throws {
         let store = try makeStore()
-        let visit = try await store.visit(for: HexCell(rawValue: 0x8A283082876FFFF))
-        #expect(visit == nil)
+        let info = try await store.info(for: HexCell(rawValue: 0x8A283082876FFFF))
+        #expect(info == nil)
     }
 
     @MainActor

@@ -4,11 +4,11 @@ import Testing
 
 struct HexVisitCodableTests {
     private func payload(
-        cell: String = "8a283082876ffff", date: String = "2026-11-20T10:00:00Z",
+        date: String = "2026-11-20T10:00:00Z",
         score: Double = 12.5, lastScore: Double = 0.5, total: Int = 42
     ) -> Data {
         Data("""
-            {"cell":"\(cell)","lastVisit":"\(date)","score":\(score),"lastScore":\(lastScore),"total":\(total)}
+            {"lastVisit":"\(date)","score":\(score),"lastScore":\(lastScore),"total":\(total)}
             """.utf8)
     }
 
@@ -21,7 +21,6 @@ struct HexVisitCodableTests {
             let visit = try JSONDecoder().decode(HexVisit.self, from: payload(date: date))
             let expected = try #require(ISO8601DateFormatter().date(from: "2026-11-20T10:00:00Z"))
             #expect(abs(visit.lastVisit.timeIntervalSince(expected) - fraction) < 0.000_001)
-            #expect(visit.cell == HexCell(rawValue: 0x8A283082876FFFF))
             #expect(visit.score == 12.5)
             #expect(visit.lastScore == 0.5)
             #expect(visit.total == 42)
@@ -34,14 +33,13 @@ struct HexVisitCodableTests {
         )
         let data = try JSONEncoder().encode(original)
         let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        #expect(json["cell"] as? String == "8a283082876ffff")
         #expect(json["lastVisit"] as? String == "2026-11-20T10:00:00.125Z")
         #expect(try JSONDecoder().decode(HexVisit.self, from: data) == original)
     }
 
     @Test func rejectsInvalidWireValues() {
         for data in [
-            payload(cell: "invalid"), payload(date: "invalid"),
+            payload(date: "invalid"),
             payload(score: -1), payload(lastScore: -0.1), payload(lastScore: 1.1), payload(total: -1)
         ] {
             #expect(throws: DecodingError.self) {

@@ -64,6 +64,13 @@ final class AppDatabase: Sendable {
                 )
                 """)
         }
+        migrator.registerMigration("v6 hexInfoJson") { db in
+            try db.drop(table: "hexVisit")
+            try db.create(table: "hexInfo") { table in
+                table.column("hexId", .integer).primaryKey()
+                table.column("json", .blob).notNull()
+            }
+        }
         return migrator
     }
 

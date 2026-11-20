@@ -43,8 +43,9 @@ struct HexTotalsServiceTests {
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
         #expect(totals.totalVisits == 105)
         #expect(totals.rivalScore == 30.25)
+        #expect(totals.cell == cell)
         #expect(totals.userVisit == HexVisit(
-            cell: cell, lastVisit: Date(timeIntervalSince1970: 1_795_168_800),
+            lastVisit: Date(timeIntervalSince1970: 1_795_168_800),
             score: 12.5, lastScore: 0.5, total: 42
         ))
     }
@@ -52,7 +53,7 @@ struct HexTotalsServiceTests {
     @Test func decodesMissingUserVisit() async throws {
         let body = "{\"totalVisits\":7,\"rivalScore\":9,\"userVisit\":null}"
         let totals = try await service(body: body).totals(for: cell)
-        #expect(totals == HexInfo(totalVisits: 7, rivalScore: 9, userVisit: nil))
+        #expect(totals == HexInfo(cell: cell, totalVisits: 7, rivalScore: 9, userVisit: nil))
     }
 
     @Test func rejectsFailedRequestsAndMalformedPayloads() async {

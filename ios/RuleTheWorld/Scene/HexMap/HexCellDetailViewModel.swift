@@ -6,16 +6,17 @@ import OSLog
 @MainActor
 final class HexCellDetailViewModel {
     let cell: HexCell
-    private(set) var visit: HexVisit?
-    private(set) var visitCount = 0
-    private(set) var totals: HexInfo?
+    private(set) var info: HexInfo?
     private(set) var isLoadingTotals = false
 
-    private let store: HexVisitStore
+    var visit: HexVisit? { info?.userVisit }
+    var visitCount: Int { info?.userVisit?.total ?? 0 }
+
+    private let store: HexInfoStore
     private let totalsProvider: (any HexTotalsProviding)?
 
     init(
-        cell: HexCell, store: HexVisitStore, logStore: HexVisitLogStore,
+        cell: HexCell, store: HexInfoStore, logStore: HexVisitLogStore,
         totalsProvider: (any HexTotalsProviding)? = nil
     ) {
         self.cell = cell
@@ -28,8 +29,7 @@ final class HexCellDetailViewModel {
 
     func load() async {
         do {
-            visit = try await store.visit(for: cell)
-            visitCount = visit?.total ?? 0
+            info = try await store.info(for: cell)
         } catch {
             Logger().error("Hex cell lookup failed: \(error)")
         }
@@ -37,7 +37,7 @@ final class HexCellDetailViewModel {
         isLoadingTotals = true
         defer { isLoadingTotals = false }
         do {
-            totals = try await totalsProvider.totals(for: cell)
+            info = try await store.save(totalsProvider.totals(for: cell))
         } catch {
             Logger().error("Hex totals lookup failed: \(error)")
         }

@@ -9,7 +9,7 @@ struct RegionSelectionTests {
     private func model(provider: ControlledRegionProvider) throws -> HexMapViewModel {
         let database = try AppDatabase.inMemory()
         return HexMapViewModel(
-            grid: HexGridService(), store: HexVisitStore(database: database),
+            grid: HexGridService(), store: HexInfoStore(database: database),
             logStore: HexVisitLogStore(database: database),
             locationService: LocationService(), boundaries: provider, totalsProvider: EmptyTotalsProvider()
         )
@@ -118,7 +118,7 @@ struct RegionSelectionTests {
 
 private struct EmptyTotalsProvider: HexTotalsProviding {
     func totals(for cell: HexCell) async throws -> HexInfo {
-        HexInfo(totalVisits: 0, rivalScore: 0, userVisit: nil)
+        HexInfo(cell: cell, totalVisits: 0, rivalScore: 0, userVisit: nil)
     }
 }
 

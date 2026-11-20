@@ -127,7 +127,7 @@ struct AuthServiceTests {
         #expect(visits.count == 1)
         #expect(visits.first?.totalVisits == 105)
         #expect(visits.first?.rivalScore == 30.25)
-        #expect(visits.first?.userVisit?.cell == HexCell(rawValue: 0x8A283082876FFFF))
+        #expect(visits.first?.cell == HexCell(rawValue: 0x8A283082876FFFF))
         #expect(visits.first?.userVisit?.score == 12.5)
         #expect(visits.first?.userVisit?.total == 42)
         #expect(visits.first?.userVisit?.lastScore == 0.5)

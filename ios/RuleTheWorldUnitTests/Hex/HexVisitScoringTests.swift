@@ -3,7 +3,6 @@ import Testing
 @testable import RuleTheWorld
 
 struct HexVisitScoringTests {
-    private let cell = HexCell(rawValue: 0x8A283082876FFFF)
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -12,7 +11,7 @@ struct HexVisitScoringTests {
     private let noon = Date(timeIntervalSince1970: TimeInterval(1_700_000_000 - 1_700_000_000 % 86_400 + 43_200))
 
     private func visit(lastVisit: Date, score: Double, lastScore: Double) -> HexVisit {
-        HexVisit(cell: cell, lastVisit: lastVisit, score: score, lastScore: lastScore)
+        HexVisit(lastVisit: lastVisit, score: score, lastScore: lastScore)
     }
 
     @Test func partialVisitSameDayAddsOnlyTheDifference() {

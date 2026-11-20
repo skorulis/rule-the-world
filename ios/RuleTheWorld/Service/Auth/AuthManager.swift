@@ -8,19 +8,19 @@ final class AuthManager {
     private let authenticatedService: AuthenticatedService
     private let tokenStore: AuthTokenStore
     private let database: AppDatabase
-    private let visitStore: HexVisitStore
+    private let visitStore: HexInfoStore
     private(set) var isSignedIn: Bool
 
     init(
         service: AuthService, authenticatedService: AuthenticatedService,
         tokenStore: AuthTokenStore, database: AppDatabase,
-        visitStore: HexVisitStore? = nil
+        visitStore: HexInfoStore? = nil
     ) {
         self.service = service
         self.authenticatedService = authenticatedService
         self.tokenStore = tokenStore
         self.database = database
-        self.visitStore = visitStore ?? HexVisitStore(database: database)
+        self.visitStore = visitStore ?? HexInfoStore(database: database)
         self.isSignedIn = tokenStore.token != nil
     }
 
@@ -40,7 +40,7 @@ final class AuthManager {
         do {
             let visits = try await authenticatedService.fetchVisits()
             try Task.checkCancellation()
-            try await visitStore.restore(visits.compactMap(\.userVisit))
+            try await visitStore.restore(visits)
             isSignedIn = true
         } catch {
             if let previousToken {

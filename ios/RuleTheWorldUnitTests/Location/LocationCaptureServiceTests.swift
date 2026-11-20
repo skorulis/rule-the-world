@@ -9,7 +9,7 @@ struct LocationCaptureServiceTests {
 
     private func makeService() throws -> LocationCaptureService {
         let database = try AppDatabase.inMemory()
-        let store = HexVisitStore(database: database)
+        let store = HexInfoStore(database: database)
         let logStore = HexVisitLogStore(database: database)
         return LocationCaptureService(grid: grid, store: store, logStore: logStore)
     }
@@ -187,7 +187,7 @@ struct LocationCaptureServiceTests {
         #expect(service.store.snapshot.states.isEmpty)
     }
 
-    private func store(of service: LocationCaptureService) -> HexVisitStore {
+    private func store(of service: LocationCaptureService) -> HexInfoStore {
         service.store
     }
 }

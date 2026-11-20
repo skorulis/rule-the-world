@@ -18,7 +18,7 @@ final class HexMapViewModel {
     private(set) var isLoadingRegions = false
 
     let grid: HexGridService
-    private let store: HexVisitStore
+    private let store: HexInfoStore
     private let logStore: HexVisitLogStore
     private let locationService: LocationService
     private let boundaries: any RegionBoundaryProviding
@@ -39,7 +39,7 @@ final class HexMapViewModel {
     @Resolvable<Resolver>
     init(
         grid: HexGridService,
-        store: HexVisitStore,
+        store: HexInfoStore,
         logStore: HexVisitLogStore,
         locationService: LocationService,
         boundaries: RegionBoundaryProviding,

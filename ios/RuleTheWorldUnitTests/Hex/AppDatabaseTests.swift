@@ -4,10 +4,10 @@ import Testing
 @testable import RuleTheWorld
 
 struct AppDatabaseTests {
-    @Test func migrationCreatesHexVisitTable() throws {
+    @Test func migrationCreatesHexInfoTable() throws {
         let database = try AppDatabase.inMemory()
         let exists = try database.writer.read { db in
-            try db.tableExists("hexVisit")
+            try db.tableExists("hexInfo")
         }
         #expect(exists)
     }
@@ -62,9 +62,10 @@ struct AppDatabaseTests {
         #expect(entries.count == 2)
         #expect(entries.allSatisfy { !$0.uploaded && !$0.uploadID.isEmpty })
         #expect(Set(entries.map(\.uploadID)).count == 2)
-        let visits = try database.writer.read { db in try HexVisit.fetchAll(db) }
-        #expect(visits.first { $0.cell == HexCell(rawValue: 1) }?.total == 4)
-        #expect(visits.first { $0.cell == HexCell(rawValue: 3) }?.total == 0)
+        let legacyTableDropped = try database.writer.read { db in
+            try !db.tableExists("hexVisit") && db.tableExists("hexInfo")
+        }
+        #expect(legacyTableDropped)
     }
 
     @Test func hexCellRoundTripsThroughDatabase() throws {
@@ -75,13 +76,18 @@ struct AppDatabaseTests {
             resolution: HexGridService.baseResolution
         )
         try database.writer.write { db in
-            let visit = HexVisit(cell: cell, lastVisit: .now, score: 1, lastScore: 1, total: 7)
-            try visit.save(db)
+            let info = HexInfo(
+                cell: cell, totalVisits: 12, rivalScore: 3.5,
+                userVisit: HexVisit(lastVisit: .now, score: 1, lastScore: 1, total: 7)
+            )
+            try info.save(db)
         }
         let fetched = try database.writer.read { db in
-            try HexVisit.fetchOne(db, key: cell)
+            try HexInfo.fetchOne(db, key: cell)
         }
         #expect(fetched?.cell == cell)
-        #expect(fetched?.total == 7)
+        #expect(fetched?.totalVisits == 12)
+        #expect(fetched?.rivalScore == 3.5)
+        #expect(fetched?.userVisit?.total == 7)
     }
 }

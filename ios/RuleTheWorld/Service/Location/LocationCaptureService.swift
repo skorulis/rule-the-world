@@ -5,7 +5,7 @@ import OSLog
 @MainActor
 final class LocationCaptureService {
     private let grid: HexGridService
-    let store: HexVisitStore
+    let store: HexInfoStore
     let logStore: HexVisitLogStore
     private var task: Task<Void, Never>?
 
@@ -17,7 +17,7 @@ final class LocationCaptureService {
 
     private(set) var lastRecorded: Recorded?
 
-    init(grid: HexGridService, store: HexVisitStore, logStore: HexVisitLogStore) {
+    init(grid: HexGridService, store: HexInfoStore, logStore: HexVisitLogStore) {
         self.grid = grid
         self.store = store
         self.logStore = logStore

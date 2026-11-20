@@ -17,10 +17,10 @@ struct HexCellDetailView: View {
             }
             if model.isLoadingTotals {
                 ProgressView()
-            } else if let totals = model.totals {
-                LabeledContent("Total visits", value: "\(totals.totalVisits)")
-                if totals.rivalScore > 0 {
-                    LabeledContent("Rival score", value: "\(Int(totals.rivalScore))")
+            } else if let info = model.info {
+                LabeledContent("Total visits", value: "\(info.totalVisits)")
+                if info.rivalScore > 0 {
+                    LabeledContent("Rival score", value: "\(Int(info.rivalScore))")
                 }
             }
             Spacer()
@@ -35,7 +35,7 @@ struct HexCellDetailView: View {
         HexCellDetailView(
             model: HexCellDetailViewModel(
                 cell: HexCell(rawValue: 0x8928308280FFFFF),
-                store: HexVisitStore(database: database),
+                store: HexInfoStore(database: database),
                 logStore: HexVisitLogStore(database: database)
             )
         )

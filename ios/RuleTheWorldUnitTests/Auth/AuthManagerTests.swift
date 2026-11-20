@@ -34,7 +34,7 @@ struct AuthManagerTests {
 
     private func makeManager(
         service: FakeURLSession, tokenStore: AuthTokenStore, database: AppDatabase,
-        visitStore: HexVisitStore? = nil
+        visitStore: HexInfoStore? = nil
     ) -> AuthManager {
         AuthManager(
             service: AuthService(urlSession: service),
@@ -107,7 +107,7 @@ struct AuthManagerTests {
 
     @Test func signInRestoresVisitsAndRefreshesSharedSnapshot() async throws {
         let database = try AppDatabase.inMemory()
-        let visits = HexVisitStore(database: database)
+        let visits = HexInfoStore(database: database)
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         let manager = makeManager(
             service: makeService(visitsBody: """
@@ -174,7 +174,7 @@ struct AuthManagerTests {
 
     @Test func signOutErasesDatabase() async throws {
         let database = try AppDatabase.inMemory()
-        let visitStore = HexVisitStore(database: database)
+        let visitStore = HexInfoStore(database: database)
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         try await visitStore.recordVisit(cell)
         let manager = makeManager(

@@ -8,9 +8,9 @@ struct ProfileViewModelTests {
     private let cellA = HexCell(rawValue: 0x8A283082876FFFF)
     private let cellB = HexCell(rawValue: 0x8A283082872FFFF)
 
-    private func makeModel() throws -> (ProfileViewModel, HexVisitStore) {
+    private func makeModel() throws -> (ProfileViewModel, HexInfoStore) {
         let database = try AppDatabase.inMemory()
-        let store = HexVisitStore(database: database)
+        let store = HexInfoStore(database: database)
         let tokenStore = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         let session = FakeURLSession { _ in
             throw URLError(.unsupportedURL)
@@ -47,7 +47,10 @@ struct ProfileViewModelTests {
         let (model, store) = try makeModel()
         _ = try await store.recordVisit(cellA)
         let visits = [cellA, cellB].map {
-            HexVisit(cell: $0, lastVisit: .now, score: 1, lastScore: 1)
+            HexInfo(
+                cell: $0, totalVisits: 1, rivalScore: 0,
+                userVisit: HexVisit(lastVisit: .now, score: 1, lastScore: 1)
+            )
         }
 
         try await store.restore(visits)
