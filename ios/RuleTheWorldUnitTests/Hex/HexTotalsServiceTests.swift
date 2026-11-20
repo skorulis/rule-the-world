@@ -52,7 +52,7 @@ struct HexTotalsServiceTests {
     @Test func decodesMissingUserVisit() async throws {
         let body = "{\"totalVisits\":7,\"rivalScore\":9,\"userVisit\":null}"
         let totals = try await service(body: body).totals(for: cell)
-        #expect(totals == HexTotals(totalVisits: 7, rivalScore: 9, userVisit: nil))
+        #expect(totals == HexInfo(totalVisits: 7, rivalScore: 9, userVisit: nil))
     }
 
     @Test func rejectsFailedRequestsAndMalformedPayloads() async {

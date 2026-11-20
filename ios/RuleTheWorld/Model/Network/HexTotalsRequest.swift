@@ -2,7 +2,7 @@ import ASKCore
 import Foundation
 
 struct HexTotalsRequest: HTTPRequest {
-    typealias ResponseType = HexTotals
+    typealias ResponseType = HexInfo
 
     let endpoint: String
     let method = "GET"
@@ -14,11 +14,11 @@ struct HexTotalsRequest: HTTPRequest {
         endpoint = "api/hex-visits/\(cell.description)"
     }
 
-    func decode(data: Data, response: URLResponse) throws -> HexTotals {
+    func decode(data: Data, response: URLResponse) throws -> HexInfo {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
             throw URLError(.badServerResponse)
         }
-        let payload = try JSONDecoder().decode(HexTotals.self, from: data)
+        let payload = try JSONDecoder().decode(HexInfo.self, from: data)
         guard payload.totalVisits >= 0, payload.rivalScore.isFinite, payload.rivalScore >= 0 else {
             throw URLError(.cannotParseResponse)
         }

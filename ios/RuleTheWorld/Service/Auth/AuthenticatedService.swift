@@ -13,7 +13,7 @@ final class AuthenticatedService: HTTPService {
         super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
     }
 
-    func fetchVisits() async throws -> [HexTotals] {
+    func fetchVisits() async throws -> [HexInfo] {
         try await execute(request: VisitDownloadRequest())
     }
 

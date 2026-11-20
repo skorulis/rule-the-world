@@ -8,7 +8,7 @@ final class HexCellDetailViewModel {
     let cell: HexCell
     private(set) var visit: HexVisit?
     private(set) var visitCount = 0
-    private(set) var totals: HexTotals?
+    private(set) var totals: HexInfo?
     private(set) var isLoadingTotals = false
 
     private let store: HexVisitStore

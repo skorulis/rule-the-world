@@ -1,5 +1,5 @@
 import Foundation
 
 nonisolated struct VisitDownloadResponse: Decodable {
-    let visits: [HexTotals]
+    let visits: [HexInfo]
 }
