@@ -102,11 +102,11 @@ struct HexInfoStoreTests {
     }
 
     @MainActor
-    @Test func snapshotMarksCellWithoutTotalsAsVisited() async throws {
+    @Test func snapshotMarksCellWithoutTotalsAsPartialVisit() async throws {
         let store = try makeStore()
         let cell = HexCell(rawValue: 0x8A283082876FFFF)
         _ = try await store.recordVisit(cell, score: 0.5)
-        #expect(store.snapshot.states[cell] == .visited)
+        #expect(store.snapshot.states[cell] == .partialVisit)
     }
 
     @MainActor

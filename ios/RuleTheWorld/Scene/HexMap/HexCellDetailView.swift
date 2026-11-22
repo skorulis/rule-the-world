@@ -9,7 +9,7 @@ struct HexCellDetailView: View {
                 .font(.headline)
             LabeledContent("Visits", value: "\(model.visitCount)")
             if let visit = model.visit {
-                LabeledContent("Score", value: "\(Int(visit.score))")
+                LabeledContent("Score", value: visit.score.formatted())
                 LabeledContent(
                     "Last visit",
                     value: visit.lastVisit.formatted(.relative(presentation: .named))
@@ -20,7 +20,7 @@ struct HexCellDetailView: View {
             } else if let totals = model.info?.totals {
                 LabeledContent("Total visits", value: "\(totals.totalVisits)")
                 if totals.rivalScore > 0 {
-                    LabeledContent("Rival score", value: "\(Int(totals.rivalScore))")
+                    LabeledContent("Rival score", value: totals.rivalScore.formatted())
                 }
             }
             Spacer()

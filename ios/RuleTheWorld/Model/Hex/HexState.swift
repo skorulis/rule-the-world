@@ -8,6 +8,7 @@ enum HexState: String, Codable, CaseIterable, Comparable {
     case contested
 
     nonisolated static func forScore(_ score: Double, rivalScore: Double?) -> HexState {
+        guard score >= HexVisit.maxDailyScore else { return .partialVisit }
         guard let rivalScore else { return .visited }
         if score > rivalScore { return .owned }
         if rivalScore > score { return .visited }
