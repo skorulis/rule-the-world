@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "regions:repair": "tsx reclassify-hex-details.ts"
   },
   "dependencies": {
     "better-auth": "1.7.18",
@@ -32,6 +33,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "tsx": "4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.12"
   },

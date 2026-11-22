@@ -4,20 +4,96 @@
   "license": "Creative Commons Attribution",
   "licenseURL": "https://data.nsw.gov.au/data/dataset/nsw-foundation-spatial-data-framework-administrative-boundaries-suburb",
   "tool": "mapshaper@0.7.101",
-  "simplification": "spherical weighted Visvalingam; keep-shapes",
-  "precisionDegrees": 1e-05,
+  "simplification": "spherical Douglas-Peucker; shared topology; keep-shapes",
+  "generatedAt": "2026-11-22T22:24:16.571685+00:00",
+  "precisionDegrees": 1e-06,
   "idBase": 9000000000000,
   "parents": {
     "New South Wales": "1159313299"
   },
+  "regressionPoints": [
+    {
+      "latitude": -33.8518,
+      "longitude": 151.2645,
+      "name": "Vaucluse",
+      "id": "9000108032101"
+    },
+    {
+      "latitude": -33.8632,
+      "longitude": 151.2694,
+      "name": "Rose Bay",
+      "id": "9000108030813"
+    },
+    {
+      "latitude": -33.8643,
+      "longitude": 151.2723,
+      "name": "Vaucluse",
+      "id": "9000108032101"
+    },
+    {
+      "latitude": -33.8466,
+      "longitude": 151.2812,
+      "name": "Watsons Bay",
+      "id": "9000108033257"
+    },
+    {
+      "latitude": -33.8465,
+      "longitude": 151.2821,
+      "name": "Vaucluse",
+      "id": "9000108032101"
+    },
+    {
+      "latitude": -33.841,
+      "longitude": 151.2766,
+      "name": "Watsons Bay",
+      "id": "9000108033257"
+    },
+    {
+      "latitude": -33.8692,
+      "longitude": 151.2529,
+      "name": "Rose Bay",
+      "id": "9000108030813"
+    },
+    {
+      "latitude": -33.8772,
+      "longitude": 151.2773,
+      "name": "Dover Heights",
+      "id": "9000108029656"
+    },
+    {
+      "latitude": -33.8759,
+      "longitude": 151.2778,
+      "name": "Rose Bay",
+      "id": "9000108030813"
+    },
+    {
+      "latitude": -33.8793,
+      "longitude": 151.278,
+      "name": "Dover Heights",
+      "id": "9000108029656"
+    }
+  ],
+  "regressionPointSource": "Membership verified against unsimplified NSW source geometry",
   "levels": {
     "medium": {
-      "intervalMeters": 100,
+      "intervalMeters": 5,
       "suburbs": 4607,
       "polygonParts": 4611,
-      "vertices": 344449,
-      "bytes": 8274211,
-      "sha256": "197c8ec4b8bbeda56c16f428fb19819074343bccf1a3a03e57db0833e335eae2"
+      "vertices": 1168349,
+      "bytes": 28552714,
+      "sha256": "cd67bfff2b300591364fe2cd228239f347e44632b59a2d12e7ee34077957f90c",
+      "rawVertices": 5568624,
+      "holes": 24,
+      "sourceInvalidFeatures": 1,
+      "outputInvalidFeatures": 1,
+      "maxBoundaryHausdorffMeters": 5.644,
+      "maximumAllowedMeters": 6.5,
+      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres"
     }
+  },
+  "normalizedSource": {
+    "bytes": 223596620,
+    "sha256": "1f2edefd3ac6cca22ce0b5705ccd46111c03ac6f7136b65490be0022ed8cca88",
+    "suburbs": 4607
   }
 }

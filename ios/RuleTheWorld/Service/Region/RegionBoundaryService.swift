@@ -55,7 +55,6 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
     let boundaries: [RegionOverlayPolicy.Level: [MapRegionBoundary]]
     private let displayBoundaries: [RegionOverlayPolicy.Level: [String: MapRegionBoundary]]
     private let statesByParent: [String: [MapRegionBoundary]]
-    private let suburbsByParent: [String: [MapRegionBoundary]]
 
     init(data: [RegionOverlayPolicy.Level: Data]) throws {
         var decoded: [RegionOverlayPolicy.Level: [MapRegionBoundary]] = [:]
@@ -88,26 +87,29 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
             grouped[parent, default: []].append(state)
         }
         statesByParent = grouped
-        var suburbs: [String: [MapRegionBoundary]] = [:]
+        let states = Dictionary(uniqueKeysWithValues: decoded[.state, default: []].map { ($0.id, $0) })
+        let countries = Set(decoded[.medium, default: []].filter { $0.kind == .country }.map(\.id))
         for suburb in decoded[.suburb, default: []] {
-            guard let parent = suburb.parent else { throw RegionBoundaryError.invalidCollection }
-            suburbs[parent, default: []].append(suburb)
+            guard suburb.kind == .suburb, let parent = suburb.parent,
+                  let state = states[parent], state.kind == .state,
+                  let country = state.parent, countries.contains(country) else {
+                throw RegionBoundaryError.invalidCollection
+            }
         }
-        suburbsByParent = suburbs
     }
 
     func selection(latitude: Double, longitude: Double, level: RegionOverlayPolicy.Level) -> MapRegionSelection? {
         let containsPoint = { (boundary: MapRegionBoundary) in
             boundary.contains(latitude: latitude, longitude: longitude)
         }
-        guard let region = boundaries[.medium]?.first(where: containsPoint) else { return nil }
-        if level == .state || level == .suburb {
-            guard let state = statesByParent[region.id]?.first(where: containsPoint) else { return nil }
-            if level == .state {
-                return MapRegionSelection(boundary: state, level: level)
-            }
-            guard let suburb = suburbsByParent[state.id]?.first(where: containsPoint) else { return nil }
+        if level == .suburb {
+            guard let suburb = boundaries[.suburb]?.first(where: containsPoint) else { return nil }
             return MapRegionSelection(boundary: suburb, level: level)
+        }
+        guard let region = boundaries[.medium]?.first(where: containsPoint) else { return nil }
+        if level == .state {
+            guard let state = statesByParent[region.id]?.first(where: containsPoint) else { return nil }
+            return MapRegionSelection(boundary: state, level: level)
         }
         guard let display = displayBoundaries[level]?[region.id] else { return nil }
         return MapRegionSelection(boundary: display, level: level)

@@ -5,8 +5,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
   outputFileTracingIncludes: {
-    "/api/hex-visits/batch": ["./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson"],
-    "/api/debug/hex_details": ["./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson"],
+    "/api/hex-visits/batch": [
+      "./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson",
+      "./data/regions/suburbs-medium.geojson", "../data/regions/suburbs-medium.geojson",
+    ],
+    "/api/debug/hex_details": [
+      "./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson",
+      "./data/regions/suburbs-medium.geojson", "../data/regions/suburbs-medium.geojson",
+    ],
   },
   async headers() {
     return [

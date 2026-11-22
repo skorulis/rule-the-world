@@ -18,10 +18,10 @@ class Ring {
       || !points.slice(1).every((end, i) => Math.abs(end.longitude - points[i].longitude) <= 180)) {
       throw new Error("Invalid region ring");
     }
-    this.minLongitude = Math.min(...points.map((p) => p.longitude));
-    this.maxLongitude = Math.max(...points.map((p) => p.longitude));
-    this.minLatitude = Math.min(...points.map((p) => p.latitude));
-    this.maxLatitude = Math.max(...points.map((p) => p.latitude));
+    this.minLongitude = points.reduce((min, p) => Math.min(min, p.longitude), Infinity);
+    this.maxLongitude = points.reduce((max, p) => Math.max(max, p.longitude), -Infinity);
+    this.minLatitude = points.reduce((min, p) => Math.min(min, p.latitude), Infinity);
+    this.maxLatitude = points.reduce((max, p) => Math.max(max, p.latitude), -Infinity);
   }
 
   contains(point: Point): boolean {
@@ -58,7 +58,7 @@ class Polygon {
   }
 }
 
-type Region = { id: bigint; parent?: bigint; polygons: Polygon[] };
+type Region = { id: bigint; kind: string; parent?: bigint; polygons: Polygon[] };
 
 type FeatureCollection = {
   type: string;
@@ -100,6 +100,7 @@ function parseRegions(collection: FeatureCollection): Region[] {
     });
     return {
       id: BigInt(feature.properties.id),
+      kind: feature.properties.kind,
       parent: parent === undefined ? undefined : BigInt(parent),
       polygons,
     };
@@ -111,9 +112,8 @@ function parseRegions(collection: FeatureCollection): Region[] {
 }
 
 function geoJsonPath(fileName: string): string {
-  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    path.resolve(moduleDir, `../../data/regions/${fileName}`),
+    ...(import.meta.url ? [path.resolve(path.dirname(fileURLToPath(import.meta.url)), `../../data/regions/${fileName}`)] : []),
     path.resolve(process.cwd(), `data/regions/${fileName}`),
   ];
   return candidates.find((candidate) => {
@@ -191,4 +191,34 @@ export function stateIdForPoint(parent: bigint, latitude: number, longitude: num
 export function suburbIdForPoint(parent: bigint, latitude: number, longitude: number): bigint {
   if (parent === noRegion) return noRegion;
   return suburbs(parent).find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
+}
+
+export type RegionHierarchy = { country: bigint; state: bigint; suburb: bigint };
+
+let suburbHierarchies: { region: Region; hierarchy: RegionHierarchy }[] | undefined;
+
+function detailedSuburbs() {
+  if (!suburbHierarchies) {
+    const countries = new Map(catalog("countries-medium.geojson").map((region) => [region.id, region]));
+    const stateRegions = new Map(catalog("states-medium.geojson").map((region) => [region.id, region]));
+    suburbsByParent ??= childrenByParent("suburbs-medium.geojson", true);
+    const regions = [...suburbsByParent.values()].flat().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    suburbHierarchies = regions.map((region) => {
+      const state = region.parent === undefined ? undefined : stateRegions.get(region.parent);
+      const country = state?.parent === undefined ? undefined : countries.get(state.parent);
+      if (region.kind !== "suburb" || state?.kind !== "state" || country?.kind !== "country") {
+        throw new Error("Invalid suburb parent hierarchy");
+      }
+      return { region, hierarchy: { country: country.id, state: state.id, suburb: region.id } };
+    });
+  }
+  return suburbHierarchies;
+}
+
+export function hierarchyForPoint(latitude: number, longitude: number): RegionHierarchy {
+  const detailed = detailedSuburbs().find(({ region }) => regionContains(region, latitude, longitude));
+  if (detailed) return detailed.hierarchy;
+  const country = regionIdForPoint(latitude, longitude);
+  const state = stateIdForPoint(country, latitude, longitude);
+  return { country, state, suburb: noRegion };
 }

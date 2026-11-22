@@ -123,6 +123,38 @@ struct RegionBoundaryTests {
         #expect(catalog.selection(latitude: 20, longitude: 20, level: .suburb) == nil)
     }
 
+    @Test func detailedSuburbSelectionDoesNotRequireCoarseParentContainment() throws {
+        let country = feature(id: "land", geometry: "[[[0,0],[2,0],[2,4],[0,4],[0,0]]]")
+        let state = feature(
+            id: "state", geometry: "[[[0,0],[1,0],[1,4],[0,4],[0,0]]]", kind: "state", parent: "land"
+        )
+        let suburb = feature(
+            id: "suburb", geometry: "[[[0,0],[4,0],[4,4],[0,4],[0,0]]]", kind: "suburb", parent: "state"
+        )
+        func collection(_ feature: String) -> Data {
+            Data("{\"type\":\"FeatureCollection\",\"features\":[\(feature)]}".utf8)
+        }
+        let catalog = try RegionBoundaryCatalog(data: [
+            .medium: collection(country), .coarse: collection(country),
+            .state: collection(state), .suburb: collection(suburb),
+        ])
+        #expect(catalog.selection(latitude: 2, longitude: 3, level: .suburb)?.boundary.id == "suburb")
+        #expect(catalog.selection(latitude: 2, longitude: 3, level: .medium) == nil)
+        #expect(catalog.selection(latitude: 2, longitude: 3, level: .state) == nil)
+    }
+
+    @Test func suburbsWithUnknownParentsAreRejected() {
+        let country = feature(id: "land", geometry: "[[[0,0],[4,0],[4,4],[0,4],[0,0]]]")
+        let suburb = feature(
+            id: "suburb", geometry: "[[[0,0],[4,0],[4,4],[0,4],[0,0]]]", kind: "suburb", parent: "unknown"
+        )
+        let countryData = Data("{\"type\":\"FeatureCollection\",\"features\":[\(country)]}".utf8)
+        let suburbData = Data("{\"type\":\"FeatureCollection\",\"features\":[\(suburb)]}".utf8)
+        #expect(throws: RegionBoundaryError.self) {
+            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
+        }
+    }
+
     @Test func suburbCollectionsRequireParents() {
         let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
         let orphan = feature(id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "suburb")
@@ -183,6 +215,33 @@ struct RegionBoundaryTests {
         #expect(fijiAcrossDateline?.boundary.name == "Fiji")
         let ocean = try await service.selection(latitude: 0, longitude: -140, level: .medium)
         #expect(ocean == nil)
+    }
+
+    @Test func bundledSuburbsRetainSourceCoastalDetail() async throws {
+        struct Point: Decodable {
+            let latitude: Double
+            let longitude: Double
+            let name: String
+            let id: String
+        }
+        struct Source: Decodable {
+            let regressionPoints: [Point]
+        }
+        let bundle = Bundle(for: HexMapViewModel.self)
+        let url = try #require(
+            bundle.url(forResource: "suburbs-source", withExtension: "json")
+                ?? bundle.url(forResource: "suburbs-source", withExtension: "json", subdirectory: "Regions")
+        )
+        let source = try JSONDecoder().decode(Source.self, from: Data(contentsOf: url))
+        #expect(!source.regressionPoints.isEmpty)
+        let service = RegionBoundaryService(bundle: bundle)
+        for point in source.regressionPoints {
+            let selection = try await service.selection(
+                latitude: point.latitude, longitude: point.longitude, level: .suburb
+            )
+            #expect(selection?.boundary.id == point.id)
+            #expect(selection?.boundary.name == point.name)
+        }
     }
 
     @Test func bundledStatesSelectWithinTheirParentCountry() async throws {

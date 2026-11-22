@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "./country-regions";
+import suburbSource from "../../../data/regions/suburbs-source.json";
+import { hierarchyForPoint, regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "./country-regions";
 
 const NONE = BigInt(0);
 
@@ -87,6 +88,16 @@ describe("suburbIdForPoint", () => {
   it.runIf(hasSuburbData)("returns a suburb id for a point inside a NSW suburb", () => {
     expect(NSW).not.toBe(NONE);
     expect(suburbIdForPoint(NSW, -33.898, 151.179)).not.toBe(NONE);
+  });
+
+  it.runIf(hasSuburbData)("retains source coastal detail around Vaucluse and neighbouring suburbs", () => {
+    expect(suburbSource.regressionPoints.length).toBeGreaterThan(0);
+    for (const point of suburbSource.regressionPoints) {
+      expect(suburbIdForPoint(NSW, point.latitude, point.longitude), point.name).toBe(BigInt(point.id));
+      expect(hierarchyForPoint(point.latitude, point.longitude), point.name).toEqual({
+        country: AUSTRALIA, state: NSW, suburb: BigInt(point.id),
+      });
+    }
   });
 
   it.runIf(hasSuburbData)("returns 'none' for a NSW point outside every suburb", () => {
