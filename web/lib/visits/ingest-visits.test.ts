@@ -9,7 +9,7 @@ vi.mock("@/lib/regions/country-regions", () => ({
 }));
 
 import { db } from "@/lib/db";
-import { hexRegion, hexVisit, regionType } from "@/db/schema";
+import { hexDetails, hexVisit } from "@/db/schema";
 import { regionIdForPoint, stateIdForPoint } from "@/lib/regions/country-regions";
 import { ingestVisits } from "./ingest-visits";
 import { parseVisitBatch } from "./visit-batch";
@@ -23,7 +23,7 @@ const query = (value: SQL) => dialect.sqlToQuery(value);
 
 function harness(previous = "0", current = "0.5", latest = timestamp,
   uploaded: { id: string; cell: bigint; count: number }[] = [],
-  knownRegions: { cell: bigint; region: bigint; regionType: number }[] = []) {
+  knownRegions: { cell: bigint; regionCountry: bigint | null; regionState: bigint | null }[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
   const dayRows = previous === "0" ? [] : [{ userId: "u1", cell: cellId, day: "2026-11-20", score: previous }];
   const select = vi.fn()
@@ -34,9 +34,10 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
   const dailyReturning = vi.fn().mockResolvedValue([{ userId: "u1", cell: cellId, day: "2026-11-20", score: current }]);
   const upsert = vi.fn().mockReturnValue({ returning: dailyReturning });
   const regionConflict = vi.fn().mockResolvedValue([]);
+  const detailValues = vi.fn(() => ({ onConflictDoNothing: regionConflict, onConflictDoUpdate: upsert }));
   const insert = vi.fn()
     .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: vi.fn().mockResolvedValue([]) }) })
-    .mockReturnValueOnce({ values: () => ({ onConflictDoNothing: regionConflict, onConflictDoUpdate: upsert }) })
+    .mockReturnValueOnce({ values: detailValues })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: upsert }) })
     .mockReturnValueOnce({ values: () => ({ onConflictDoUpdate: vi.fn().mockResolvedValue([]) }) });
   const returning = vi.fn().mockResolvedValue([{ cell: cellId, lastVisit: new Date(latest), score: current, lastScore: current, total: 1 }]);
@@ -45,10 +46,14 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
   const update = vi.fn().mockReturnValue({ set });
   const tx = { select, insert, update };
   vi.mocked(db.transaction).mockImplementationOnce(async (callback) => callback(tx as never));
-  return { lock, select, insert, regionConflict, upsert, dailyReturning, returning, where, set };
+  return { lock, select, insert, detailValues, regionConflict, upsert, dailyReturning, returning, where, set };
 }
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(regionIdForPoint).mockReturnValue(BigInt(42));
+  vi.mocked(stateIdForPoint).mockReturnValue(BigInt(0));
+});
 
 describe("visit ingestion SQL contract", () => {
   it.each([
@@ -124,7 +129,7 @@ describe("visit ingestion SQL contract", () => {
     expect(query(mock.where.mock.calls[0][0]).params).toEqual(["other-player", cellId]);
   });
 
-  it("classifies unmapped cells into hex_region from the cell center", async () => {
+  it("classifies unmapped cells into hex_details from the cell center", async () => {
     const mock = harness();
     await ingestVisits("u1", batch());
     expect(regionIdForPoint).toHaveBeenCalledTimes(1);
@@ -133,39 +138,63 @@ describe("visit ingestion SQL contract", () => {
     expect(latitude).toBeLessThan(90);
     expect(longitude).toBeGreaterThan(-180);
     expect(longitude).toBeLessThanOrEqual(180);
-    expect(mock.insert).toHaveBeenCalledWith(hexRegion);
+    expect(mock.insert).toHaveBeenCalledWith(hexDetails);
     expect(mock.regionConflict).toHaveBeenCalledTimes(1);
   });
 
-  it("skips region lookup for cells already classified", async () => {
+  it.each([
+    [BigInt(42), BigInt(7)],
+    [BigInt(42), null],
+    [null, null],
+  ])("skips classification for cached country=%s state=%s", async (regionCountry, regionState) => {
     const mock = harness("0", "0.5", timestamp, [], [
-      { cell: cellId, region: BigInt(42), regionType: regionType.country },
-      { cell: cellId, region: BigInt(7), regionType: regionType.state },
+      { cell: cellId, regionCountry, regionState },
     ]);
     await ingestVisits("u1", batch());
     expect(regionIdForPoint).not.toHaveBeenCalled();
     expect(stateIdForPoint).not.toHaveBeenCalled();
-    expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexRegion);
+    expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexDetails);
   });
 
-  it("writes a state row alongside the country row when a state matches", async () => {
+  it("writes country and state in a single conflict-safe row", async () => {
     vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
     const mock = harness();
     await ingestVisits("u1", batch());
     expect(stateIdForPoint).toHaveBeenCalledWith(BigInt(42), expect.any(Number), expect.any(Number));
+    expect(mock.detailValues).toHaveBeenCalledWith([
+      { cell: cellId, regionCountry: BigInt(42), regionState: BigInt(7) },
+    ]);
     expect(mock.regionConflict).toHaveBeenCalledTimes(1);
-    expect(mock.insert).toHaveBeenCalledWith(hexRegion);
   });
 
-  it("backfills a missing state row for a cell with only a country row", async () => {
-    vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
-    const mock = harness("0", "0.5", timestamp, [], [
-      { cell: cellId, region: BigInt(42), regionType: regionType.country },
-    ]);
+  it("caches a country without a matching state", async () => {
+    const mock = harness();
     await ingestVisits("u1", batch());
-    expect(regionIdForPoint).not.toHaveBeenCalled();
-    expect(stateIdForPoint).toHaveBeenCalledWith(BigInt(42), expect.any(Number), expect.any(Number));
-    expect(mock.regionConflict).toHaveBeenCalledTimes(1);
+    expect(mock.detailValues).toHaveBeenCalledWith([
+      { cell: cellId, regionCountry: BigInt(42), regionState: null },
+    ]);
+  });
+
+  it("caches cells outside all countries with null regions", async () => {
+    vi.mocked(regionIdForPoint).mockReturnValueOnce(BigInt(0));
+    const mock = harness();
+    await ingestVisits("u1", batch());
+    expect(stateIdForPoint).not.toHaveBeenCalled();
+    expect(mock.detailValues).toHaveBeenCalledWith([
+      { cell: cellId, regionCountry: null, regionState: null },
+    ]);
+  });
+
+  it("classifies a cell only once across repeated visits", async () => {
+    const mock = harness();
+    await ingestVisits("u1", parseVisitBatch({ visits: [
+      { id: "1", cell, timestamp, score: 0.5 },
+      { id: "2", cell, timestamp, score: 0.5 },
+    ] }));
+    expect(regionIdForPoint).toHaveBeenCalledTimes(1);
+    expect(mock.detailValues).toHaveBeenCalledWith([
+      { cell: cellId, regionCountry: BigInt(42), regionState: null },
+    ]);
   });
 
   it("propagates transaction failures without acknowledging", async () => {

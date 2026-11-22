@@ -1,18 +1,7 @@
 import MapKit
 import UIKit
 
-final class UserStatusAnnotation: NSObject, MKAnnotation {
-    dynamic var coordinate: CLLocationCoordinate2D
-
-    init(coordinate: CLLocationCoordinate2D) {
-        self.coordinate = coordinate
-        super.init()
-    }
-}
-
-final class UserStatusAnnotationView: MKAnnotationView {
-    static let reuseIdentifier = "UserStatusAnnotation"
-
+final class UserStatusAnnotationView: UIView {
     private static let size: CGFloat = 120
     private static let orbitRadius: CGFloat = 34
     private static let speedLabelOffset: CGFloat = 36
@@ -20,9 +9,9 @@ final class UserStatusAnnotationView: MKAnnotationView {
     private let arrowView = UIImageView()
     private let speedLabel = UILabel()
 
-    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
-        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        frame = CGRect(x: 0, y: 0, width: Self.size, height: Self.size)
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.frame = CGRect(x: 0, y: 0, width: Self.size, height: Self.size)
 
         arrowView.image = UIImage(systemName: "location.north.fill")
         arrowView.tintColor = .systemBlue
@@ -38,8 +27,8 @@ final class UserStatusAnnotationView: MKAnnotationView {
         speedLabel.layer.masksToBounds = true
         addSubview(speedLabel)
 
-        centerOffset = .zero
-        isEnabled = false
+        autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
+        isUserInteractionEnabled = false
     }
 
     @available(*, unavailable)

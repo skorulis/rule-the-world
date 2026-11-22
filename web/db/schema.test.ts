@@ -1,14 +1,23 @@
 import { getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import { hexRegion, hexVisit, hexVisitDay } from "./schema";
+import { hexDetails, hexVisit, hexVisitDay } from "./schema";
 
 describe("visit score schema", () => {
   it("keys aggregates by user/cell and daily summaries by user/cell/day", () => {
     expect(getTableName(hexVisit)).toBe("hex_visit");
     expect(getTableName(hexVisitDay)).toBe("hex_visit_day");
-    expect(getTableName(hexRegion)).toBe("hex_region");
-    expect(getTableConfig(hexRegion).primaryKeys[0].columns.map((column) => column.name)).toEqual(["cell", "region_type"]);
+    expect(getTableName(hexDetails)).toBe("hex_details");
+    expect(getTableConfig(hexDetails).primaryKeys[0].columns.map((column) => column.name)).toEqual(["cell"]);
+    expect(hexDetails.cell.getSQLType()).toBe("bigint");
+    expect(hexDetails.cell.notNull).toBe(true);
+    expect(hexDetails.regionCountry.getSQLType()).toBe("bigint");
+    expect(hexDetails.regionState.getSQLType()).toBe("bigint");
+    expect(hexDetails.regionCountry.notNull).toBe(false);
+    expect(hexDetails.regionState.notNull).toBe(false);
+    expect(getTableConfig(hexDetails).checks.map(({ name }) => name)).toEqual([
+      "hex_details_region_country_positive", "hex_details_region_state_positive",
+    ]);
     expect(getTableConfig(hexVisit).primaryKeys[0].columns.map((column) => column.name)).toEqual(["user_id", "cell"]);
     expect(getTableConfig(hexVisitDay).primaryKeys[0].columns.map((column) => column.name)).toEqual(["user_id", "cell", "day"]);
   });

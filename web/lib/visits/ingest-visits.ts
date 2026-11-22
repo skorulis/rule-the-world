@@ -1,7 +1,7 @@
 import { cellToLatLng } from "h3-js";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
-import { hexRegion, hexVisit, hexVisitDay, hexVisitUpload, noRegion, regionType, type RegionType } from "@/db/schema";
+import { hexDetails, hexVisit, hexVisitDay, hexVisitUpload, noRegion } from "@/db/schema";
 import { db } from "@/lib/db";
 import { regionIdForPoint, stateIdForPoint } from "@/lib/regions/country-regions";
 import type { VisitBatch } from "./visit-batch";
@@ -14,31 +14,24 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
     await tx.insert(hexVisit).values(batch.cells.map(({ cell, lastVisit }) => ({ userId, cell, lastVisit })))
       .onConflictDoNothing();
 
-    const known = await tx.select({
-      cell: hexRegion.cell, region: hexRegion.region, regionType: hexRegion.regionType,
-    }).from(hexRegion).where(inArray(hexRegion.cell, batch.cells.map(({ cell }) => cell)));
-    const countries = new Map<bigint, bigint>();
-    const knownStates = new Set<bigint>();
-    for (const row of known) {
-      if (row.regionType === regionType.state) knownStates.add(row.cell);
-      else countries.set(row.cell, row.region);
-    }
-    const rows: { cell: bigint; region: bigint; regionType: RegionType }[] = [];
-    for (const cell of new Set(batch.cells.map(({ cell }) => cell))) {
+    const cells = [...new Set(batch.cells.map(({ cell }) => cell))];
+    const known = await tx.select({ cell: hexDetails.cell }).from(hexDetails)
+      .where(inArray(hexDetails.cell, cells));
+    const classified = new Set(known.map(({ cell }) => cell));
+    const rows: (typeof hexDetails.$inferInsert)[] = [];
+    for (const cell of cells) {
+      if (classified.has(cell)) continue;
       const [latitude, longitude] = cellToLatLng(cell.toString(16));
-      if (!countries.has(cell)) {
-        const region = regionIdForPoint(latitude, longitude);
-        countries.set(cell, region);
-        rows.push({ cell, region, regionType: region === noRegion ? regionType.none : regionType.country });
-      }
-      const country = countries.get(cell) ?? noRegion;
-      if (!knownStates.has(cell) && country !== noRegion) {
-        const state = stateIdForPoint(country, latitude, longitude);
-        if (state !== noRegion) rows.push({ cell, region: state, regionType: regionType.state });
-      }
+      const country = regionIdForPoint(latitude, longitude);
+      const state = country === noRegion ? noRegion : stateIdForPoint(country, latitude, longitude);
+      rows.push({
+        cell,
+        regionCountry: country === noRegion ? null : country,
+        regionState: state === noRegion ? null : state,
+      });
     }
     if (rows.length) {
-      await tx.insert(hexRegion).values(rows).onConflictDoNothing();
+      await tx.insert(hexDetails).values(rows).onConflictDoNothing();
     }
     const previous = await tx.select().from(hexVisitDay).where(and(
       eq(hexVisitDay.userId, userId),

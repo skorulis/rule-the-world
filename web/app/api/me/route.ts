@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { hexRegion, hexVisit, regionType } from "@/db/schema";
+import { hexDetails, hexVisit, regionType } from "@/db/schema";
 import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
 
@@ -27,13 +27,17 @@ export async function GET(request: Request) {
         from ${hexVisit}
         where ${hexVisit.userId} = ${session.user.id}
       ), region_counts as (
-        select ${hexRegion.region} as region, ${hexRegion.regionType} as kind,
+        select membership.region, membership.kind,
           count(*)::text as visited,
           count(*) filter (where user_cells.owned)::text as owned
         from user_cells
-        left join ${hexRegion} on ${hexRegion.cell} = user_cells.cell
-        where ${hexRegion.region} > 0
-        group by ${hexRegion.region}, ${hexRegion.regionType}
+        join ${hexDetails} on ${hexDetails.cell} = user_cells.cell
+        cross join lateral (values
+          (${hexDetails.regionCountry}, ${sql.raw(String(regionType.country))}),
+          (${hexDetails.regionState}, ${sql.raw(String(regionType.state))})
+        ) as membership(region, kind)
+        where membership.region is not null
+        group by membership.region, membership.kind
       )
       select region::text, kind, 0 as overall, visited, owned from region_counts
       union all

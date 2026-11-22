@@ -1,6 +1,6 @@
 // App-specific tables go here. Auth tables live in auth-schema.ts.
 import { sql } from "drizzle-orm";
-import { bigint, check, date, foreignKey, integer, numeric, pgTable, primaryKey, smallint, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, check, date, foreignKey, integer, numeric, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 
 export const hexVisit = pgTable("hex_visit", {
@@ -20,16 +20,15 @@ export const hexVisit = pgTable("hex_visit", {
 export const noRegion = BigInt(0);
 
 export const regionType = { none: 0, country: 1, state: 2 } as const;
-export type RegionType = (typeof regionType)[keyof typeof regionType];
 
-export const hexRegion = pgTable("hex_region", {
+export const hexDetails = pgTable("hex_details", {
   cell: bigint("cell", { mode: "bigint" }).notNull(),
-  region: bigint("region", { mode: "bigint" }).notNull(),
-  regionType: smallint("region_type").notNull().$type<RegionType>(),
+  regionCountry: bigint("region_country", { mode: "bigint" }),
+  regionState: bigint("region_state", { mode: "bigint" }),
 }, (table) => [
-  primaryKey({ columns: [table.cell, table.regionType] }),
-  check("hex_region_region_nonnegative", sql`${table.region} >= 0`),
-  check("hex_region_region_type_range", sql`${table.regionType} BETWEEN 0 AND 2`),
+  primaryKey({ columns: [table.cell] }),
+  check("hex_details_region_country_positive", sql`${table.regionCountry} > 0`),
+  check("hex_details_region_state_positive", sql`${table.regionState} > 0`),
 ]);
 
 export const hexVisitUpload = pgTable("hex_visit_upload", {

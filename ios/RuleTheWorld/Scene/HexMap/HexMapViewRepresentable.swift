@@ -48,7 +48,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         private(set) var renderer: HexGridOverlayRenderer?
         private let grid: HexGridService
         private var hasCenteredOnUser = false
-        private var statusAnnotation: UserStatusAnnotation?
+        private let statusView = UserStatusAnnotationView(frame: .zero)
         private var status: UserMapStatus?
         private var selectedRegion: MapRegionSelection?
         private var countryOverlay: MKMultiPolygon?
@@ -109,20 +109,8 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             reportCamera(mapView)
         }
 
-        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            guard let statusAnnotation = annotation as? UserStatusAnnotation else {
-                return nil
-            }
-            let view = mapView.dequeueReusableAnnotationView(
-                withIdentifier: UserStatusAnnotationView.reuseIdentifier
-            ) as? UserStatusAnnotationView ?? UserStatusAnnotationView(
-                annotation: statusAnnotation,
-                reuseIdentifier: UserStatusAnnotationView.reuseIdentifier
-            )
-            if let status {
-                view.apply(status: status, mapHeading: mapView.camera.heading)
-            }
-            return view
+        func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+            reapplyStatus(mapView)
         }
 
         func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
@@ -145,25 +133,19 @@ struct HexMapViewRepresentable: UIViewRepresentable {
 
         func apply(status: UserMapStatus?, to mapView: MKMapView) {
             self.status = status
-            guard let status else { return }
-            let coordinate = CLLocationCoordinate2D(
-                latitude: status.latitude,
-                longitude: status.longitude
-            )
-            if let annotation = statusAnnotation {
-                annotation.coordinate = coordinate
-            } else {
-                let annotation = UserStatusAnnotation(coordinate: coordinate)
-                statusAnnotation = annotation
-                mapView.addAnnotation(annotation)
-            }
             reapplyStatus(mapView)
         }
 
         private func reapplyStatus(_ mapView: MKMapView) {
-            guard let status, let annotation = statusAnnotation,
-                  let view = mapView.view(for: annotation) as? UserStatusAnnotationView else { return }
-            view.apply(status: status, mapHeading: mapView.camera.heading)
+            statusView.isHidden = status == nil
+            guard let status,
+                  let userLocationView = mapView.view(for: mapView.userLocation) else { return }
+            if statusView.superview !== userLocationView {
+                statusView.removeFromSuperview()
+                userLocationView.addSubview(statusView)
+            }
+            statusView.center = CGPoint(x: userLocationView.bounds.midX, y: userLocationView.bounds.midY)
+            statusView.apply(status: status, mapHeading: mapView.camera.heading)
         }
 
         private func reportCamera(_ mapView: MKMapView) {

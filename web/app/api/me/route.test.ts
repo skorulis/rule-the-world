@@ -69,9 +69,13 @@ describe("GET /api/me", () => {
     expect(query.sql).toContain('"hex_visit"."score" > coalesce');
     expect(query.sql).toContain('select max(rival.score)');
     expect(query.sql).toContain('rival.cell = "hex_visit"."cell" and rival.user_id <>');
-    expect(query.sql).toContain('left join "hex_region"');
+    expect(query.sql).toContain('join "hex_details"');
     expect(query.sql).toContain('count(*) filter (where owned)');
-    expect(query.sql).toContain('"hex_region"."region" > 0');
+    expect(query.sql).toContain('cross join lateral (values');
+    expect(query.sql).toContain('("hex_details"."region_country", 1)');
+    expect(query.sql).toContain('("hex_details"."region_state", 2)');
+    expect(query.sql).toContain('where membership.region is not null');
+    expect(query.sql).toContain('group by membership.region, membership.kind');
     expect(query.sql).toContain('union all');
     expect(query.sql).toContain('from user_cells');
   });
