@@ -4,36 +4,50 @@ struct HexVisitLogListView: View {
     @State var model: HexVisitLogListViewModel
 
     var body: some View {
-        NavigationStack {
-            List {
-                if let errorMessage = model.errorMessage {
-                    Section {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    }
-                }
-                ForEach(model.entries, id: \.id) { entry in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.timestamp.formatted(date: .abbreviated, time: .standard))
-                            .font(.headline)
-                        Text("Hex \(entry.cell.description)")
-                            .font(.caption)
-                            .monospaced()
-                        Text(detailLine(entry))
-                            .font(.caption)
-                            .monospaced()
-                    }
+        List {
+            if let errorMessage = model.errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
                 }
             }
-            .navigationTitle("Visit Log")
-            .overlay {
-                if model.entries.isEmpty {
-                    ContentUnavailableView("No visits yet", systemImage: "hexagon")
+            ForEach(model.entries, id: \.id) { entry in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.timestamp.formatted(date: .abbreviated, time: .standard))
+                        .font(.headline)
+                    Text("Hex \(entry.cell.description)")
+                        .font(.caption)
+                        .monospaced()
+                    Text(detailLine(entry))
+                        .font(.caption)
+                        .monospaced()
                 }
             }
-            .task { await model.load() }
-            .refreshable { await model.load() }
         }
+        .navigationTitle("Visit Log")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await model.sync() }
+                } label: {
+                    HStack {
+                        if model.isSyncing {
+                            ProgressView()
+                        }
+                        Text("Sync (\(model.pendingCount))")
+                    }
+                }
+                .disabled(model.isSyncing || model.pendingCount == 0)
+                .accessibilityIdentifier("syncVisits")
+            }
+        }
+        .overlay {
+            if model.entries.isEmpty {
+                ContentUnavailableView("No visits yet", systemImage: "hexagon")
+            }
+        }
+        .task { await model.observeEntries() }
+        .refreshable { await model.load() }
     }
 
     private func detailLine(_ entry: HexVisitLog) -> String {

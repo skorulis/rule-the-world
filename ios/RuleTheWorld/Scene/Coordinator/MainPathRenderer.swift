@@ -10,10 +10,12 @@ struct MainPathRenderer: CoordinatorPathRenderer {
     @MainActor @ViewBuilder
     func render(path: MainPath, in coordinator: Coordinator) -> some View {
         switch path {
-        case .content:
-            ContentView(model: ContentViewModel.make(resolver: resolver))
         case .hexMap:
             HexMapView(model: HexMapViewModel.make(resolver: resolver))
+        case .visitLog:
+            HexVisitLogListView(model: HexVisitLogListViewModel.make(resolver: resolver))
+        case .profile:
+            ProfileView(model: ProfileViewModel.make(resolver: resolver))
         }
     }
 }

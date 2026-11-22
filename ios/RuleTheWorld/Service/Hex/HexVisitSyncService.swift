@@ -1,13 +1,15 @@
 import Foundation
 import OSLog
+import Observation
 
+@Observable
 @MainActor
 final class HexVisitSyncService {
     private let store: HexVisitLogStore
     private let uploader: AuthenticatedService
     private let tokenStore: AuthTokenStore
     private let waitForNextCheck: () async throws -> Void
-    private var isSyncing = false
+    private(set) var isSyncing = false
 
     init(
         store: HexVisitLogStore,

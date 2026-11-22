@@ -1,4 +1,3 @@
-import ASKCoordinator
 import ASKCore
 import Knit
 import SwiftUI
@@ -48,8 +47,7 @@ struct RuleTheWorldApp: App {
                 if ProcessInfo.isRunningTests {
                     Color.clear
                 } else if let authManager, authManager.isSignedIn {
-                    CoordinatorView(coordinator: Coordinator(root: MainPath.content))
-                        .withRenderers(resolver: assembler.resolver)
+                    ContentView(model: ContentViewModel.make(resolver: assembler.resolver))
                         .environment(\.resolver, assembler.resolver)
                 } else {
                     LoginView(model: LoginViewModel.make(resolver: assembler.resolver))

@@ -60,6 +60,15 @@ final class HexVisitLogStore {
         }
     }
 
+    func observeEntries(onChange: ([HexVisitLog]) -> Void) async throws {
+        let observation = ValueObservation.tracking { db in
+            try HexVisitLog.order(Column("id").desc).fetchAll(db)
+        }
+        for try await entries in observation.values(in: database.writer) {
+            onChange(entries)
+        }
+    }
+
     func all() async throws -> [HexVisitLog] {
         try await database.writer.read { db in
             try HexVisitLog.order(Column("id").asc).fetchAll(db)

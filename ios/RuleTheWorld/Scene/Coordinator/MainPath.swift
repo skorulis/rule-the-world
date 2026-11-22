@@ -1,15 +1,18 @@
 import ASKCoordinator
 
 enum MainPath: CoordinatorPath {
-    case content
     case hexMap
+    case visitLog
+    case profile
 
     var id: String {
         switch self {
-        case .content:
-            "content"
         case .hexMap:
             "hexMap"
+        case .visitLog:
+            "visitLog"
+        case .profile:
+            "profile"
         }
     }
 }
