@@ -21,6 +21,17 @@ struct HexMapView: View {
             }
         )
         .ignoresSafeArea()
+        .overlay(alignment: .topLeading) {
+            if let region = model.selectedRegion {
+                Text(region.boundary.name)
+                    .font(.headline)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: .capsule)
+                    .padding()
+            }
+        }
+        .animation(.default, value: model.selectedRegion)
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await model.refreshGameDay()
