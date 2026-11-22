@@ -61,6 +61,22 @@ final class HexMapViewModel {
         store.snapshot
     }
 
+    func refreshGameDay() async {
+        while !Task.isCancelled {
+            await store.reload()
+            let calendar = HexVisit.scoringCalendar
+            let now = Date.now
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) else {
+                return
+            }
+            do {
+                try await Task.sleep(for: .seconds(max(nextDay.timeIntervalSinceNow, 0.1)))
+            } catch {
+                return
+            }
+        }
+    }
+
     var userStatus: UserMapStatus? {
         UserMapStatus.make(sample: locationService.latestSample, heading: locationService.heading)
     }

@@ -2,9 +2,31 @@ import Foundation
 
 struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     nonisolated var states: [HexCell: HexState]
+    nonisolated var visitedToday: Set<HexCell> = []
+
+    nonisolated init(states: [HexCell: HexState], visitedToday: Set<HexCell> = []) {
+        self.states = states
+        self.visitedToday = visitedToday
+    }
+
+    nonisolated init(infos: [HexInfo], at date: Date = .now) {
+        states = Dictionary(uniqueKeysWithValues: infos.compactMap { info in
+            info.userVisit.map { (info.cell, HexState.forScore($0.score, rivalScore: info.totals?.rivalScore)) }
+        })
+        visitedToday = Set(infos.compactMap { info in
+            guard let visit = info.userVisit,
+                  HexVisit.scoringCalendar.isDate(visit.lastVisit, inSameDayAs: date) else { return nil }
+            return info.cell
+        })
+    }
+
+    nonisolated func aggregatedVisits(at resolution: Int, grid: HexGridService) -> Set<HexCell> {
+        if resolution == HexGridService.baseResolution { return visitedToday }
+        return Set(visitedToday.compactMap { grid.parent(of: $0, at: resolution) })
+    }
 
     nonisolated static func == (lhs: HexOwnershipSnapshot, rhs: HexOwnershipSnapshot) -> Bool {
-        lhs.states == rhs.states
+        lhs.states == rhs.states && lhs.visitedToday == rhs.visitedToday
     }
 
     nonisolated func aggregated(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {

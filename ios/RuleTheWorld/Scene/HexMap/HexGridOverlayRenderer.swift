@@ -9,6 +9,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         var snapshot = HexOwnershipSnapshot(states: [:])
         var showGrid = true
         var aggregateCache: [Int: [HexCell: HexState]] = [:]
+        var visitCache: [Int: Set<HexCell>] = [:]
     }
 
     private let state = OSAllocatedUnfairLock<State>(initialState: State())
@@ -26,6 +27,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             state.snapshot = snapshot
             state.showGrid = showGrid
             state.aggregateCache = [:]
+            state.visitCache = [:]
             return true
         }
         if changed {
@@ -50,13 +52,32 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         let region = MKCoordinateRegion(paddedRect)
 
         let cells = grid.cells(in: region, resolution: resolution)
-        let states = aggregated(at: resolution)
+        let (states, visits) = aggregated(at: resolution)
+        let markerPath = CGMutablePath()
 
         var unclaimedPath = CGMutablePath()
         var ownedPaths: [HexState: (fill: CGMutablePath, stroke: CGMutablePath)] = [:]
         for cell in cells {
             let boundary = grid.boundary(of: cell)
             guard !boundary.isEmpty else { continue }
+            if visits.contains(cell) {
+                let points = boundary.map { point(for: MKMapPoint($0)) }
+                let center = CGPoint(
+                    x: points.map(\.x).reduce(0, +) / CGFloat(points.count),
+                    y: points.map(\.y).reduce(0, +) / CGFloat(points.count)
+                )
+                if let corner = points.max(by: { $0.x - $0.y < $1.x - $1.y }) {
+                    let distance = hypot(corner.x - center.x, corner.y - center.y)
+                    let radius = min(3 / zoomScale, distance * 0.12)
+                    let marker = CGPoint(
+                        x: center.x + (corner.x - center.x) * 0.65,
+                        y: center.y + (corner.y - center.y) * 0.65
+                    )
+                    markerPath.addEllipse(in: CGRect(
+                        x: marker.x - radius, y: marker.y - radius, width: radius * 2, height: radius * 2
+                    ))
+                }
+            }
             let cellState = states[cell] ?? .unclaimed
             if cellState == .unclaimed {
                 appendPath(to: &unclaimedPath, boundary: boundary)
@@ -87,16 +108,23 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             context.setStrokeColor(uiColor.cgColor)
             context.strokePath()
         }
+        context.addPath(markerPath)
+        context.setFillColor(UIColor.systemGreen.cgColor)
+        context.setStrokeColor(UIColor.white.cgColor)
+        context.setLineWidth(1 / zoomScale)
+        context.drawPath(using: .fillStroke)
     }
 
-    private func aggregated(at resolution: Int) -> [HexCell: HexState] {
+    private func aggregated(at resolution: Int) -> ([HexCell: HexState], Set<HexCell>) {
         state.withLock { state in
-            if let cached = state.aggregateCache[resolution] {
-                return cached
+            if let cached = state.aggregateCache[resolution], let visits = state.visitCache[resolution] {
+                return (cached, visits)
             }
             let result = state.snapshot.aggregated(at: resolution, grid: grid)
+            let visits = state.snapshot.aggregatedVisits(at: resolution, grid: grid)
             state.aggregateCache[resolution] = result
-            return result
+            state.visitCache[resolution] = visits
+            return (result, visits)
         }
     }
 

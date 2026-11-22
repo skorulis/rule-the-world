@@ -1,4 +1,5 @@
 import CoreLocation
+import Foundation
 import Testing
 @testable import RuleTheWorld
 
@@ -10,6 +11,41 @@ struct HexOwnershipSnapshotTests {
             containing: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
             resolution: HexGridService.baseResolution
         )
+    }
+
+    @Test func todayUsesGameCalendarAndPreservesState() {
+        let midnight = HexVisit.scoringCalendar.startOfDay(for: Date(timeIntervalSince1970: 1_800_000_000))
+        let info = HexInfo(
+            cell: sydneyCell, totals: nil,
+            userVisit: HexVisit(lastVisit: midnight, score: 0.5, lastScore: 0.5)
+        )
+        let today = HexOwnershipSnapshot(infos: [info], at: midnight.addingTimeInterval(86_399))
+        #expect(today.visitedToday == [sydneyCell])
+        #expect(today.states[sydneyCell] == .partialVisit)
+        let tomorrow = HexOwnershipSnapshot(infos: [info], at: midnight.addingTimeInterval(86_400))
+        #expect(tomorrow.visitedToday.isEmpty)
+        #expect(tomorrow.states == today.states)
+        #expect(today != tomorrow)
+        let yesterday = HexOwnershipSnapshot(infos: [info], at: midnight.addingTimeInterval(-1))
+        #expect(yesterday.visitedToday.isEmpty)
+    }
+
+    @Test func missingVisitHasNoMarker() {
+        let snapshot = HexOwnershipSnapshot(infos: [HexInfo(cell: sydneyCell, totals: nil, userVisit: nil)])
+        #expect(snapshot.visitedToday.isEmpty)
+        #expect(snapshot.states.isEmpty)
+    }
+
+    @Test func todayMarkersAggregateIndependentlyOfOwnership() {
+        let parent = grid.parent(of: sydneyCell, at: 7)!
+        let children = grid.children(of: parent, at: HexGridService.baseResolution)
+        let snapshot = HexOwnershipSnapshot(
+            states: [children[0]: .owned, children[1]: .partialVisit, children[2]: .owned],
+            visitedToday: [children[1], children[2]]
+        )
+        #expect(snapshot.aggregatedVisits(at: HexGridService.baseResolution, grid: grid) == snapshot.visitedToday)
+        #expect(snapshot.aggregatedVisits(at: 7, grid: grid) == [parent])
+        #expect(snapshot.aggregated(at: 7, grid: grid)[parent] == .owned)
     }
 
     @Test func stateForScore() {

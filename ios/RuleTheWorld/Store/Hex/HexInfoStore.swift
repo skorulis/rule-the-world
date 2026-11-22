@@ -67,13 +67,7 @@ final class HexInfoStore {
             let infos = try await database.writer.read { db in
                 try HexInfo.fetchAll(db)
             }
-            snapshot = HexOwnershipSnapshot(
-                states: Dictionary(uniqueKeysWithValues: infos.compactMap { info in
-                    info.userVisit.map {
-                        (info.cell, HexState.forScore($0.score, rivalScore: info.totals?.rivalScore))
-                    }
-                })
-            )
+            snapshot = HexOwnershipSnapshot(infos: infos)
         } catch {
             Logger().error("HexInfoStore reload failed: \(error)")
         }

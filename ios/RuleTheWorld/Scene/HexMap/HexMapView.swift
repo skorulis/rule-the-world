@@ -3,6 +3,7 @@ import SwiftUI
 
 struct HexMapView: View {
     @State var model: HexMapViewModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         HexMapViewRepresentable(
@@ -20,6 +21,10 @@ struct HexMapView: View {
             }
         )
         .ignoresSafeArea()
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await model.refreshGameDay()
+        }
         .onDisappear { model.cancelRegionSelection() }
         .sheet(item: $model.selectedCell) { cell in
             HexCellDetailView(model: model.makeCellDetailViewModel(for: cell))
