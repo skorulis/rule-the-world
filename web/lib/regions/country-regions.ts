@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { decode } from "geobuf";
+import Pbf from "pbf";
 import { noRegion } from "@/db/schema";
 
 type Point = { longitude: number; latitude: number };
@@ -70,6 +72,7 @@ type FeatureCollection = {
 };
 
 function parsePoint(value: unknown): Point {
+  if (!Array.isArray(value) || value.length !== 2) throw new Error("Invalid region point");
   const [longitude, latitude] = value as number[];
   if (!Number.isFinite(longitude) || !Number.isFinite(latitude)
     || longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
@@ -89,8 +92,9 @@ function parseRegions(collection: FeatureCollection): Region[] {
         ? feature.geometry.coordinates as number[][][][]
         : null;
     const parent = feature.properties.parent;
-    if (feature.type !== "Feature" || !/^\d+$/.test(feature.properties.id)
-      || (parent !== undefined && !/^\d+$/.test(parent)) || !rawPolygons?.length) {
+    if (feature.type !== "Feature" || typeof feature.properties.id !== "string" || !/^\d+$/.test(feature.properties.id)
+      || typeof feature.properties.name !== "string" || !["country", "state", "suburb"].includes(feature.properties.kind)
+      || (parent !== undefined && (typeof parent !== "string" || !/^\d+$/.test(parent))) || !rawPolygons?.length) {
       throw new Error("Invalid region collection");
     }
     const polygons = rawPolygons.map((rings) => {
@@ -111,7 +115,7 @@ function parseRegions(collection: FeatureCollection): Region[] {
   return regions.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
-function geoJsonPath(fileName: string): string {
+function boundaryPath(fileName: string): string {
   const candidates = [
     ...(import.meta.url ? [path.resolve(path.dirname(fileURLToPath(import.meta.url)), `../../data/regions/${fileName}`)] : []),
     path.resolve(process.cwd(), `data/regions/${fileName}`),
@@ -126,12 +130,27 @@ function geoJsonPath(fileName: string): string {
   }) ?? candidates[0];
 }
 
+function decodeCollection(data: Uint8Array): FeatureCollection {
+  const header = new Pbf(data);
+  const metadata = header.readFields((tag, metadata, pbf) => {
+    if (tag === 2) metadata.dimensions = pbf.readVarint();
+    if (tag === 3) metadata.precision = pbf.readVarint();
+  }, { dimensions: 2, precision: 6 });
+  if (header.pos !== data.length || metadata.dimensions !== 2 || metadata.precision > 6) {
+    throw new Error("Invalid region encoding");
+  }
+  const reader = new Pbf(data);
+  const collection = decode(reader) as FeatureCollection;
+  if (reader.pos !== data.length) throw new Error("Invalid region encoding");
+  return collection;
+}
+
 const catalogs = new Map<string, Region[]>();
 
 function catalog(fileName: string): Region[] {
   let regions = catalogs.get(fileName);
   if (!regions) {
-    regions = parseRegions(JSON.parse(readFileSync(geoJsonPath(fileName), "utf-8")));
+    regions = parseRegions(decodeCollection(readFileSync(boundaryPath(fileName))));
     catalogs.set(fileName, regions);
   }
   return regions;
@@ -159,12 +178,12 @@ let statesByParent: Map<bigint, Region[]> | undefined;
 let suburbsByParent: Map<bigint, Region[]> | undefined;
 
 function states(parent: bigint): Region[] {
-  statesByParent ??= childrenByParent("states-medium.geojson");
+  statesByParent ??= childrenByParent("states-medium.pbf");
   return statesByParent.get(parent) ?? [];
 }
 
 function suburbs(parent: bigint): Region[] {
-  suburbsByParent ??= childrenByParent("suburbs-medium.geojson", true);
+  suburbsByParent ??= childrenByParent("suburbs-medium.pbf", true);
   return suburbsByParent.get(parent) ?? [];
 }
 
@@ -179,7 +198,7 @@ function regionContains(region: Region, latitude: number, longitude: number): bo
 }
 
 export function regionIdForPoint(latitude: number, longitude: number): bigint {
-  return catalog("countries-medium.geojson")
+  return catalog("countries-medium.pbf")
     .find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
 }
 
@@ -199,9 +218,9 @@ let suburbHierarchies: { region: Region; hierarchy: RegionHierarchy }[] | undefi
 
 function detailedSuburbs() {
   if (!suburbHierarchies) {
-    const countries = new Map(catalog("countries-medium.geojson").map((region) => [region.id, region]));
-    const stateRegions = new Map(catalog("states-medium.geojson").map((region) => [region.id, region]));
-    suburbsByParent ??= childrenByParent("suburbs-medium.geojson", true);
+    const countries = new Map(catalog("countries-medium.pbf").map((region) => [region.id, region]));
+    const stateRegions = new Map(catalog("states-medium.pbf").map((region) => [region.id, region]));
+    suburbsByParent ??= childrenByParent("suburbs-medium.pbf", true);
     const regions = [...suburbsByParent.values()].flat().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
     suburbHierarchies = regions.map((region) => {
       const state = region.parent === undefined ? undefined : stateRegions.get(region.parent);

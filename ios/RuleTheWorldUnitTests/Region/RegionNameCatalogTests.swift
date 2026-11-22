@@ -19,40 +19,27 @@ struct RegionNameCatalogTests {
 
     @Test func bundledLookupCoversEveryCountryWithItsCanonicalName() throws {
         let bundle = Bundle(for: HexMapViewModel.self)
-        let url = try #require(bundle.url(forResource: "countries-medium", withExtension: "geojson")
-            ?? bundle.url(forResource: "countries-medium", withExtension: "geojson", subdirectory: "Regions"))
-        let collection = try JSONDecoder().decode(Collection.self, from: Data(contentsOf: url))
+        let url = try #require(bundle.url(forResource: "countries-medium", withExtension: "pbf")
+            ?? bundle.url(forResource: "countries-medium", withExtension: "pbf", subdirectory: "Regions"))
+        let regions = try GeobufRegionDecoder.decode(Data(contentsOf: url))
         let catalog = RegionNameCatalog(bundle: bundle)
-        #expect(collection.features.count == 242)
-        for feature in collection.features {
-            let id = try #require(Int64(feature.properties.id))
-            #expect(catalog.name(for: id) == feature.properties.name)
+        #expect(regions.count == 242)
+        for feature in regions {
+            let id = try #require(Int64(feature.id))
+            #expect(catalog.name(for: id) == feature.name)
         }
     }
 
     @Test func bundledLookupCoversEveryStateWithItsCanonicalName() throws {
         let bundle = Bundle(for: HexMapViewModel.self)
-        let url = try #require(bundle.url(forResource: "states-coarse", withExtension: "geojson")
-            ?? bundle.url(forResource: "states-coarse", withExtension: "geojson", subdirectory: "Regions"))
-        let collection = try JSONDecoder().decode(Collection.self, from: Data(contentsOf: url))
+        let url = try #require(bundle.url(forResource: "states-coarse", withExtension: "pbf")
+            ?? bundle.url(forResource: "states-coarse", withExtension: "pbf", subdirectory: "Regions"))
+        let regions = try GeobufRegionDecoder.decode(Data(contentsOf: url))
         let catalog = RegionNameCatalog(bundle: bundle)
-        #expect(collection.features.count == 11)
-        for feature in collection.features {
-            let id = try #require(Int64(feature.properties.id))
-            #expect(catalog.name(for: id) == feature.properties.name)
+        #expect(regions.count == 11)
+        for feature in regions {
+            let id = try #require(Int64(feature.id))
+            #expect(catalog.name(for: id) == feature.name)
         }
-    }
-
-    private struct Collection: Decodable {
-        let features: [Feature]
-    }
-
-    private struct Feature: Decodable {
-        let properties: Properties
-    }
-
-    private struct Properties: Decodable {
-        let id: String
-        let name: String
     }
 }

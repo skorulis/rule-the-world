@@ -17,16 +17,24 @@
       "states": 11,
       "polygonParts": 101,
       "vertices": 12083,
-      "bytes": 265344,
-      "sha256": "06e4d16190990f21341845cd1ac65c992e71d8443d4d0bbf32f2fed26af3b921"
+      "bytes": 66518,
+      "sha256": "c1644d126f991dbe16a1b1a2240893088dcb83160da5f602ec6a9193168ae942",
+      "format": "geobuf",
+      "precisionDegrees": 1e-06,
+      "geojsonBytes": 265344,
+      "reductionPercent": 74.93
     },
     "coarse": {
       "intervalMeters": 6000,
       "states": 11,
       "polygonParts": 101,
       "vertices": 1527,
-      "bytes": 35481,
-      "sha256": "ac1e3d8e09e1e48328ed3c508d3d3918a0a07cd558c56fd438b64589de49376e"
+      "bytes": 9687,
+      "sha256": "b3512ffcb1ea52bb1cdace2f9abbd056a7c38a49ff85345be69791223985c5dd",
+      "format": "geobuf",
+      "precisionDegrees": 1e-06,
+      "geojsonBytes": 35481,
+      "reductionPercent": 72.7
     }
   }
 }

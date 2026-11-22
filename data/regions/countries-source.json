@@ -14,16 +14,24 @@
       "countries": 242,
       "polygonParts": 1620,
       "vertices": 60169,
-      "bytes": 1273694,
-      "sha256": "9a93fa2e779761860466ac6c768fba4eb479547e4fb3ba7750278138267be4fb"
+      "bytes": 367024,
+      "sha256": "e78ddddfda585148e480f5ca55f18703316dd71b3de4ac41283dfbf0823e5c57",
+      "format": "geobuf",
+      "precisionDegrees": 1e-06,
+      "geojsonBytes": 1273694,
+      "reductionPercent": 71.18
     },
     "coarse": {
       "intervalMeters": 15000,
       "countries": 242,
       "polygonParts": 1620,
       "vertices": 18242,
-      "bytes": 414684,
-      "sha256": "d1717a0bc4a66731945f60dcb51cf9c11e12b930a5ac5b75ef2fc2db6c2f64f7"
+      "bytes": 121382,
+      "sha256": "f43a2818863cedaeb011a3be2f6b2047c558ddbccdb78beee8814e3cfc6e432f",
+      "format": "geobuf",
+      "precisionDegrees": 1e-06,
+      "geojsonBytes": 414684,
+      "reductionPercent": 70.73
     }
   }
 }

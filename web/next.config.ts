@@ -6,12 +6,14 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
   outputFileTracingIncludes: {
     "/api/hex-visits/batch": [
-      "./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson",
-      "./data/regions/suburbs-medium.geojson", "../data/regions/suburbs-medium.geojson",
+      "./data/regions/countries-medium.pbf", "./data/regions/states-medium.pbf",
+      "./data/regions/suburbs-medium.pbf", "../data/regions/suburbs-medium.pbf",
+      "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
     "/api/debug/hex_details": [
-      "./data/regions/countries-medium.geojson", "./data/regions/states-medium.geojson",
-      "./data/regions/suburbs-medium.geojson", "../data/regions/suburbs-medium.geojson",
+      "./data/regions/countries-medium.pbf", "./data/regions/states-medium.pbf",
+      "./data/regions/suburbs-medium.pbf", "../data/regions/suburbs-medium.pbf",
+      "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
   },
   async headers() {

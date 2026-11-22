@@ -7,7 +7,7 @@ struct RegionBoundaryTests {
         let data = Data("""
         {"type":"FeatureCollection","features":[\(features)]}
         """.utf8)
-        return try RegionBoundaryCatalog(data: [.medium: data, .coarse: data])
+        return try RegionBoundaryCatalog(fixtures: [.medium: data, .coarse: data])
     }
 
     private func feature(
@@ -59,7 +59,7 @@ struct RegionBoundaryTests {
     @Test func coarseDisplayStillUsesMediumGeometryForSelection() throws {
         let medium = feature(id: "country", geometry: "[[[0,0],[4,0],[4,4],[0,4],[0,0]]]")
         let coarse = feature(id: "country", geometry: "[[[0,0],[2,0],[2,2],[0,2],[0,0]]]")
-        let catalog = try RegionBoundaryCatalog(data: [
+        let catalog = try RegionBoundaryCatalog(fixtures: [
             .medium: Data("{\"type\":\"FeatureCollection\",\"features\":[\(medium)]}".utf8),
             .coarse: Data("{\"type\":\"FeatureCollection\",\"features\":[\(coarse)]}".utf8),
         ])
@@ -70,8 +70,8 @@ struct RegionBoundaryTests {
     }
 
     @Test func malformedRingsAndDuplicateIdentitiesAreRejected() {
-        let unclosed = feature(id: "bad", geometry: "[[[0,0],[2,0],[2,2],[0,2]]]")
-        #expect(throws: RegionBoundaryError.self) { try catalog(features: unclosed) }
+        let tooShort = feature(id: "bad", geometry: "[[[0,0],[2,0],[0,0]]]")
+        #expect(throws: RegionBoundaryError.self) { try catalog(features: tooShort) }
         let crossing = feature(id: "bad", geometry: "[[[179,0],[-179,0],[-179,2],[179,0]]]")
         #expect(throws: RegionBoundaryError.self) { try catalog(features: crossing) }
         let valid = feature(id: "same", geometry: "[[[0,0],[2,0],[2,2],[0,0]]]")
@@ -89,7 +89,9 @@ struct RegionBoundaryTests {
         let stateData = Data("""
         {"type":"FeatureCollection","features":[\(states)]}
         """.utf8)
-        let catalog = try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .state: stateData])
+        let catalog = try RegionBoundaryCatalog(fixtures: [
+            .medium: countryData, .coarse: countryData, .state: stateData,
+        ])
         #expect(catalog.selection(latitude: 5, longitude: 2, level: .state)?.boundary.id == "child")
         #expect(catalog.selection(latitude: 5, longitude: 7, level: .state) == nil)
         #expect(catalog.selection(latitude: 5, longitude: 2, level: .medium)?.boundary.id == "land")
@@ -113,7 +115,7 @@ struct RegionBoundaryTests {
         let suburbData = Data("""
         {"type":"FeatureCollection","features":[\(suburbs)]}
         """.utf8)
-        let catalog = try RegionBoundaryCatalog(data: [
+        let catalog = try RegionBoundaryCatalog(fixtures: [
             .medium: countryData, .coarse: countryData, .state: stateData, .suburb: suburbData,
         ])
         #expect(catalog.selection(latitude: 2, longitude: 1, level: .suburb)?.boundary.id == "nested")
@@ -134,7 +136,7 @@ struct RegionBoundaryTests {
         func collection(_ feature: String) -> Data {
             Data("{\"type\":\"FeatureCollection\",\"features\":[\(feature)]}".utf8)
         }
-        let catalog = try RegionBoundaryCatalog(data: [
+        let catalog = try RegionBoundaryCatalog(fixtures: [
             .medium: collection(country), .coarse: collection(country),
             .state: collection(state), .suburb: collection(suburb),
         ])
@@ -151,7 +153,7 @@ struct RegionBoundaryTests {
         let countryData = Data("{\"type\":\"FeatureCollection\",\"features\":[\(country)]}".utf8)
         let suburbData = Data("{\"type\":\"FeatureCollection\",\"features\":[\(suburb)]}".utf8)
         #expect(throws: RegionBoundaryError.self) {
-            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
+            try RegionBoundaryCatalog(fixtures: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
         }
     }
 
@@ -165,7 +167,7 @@ struct RegionBoundaryTests {
         {"type":"FeatureCollection","features":[\(orphan)]}
         """.utf8)
         #expect(throws: RegionBoundaryError.self) {
-            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
+            try RegionBoundaryCatalog(fixtures: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
         }
     }
 
@@ -174,7 +176,7 @@ struct RegionBoundaryTests {
         let countryData = Data("""
         {"type":"FeatureCollection","features":[\(countries)]}
         """.utf8)
-        let catalog = try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData])
+        let catalog = try RegionBoundaryCatalog(fixtures: [.medium: countryData, .coarse: countryData])
         #expect(catalog.selection(latitude: 5, longitude: 5, level: .suburb) == nil)
     }
 
@@ -188,7 +190,7 @@ struct RegionBoundaryTests {
         {"type":"FeatureCollection","features":[\(orphan)]}
         """.utf8)
         #expect(throws: RegionBoundaryError.self) {
-            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .state: stateData])
+            try RegionBoundaryCatalog(fixtures: [.medium: countryData, .coarse: countryData, .state: stateData])
         }
     }
 

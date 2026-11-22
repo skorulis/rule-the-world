@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import json
 import math
-import shutil
 import subprocess
 from datetime import datetime, timezone
 import tempfile
@@ -13,7 +12,7 @@ import urllib.request
 from pathlib import Path
 
 from region_pipeline import (
-    OUTPUT, coverage_names, load_regions, regroup, validate_file, write_level,
+    OUTPUT, coverage_names, load_regions, publish_dataset, regroup, validate_file, validate_resources, write_level,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,7 +20,6 @@ LAYER = "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Administrati
 PARENT = {"New South Wales": "1159313299"}
 LEVELS = {"medium": 5}
 MAX_DEVIATION_METERS = 6.5
-BUNDLE = ROOT / "ios/RuleTheWorld/Resource/Regions"
 PAGE = 2000
 ID_BASE = 9_000_000_000_000  # reserved suburb id range, disjoint from Natural Earth ids
 NAMES = ROOT / "ios/RuleTheWorld/Resource/Regions/region-names.json"
@@ -168,6 +166,8 @@ def geometry_quality(source: dict, output: dict) -> dict:
 
 
 def prepare(cache: Path | None = None):
+    if cache and ROOT in cache.resolve().parents:
+        assert cache.resolve().parent == OUTPUT and cache.name.endswith("-download-cache.json"), "use an ignored data/regions/*-download-cache.json or a cache outside the repository"
     OUTPUT.mkdir(parents=True, exist_ok=True)
     metadata = {
         "source": "NSW Administrative Boundaries Theme - Suburb (FeatureServer layer 2)",
@@ -207,15 +207,13 @@ def prepare(cache: Path | None = None):
             simplify_geojson(directory, raw, interval, target)
             simplified = json.loads(target.read_text())
             regroup(simplified)
-            quality = geometry_quality(collection, simplified)
-            update_names(simplified)
-            metadata["levels"][level] = {
-                **write_level(simplified, "suburbs", level, interval, "suburbs"), **quality,
-            }
+            stats = write_level(simplified, "suburbs", level, interval, "suburbs", output=directory)
+            decoded = load_regions("suburbs", level, output=directory)
+            quality = geometry_quality(collection, decoded)
+            metadata["levels"][level] = {**stats, **quality}
             print(level, metadata["levels"][level], flush=True)
-    (OUTPUT / "suburbs-source.json").write_text(json.dumps(metadata, indent=2) + "\n")
-    for filename in [*(f"suburbs-{level}.geojson" for level in LEVELS), "suburbs-source.json"]:
-        shutil.copyfile(OUTPUT / filename, BUNDLE / filename)
+        publish_dataset("suburbs", metadata, directory)
+        update_names(decoded)
 
 
 def validate():
@@ -223,8 +221,7 @@ def validate():
     states = {feature["properties"]["id"] for feature in load_regions("states")["features"]}
     assert set(metadata["parents"].values()) <= states
     countries = {feature["properties"]["id"] for feature in load_regions("countries")["features"]}
-    for filename in [*(f"suburbs-{level}.geojson" for level in LEVELS), "suburbs-source.json"]:
-        assert (OUTPUT / filename).read_bytes() == (BUNDLE / filename).read_bytes(), f"stale iOS resource: {filename}"
+    validate_resources("suburbs", metadata)
     for level in LEVELS:
         assert metadata["levels"][level]["intervalMeters"] == LEVELS[level]
         assert metadata["levels"][level]["maxBoundaryHausdorffMeters"] <= MAX_DEVIATION_METERS

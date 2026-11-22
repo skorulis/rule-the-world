@@ -80,15 +80,19 @@
       "suburbs": 4607,
       "polygonParts": 4611,
       "vertices": 1168349,
-      "bytes": 28552714,
-      "sha256": "cd67bfff2b300591364fe2cd228239f347e44632b59a2d12e7ee34077957f90c",
+      "bytes": 4914280,
+      "sha256": "89c083c243c3ae45265369370542f6764d510c20d31f91aad3f89d18e4f8ad89",
       "rawVertices": 5568624,
       "holes": 24,
       "sourceInvalidFeatures": 1,
       "outputInvalidFeatures": 1,
       "maxBoundaryHausdorffMeters": 5.644,
       "maximumAllowedMeters": 6.5,
-      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres"
+      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres",
+      "format": "geobuf",
+      "precisionDegrees": 1e-06,
+      "geojsonBytes": 28552714,
+      "reductionPercent": 82.79
     }
   },
   "normalizedSource": {

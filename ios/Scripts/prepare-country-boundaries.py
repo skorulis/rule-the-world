@@ -4,7 +4,7 @@ import tempfile
 
 from region_pipeline import (
     LEVELS, OUTPUT, REVISION, coverage_names, download, load_regions, regroup,
-    simplify, validate_file, write_level,
+    publish_dataset, simplify, validate_file, validate_resources, write_level,
 )
 
 SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/50m_cultural/ne_50m_admin_0_countries"
@@ -37,13 +37,14 @@ def prepare():
             )
             collection = json.loads(target.read_text())
             regroup(collection)
-            metadata["levels"][level] = write_level(collection, "countries", level, interval, "countries")
+            metadata["levels"][level] = write_level(collection, "countries", level, interval, "countries", output=directory)
             print(level, metadata["levels"][level])
-    (OUTPUT / "countries-source.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        publish_dataset("countries", metadata, directory)
 
 
 def validate():
     metadata = json.loads((OUTPUT / "countries-source.json").read_text())
+    validate_resources("countries", metadata)
     identities = []
     part_counts = []
     for level in LEVELS:

@@ -1,8 +1,12 @@
+import argparse
 import hashlib
 import json
 from pathlib import Path
 import subprocess
+import tempfile
 import urllib.request
+
+import geobuf
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "data/regions"
@@ -77,20 +81,33 @@ def expand_antimeridian(collection: dict):
     return identities, parts, vertices
 
 
-def write_level(collection: dict, stem: str, level: str, interval: int, regions_key: str):
+def encode_collection(collection: dict) -> bytes:
+    data = geobuf.encode(collection, 6, 2)
+    assert geobuf.decode(data) == collection, "Geobuf round trip changed geometry or properties"
+    assert data == geobuf.encode(collection, 6, 2), "nondeterministic encoding"
+    return data
+
+
+def write_level(collection: dict, stem: str, level: str, interval: int, regions_key: str, output: Path = OUTPUT):
     identities, parts, vertices = expand_antimeridian(collection)
-    data = (json.dumps(collection, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
-    (OUTPUT / f"{stem}-{level}.geojson").write_bytes(data)
+    source = (json.dumps(collection, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
+    data = encode_collection(collection)
+    (output / f"{stem}-{level}.pbf").write_bytes(data)
     return {
         "intervalMeters": interval, regions_key: len(identities), "polygonParts": parts,
-        "vertices": vertices, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(),
+        "vertices": vertices, "format": "geobuf", "precisionDegrees": 0.000001,
+        "geojsonBytes": len(source), "bytes": len(data),
+        "reductionPercent": round(100 * (1 - len(data) / len(source)), 2),
+        "sha256": hashlib.sha256(data).hexdigest(),
     }
 
 
-def validate_file(stem: str, level: str, expected: dict, regions_key: str):
-    data = (OUTPUT / f"{stem}-{level}.geojson").read_bytes()
+def validate_file(stem: str, level: str, expected: dict, regions_key: str, output: Path = OUTPUT):
+    data = (output / f"{stem}-{level}.pbf").read_bytes()
+    assert expected["format"] == "geobuf" and len(data) == expected["bytes"]
     assert hashlib.sha256(data).hexdigest() == expected["sha256"]
-    collection = json.loads(data)
+    collection = geobuf.decode(data)
+    assert collection["type"] == "FeatureCollection" and collection["features"]
     ids = set()
     parts = 0
     vertices = 0
@@ -111,8 +128,87 @@ def validate_file(stem: str, level: str, expected: dict, regions_key: str):
     return ids, parts, vertices
 
 
-def load_regions(stem: str, level: str = "medium"):
-    return json.loads((OUTPUT / f"{stem}-{level}.geojson").read_text())
+def load_regions(stem: str, level: str = "medium", output: Path = OUTPUT):
+    return geobuf.decode((output / f"{stem}-{level}.pbf").read_bytes())
+
+
+def atomic_write(target: Path, data: bytes):
+    with tempfile.NamedTemporaryFile(dir=target.parent, delete=False) as temporary:
+        temporary.write(data)
+        path = Path(temporary.name)
+    path.chmod(0o644)
+    path.replace(target)
+
+
+def publish_dataset(stem: str, metadata: dict, staging: Path):
+    levels = [validate_file(stem, level, expected, stem, output=staging) for level, expected in metadata["levels"].items()]
+    assert levels and all((ids, parts) == levels[0][:2] for ids, parts, _ in levels), "region IDs or parts differ between levels"
+    if stem != "countries":
+        parent_stem = "countries" if stem == "states" else "states"
+        parents = {feature["properties"]["id"] for feature in load_regions(parent_stem)["features"]}
+        ancestors = {feature["properties"]["id"] for feature in load_regions("countries")["features"]}
+        for level in metadata["levels"]:
+            collection = load_regions(stem, level, output=staging)
+            for feature in collection["features"]:
+                properties = feature["properties"]
+                assert properties["parent"] in parents and properties["id"] not in parents | ancestors
+                assert properties["kind"] == ("state" if stem == "states" else "suburb")
+    for level in metadata["levels"]:
+        filename = f"{stem}-{level}.pbf"
+        atomic_write(OUTPUT / filename, (staging / filename).read_bytes())
+    atomic_write(OUTPUT / f"{stem}-source.json", (json.dumps(metadata, indent=2) + "\n").encode())
+    synchronize(stem, metadata)
+
+
+def synchronize(stem: str, metadata: dict):
+    bundle = ROOT / "ios/RuleTheWorld/Resource/Regions"
+    web = ROOT / "web/data/regions"
+    bundled_levels = {"countries": {"medium", "coarse"}, "states": {"coarse"}, "suburbs": {"medium"}}
+    filenames = [f"{stem}-{level}.pbf" for level in metadata["levels"] if level in bundled_levels[stem]]
+    filenames.append(f"{stem}-source.json")
+    for filename in filenames:
+        source = OUTPUT / filename
+        target = bundle / filename
+        if source.resolve() != target.resolve():
+            atomic_write(target, source.read_bytes())
+    if "medium" in metadata["levels"]:
+        target = web / f"{stem}-medium.pbf"
+        relative = f"../../../data/regions/{target.name}"
+        if not target.is_symlink():
+            assert not target.exists(), f"refusing to replace {target}"
+            target.symlink_to(relative)
+        assert target.resolve() == (OUTPUT / target.name).resolve(), f"stale web resource: {target}"
+
+
+def validate_resources(stem: str, metadata: dict):
+    bundle = ROOT / "ios/RuleTheWorld/Resource/Regions"
+    for level in metadata["levels"]:
+        filename = f"{stem}-{level}.pbf"
+        if stem == "countries" or (stem == "states" and level == "coarse") or stem == "suburbs":
+            assert (OUTPUT / filename).read_bytes() == (bundle / filename).read_bytes(), f"stale iOS resource: {filename}"
+        if level == "medium":
+            assert (OUTPUT / filename).read_bytes() == (ROOT / "web/data/regions" / filename).read_bytes()
+    filename = f"{stem}-source.json"
+    assert (OUTPUT / filename).read_bytes() == (bundle / filename).read_bytes()
+
+
+def convert_existing():
+    for stem in ("countries", "states", "suburbs"):
+        metadata = json.loads((OUTPUT / f"{stem}-source.json").read_text())
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            for level, previous in metadata["levels"].items():
+                collection = json.loads((OUTPUT / f"{stem}-{level}.geojson").read_text())
+                stats = write_level(collection, stem, level, previous["intervalMeters"], stem, output=directory)
+                for key in (stem, "polygonParts", "vertices"):
+                    assert stats[key] == previous[key], f"changed {stem} {level} {key}"
+                metadata["levels"][level] = {**previous, **stats}
+                decoded = load_regions(stem, level, output=directory)
+                for point in metadata.get("regressionPoints", []):
+                    assert coverage_names(decoded, point["latitude"], point["longitude"]) == [point["name"]], point
+                print(f"{stem}-{level}: {stats['geojsonBytes']:,} -> {stats['bytes']:,} bytes ({stats['reductionPercent']}% smaller)")
+            publish_dataset(stem, metadata, directory)
+        validate_resources(stem, metadata)
 
 
 def coverage_names(collection: dict, latitude: float, longitude: float):
@@ -130,3 +226,10 @@ def coverage_names(collection: dict, latitude: float, longitude: float):
                 names.append(feature["properties"]["name"])
                 break
     return names
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--convert-existing", action="store_true", required=True)
+    parser.parse_args()
+    convert_existing()

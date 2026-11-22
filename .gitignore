@@ -4,3 +4,8 @@ xcuserdata/
 DerivedData/
 .DS_Store
 node_modules/
+ios/Scripts/__pycache__/
+data/regions/*.geojson
+data/regions/*-download-cache.json
+ios/RuleTheWorld/Resource/Regions/*.geojson
+web/data/regions/*.geojson

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BB000000000000000000BB01 /* SwiftyH3 in Frameworks */ = {isa = PBXBuildFile; productRef = BB000000000000000000BB02 /* SwiftyH3 */; };
+		CC000000000000000000CC01 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = CC000000000000000000CC02 /* SwiftProtobuf */; };
 		FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325B30AA4E7C0020E36D /* Knit */; };
 		FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA325D30AA4E7C0020E36D /* KnitMacros */; };
 		FAFA326130AA4EAC0020E36D /* ASKCore in Frameworks */ = {isa = PBXBuildFile; productRef = FAFA326030AA4EAC0020E36D /* ASKCore */; };
@@ -45,6 +46,7 @@
 				FAFA326630AA4EAC0020E36D /* ASKCoordinator in Frameworks */,
 				BB000000000000000000BB01 /* SwiftyH3 in Frameworks */,
 				FAFA35B230AA82190020E36D /* GRDB in Frameworks */,
+				CC000000000000000000CC01 /* SwiftProtobuf in Frameworks */,
 				FAFA325C30AA4E7C0020E36D /* Knit in Frameworks */,
 				FAFA325E30AA4E7C0020E36D /* KnitMacros in Frameworks */,
 			);
@@ -107,6 +109,7 @@
 				FAFA326530AA4EAC0020E36D /* ASKCoordinator */,
 				BB000000000000000000BB02 /* SwiftyH3 */,
 				FAFA35B130AA82190020E36D /* GRDB */,
+				CC000000000000000000CC02 /* SwiftProtobuf */,
 			);
 			productName = RuleTheWorld;
 			productReference = 000000000000000000000120 /* RuleTheWorld.app */;
@@ -171,6 +174,7 @@
 				FAFA326730AA4EAC0020E36D /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
 				BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */,
 				FAFA35B030AA82190020E36D /* XCRemoteSwiftPackageReference "GRDB" */,
+				CC000000000000000000CC03 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 			);
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -526,6 +530,14 @@
 				minimumVersion = 0.6.0;
 			};
 		};
+		CC000000000000000000CC03 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.33.3;
+			};
+		};
 		FAFA325A30AA4E7C0020E36D /* XCRemoteSwiftPackageReference "ASKKnit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/skorulis/ASKKnit";
@@ -573,6 +585,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BB000000000000000000BB03 /* XCRemoteSwiftPackageReference "SwiftyH3" */;
 			productName = SwiftyH3;
+		};
+		CC000000000000000000CC02 /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC000000000000000000CC03 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
 		};
 		FAFA325B30AA4E7C0020E36D /* Knit */ = {
 			isa = XCSwiftPackageProductDependency;

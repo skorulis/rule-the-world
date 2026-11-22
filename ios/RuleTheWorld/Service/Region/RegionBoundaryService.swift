@@ -19,8 +19,8 @@ actor RegionBoundaryService: RegionBoundaryProviding {
             case .suburb: "suburbs-medium"
             default: "countries-\(level.rawValue)"
             }
-            let url = bundle.url(forResource: name, withExtension: "geojson")
-                ?? bundle.url(forResource: name, withExtension: "geojson", subdirectory: "Regions")
+            let url = bundle.url(forResource: name, withExtension: "pbf")
+                ?? bundle.url(forResource: name, withExtension: "pbf", subdirectory: "Regions")
             return url.map { (level, $0) }
         })
     }
@@ -66,11 +66,7 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
                 }
                 throw RegionBoundaryError.missingResource
             }
-            let collection = try JSONDecoder().decode(Collection.self, from: contents)
-            guard collection.type == "FeatureCollection", !collection.features.isEmpty else {
-                throw RegionBoundaryError.invalidCollection
-            }
-            let regions = try collection.features.map { try $0.boundary() }.sorted { $0.id < $1.id }
+            let regions = try GeobufRegionDecoder.decode(contents).sorted { $0.id < $1.id }
             guard Set(regions.map(\.id)).count == regions.count else {
                 throw RegionBoundaryError.invalidCollection
             }
@@ -113,60 +109,5 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
         }
         guard let display = displayBoundaries[level]?[region.id] else { return nil }
         return MapRegionSelection(boundary: display, level: level)
-    }
-
-    private struct Collection: Decodable {
-        let type: String
-        let features: [Feature]
-    }
-
-    private struct Properties: Decodable {
-        let id: String
-        let name: String
-        let kind: String
-        let parent: String?
-    }
-
-    private struct Feature: Decodable {
-        let type: String
-        let properties: Properties
-        let geometry: Geometry
-
-        func boundary() throws -> MapRegionBoundary {
-            guard type == "Feature", !properties.id.isEmpty, !geometry.polygons.isEmpty,
-                  let kind = RegionType(name: properties.kind), kind != .none else {
-                throw RegionBoundaryError.invalidCollection
-            }
-            let polygons = try geometry.polygons.map { rings in
-                guard let exterior = rings.first else { throw RegionBoundaryError.invalidGeometry }
-                return try MapRegionBoundary.Polygon(
-                    exterior: MapRegionBoundary.Ring(points: exterior),
-                    holes: rings.dropFirst().map { try MapRegionBoundary.Ring(points: $0) }
-                )
-            }
-            return MapRegionBoundary(
-                id: properties.id, name: properties.name, kind: kind, parent: properties.parent, polygons: polygons
-            )
-        }
-    }
-
-    private enum GeometryKeys: CodingKey {
-        case type, coordinates
-    }
-
-    private struct Geometry: Decodable {
-        let polygons: [[[MapRegionBoundary.Point]]]
-
-        init(from decoder: any Decoder) throws {
-            let container = try decoder.container(keyedBy: GeometryKeys.self)
-            switch try container.decode(String.self, forKey: .type) {
-            case "Polygon":
-                polygons = [try container.decode([[MapRegionBoundary.Point]].self, forKey: .coordinates)]
-            case "MultiPolygon":
-                polygons = try container.decode([[[MapRegionBoundary.Point]]].self, forKey: .coordinates)
-            default:
-                throw RegionBoundaryError.invalidGeometry
-            }
-        }
     }
 }

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from region_pipeline import (
     OUTPUT, REVISION, coverage_names, download, load_regions, regroup,
-    simplify, validate_file, write_level,
+    publish_dataset, simplify, validate_file, validate_resources, write_level,
 )
 
 SOURCE = f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/{REVISION}/10m_cultural/ne_10m_admin_1_states_provinces"
@@ -41,13 +41,14 @@ def prepare():
             simplify(directory, "states", each_expression(), "id,name,kind,parent", interval, target, where="parent != null")
             collection = json.loads(target.read_text())
             regroup(collection)
-            metadata["levels"][level] = write_level(collection, "states", level, interval, "states")
+            metadata["levels"][level] = write_level(collection, "states", level, interval, "states", output=directory)
             print(level, metadata["levels"][level])
-    (OUTPUT / "states-source.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        publish_dataset("states", metadata, directory)
 
 
 def validate():
     metadata = json.loads((OUTPUT / "states-source.json").read_text())
+    validate_resources("states", metadata)
     countries = {feature["properties"]["id"] for feature in load_regions("countries")["features"]}
     assert set(metadata["parents"].values()) <= countries
     identities = []
