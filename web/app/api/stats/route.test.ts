@@ -34,6 +34,7 @@ describe("GET /api/stats", () => {
     expect(query.sql).toContain('cross join lateral (values');
     expect(query.sql).toContain('("hex_details"."region_country", 1)');
     expect(query.sql).toContain('("hex_details"."region_state", 2)');
+    expect(query.sql).toContain('("hex_details"."region_suburb", 3)');
     expect(query.sql).toContain('where membership.region is not null');
     expect(query.sql).toContain('group by membership.region, membership.kind');
     expect(query.sql).toContain('order by count(*) desc');

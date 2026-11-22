@@ -13,10 +13,13 @@ describe("visit score schema", () => {
     expect(hexDetails.cell.notNull).toBe(true);
     expect(hexDetails.regionCountry.getSQLType()).toBe("bigint");
     expect(hexDetails.regionState.getSQLType()).toBe("bigint");
+    expect(hexDetails.regionSuburb.getSQLType()).toBe("bigint");
     expect(hexDetails.regionCountry.notNull).toBe(false);
     expect(hexDetails.regionState.notNull).toBe(false);
+    expect(hexDetails.regionSuburb.notNull).toBe(false);
     expect(getTableConfig(hexDetails).checks.map(({ name }) => name)).toEqual([
       "hex_details_region_country_positive", "hex_details_region_state_positive",
+      "hex_details_region_suburb_positive",
     ]);
     expect(getTableConfig(hexVisit).primaryKeys[0].columns.map((column) => column.name)).toEqual(["user_id", "cell"]);
     expect(getTableConfig(hexVisitDay).primaryKeys[0].columns.map((column) => column.name)).toEqual(["user_id", "cell", "day"]);

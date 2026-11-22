@@ -14,7 +14,8 @@ export async function GET() {
       from ${hexDetails}
       cross join lateral (values
         (${hexDetails.regionCountry}, ${sql.raw(String(regionType.country))}),
-        (${hexDetails.regionState}, ${sql.raw(String(regionType.state))})
+        (${hexDetails.regionState}, ${sql.raw(String(regionType.state))}),
+        (${hexDetails.regionSuburb}, ${sql.raw(String(regionType.suburb))})
       ) as membership(region, kind)
       where membership.region is not null
       group by membership.region, membership.kind

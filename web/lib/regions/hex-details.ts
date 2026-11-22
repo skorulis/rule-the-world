@@ -2,16 +2,18 @@ import { eq } from "drizzle-orm";
 import { cellToLatLng } from "h3-js";
 import { hexDetails, noRegion } from "@/db/schema";
 import { db } from "@/lib/db";
-import { regionIdForPoint, stateIdForPoint } from "./country-regions";
+import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "./country-regions";
 
 export function calculateHexDetails(cell: bigint): typeof hexDetails.$inferSelect {
   const [latitude, longitude] = cellToLatLng(cell.toString(16));
   const country = regionIdForPoint(latitude, longitude);
   const state = country === noRegion ? noRegion : stateIdForPoint(country, latitude, longitude);
+  const suburb = state === noRegion ? noRegion : suburbIdForPoint(state, latitude, longitude);
   return {
     cell,
     regionCountry: country === noRegion ? null : country,
     regionState: state === noRegion ? null : state,
+    regionSuburb: suburb === noRegion ? null : suburb,
   };
 }
 

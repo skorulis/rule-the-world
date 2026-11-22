@@ -34,7 +34,8 @@ export async function GET(request: Request) {
         join ${hexDetails} on ${hexDetails.cell} = user_cells.cell
         cross join lateral (values
           (${hexDetails.regionCountry}, ${sql.raw(String(regionType.country))}),
-          (${hexDetails.regionState}, ${sql.raw(String(regionType.state))})
+          (${hexDetails.regionState}, ${sql.raw(String(regionType.state))}),
+          (${hexDetails.regionSuburb}, ${sql.raw(String(regionType.suburb))})
         ) as membership(region, kind)
         where membership.region is not null
         group by membership.region, membership.kind
@@ -51,6 +52,7 @@ export async function GET(request: Request) {
     const kinds = new Map<number, string>([
       [regionType.country, "country"],
       [regionType.state, "state"],
+      [regionType.suburb, "suburb"],
     ]);
     const regions = rows.flatMap((row) => {
       const id = Number(row.region);

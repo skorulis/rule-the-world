@@ -15,6 +15,7 @@ export async function GET() {
       cell: details.cell.toString(16),
       region_country: details.regionCountry?.toString() ?? null,
       region_state: details.regionState?.toString() ?? null,
+      region_suburb: details.regionSuburb?.toString() ?? null,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return serverError("Debug hex details failed", undefined, "Unable to load hex details");

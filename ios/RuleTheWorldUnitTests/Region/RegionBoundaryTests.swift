@@ -96,6 +96,56 @@ struct RegionBoundaryTests {
         #expect(catalog.selection(latitude: 20, longitude: 20, level: .state) == nil)
     }
 
+    @Test func suburbSelectionIsScopedToTheContainingState() throws {
+        let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
+        let states = feature(
+            id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "state", parent: "land"
+        )
+        let suburbs = feature(
+            id: "nested", geometry: "[[[0,0],[2,0],[2,5],[0,5],[0,0]]]", kind: "suburb", parent: "child"
+        )
+        let countryData = Data("""
+        {"type":"FeatureCollection","features":[\(countries)]}
+        """.utf8)
+        let stateData = Data("""
+        {"type":"FeatureCollection","features":[\(states)]}
+        """.utf8)
+        let suburbData = Data("""
+        {"type":"FeatureCollection","features":[\(suburbs)]}
+        """.utf8)
+        let catalog = try RegionBoundaryCatalog(data: [
+            .medium: countryData, .coarse: countryData, .state: stateData, .suburb: suburbData,
+        ])
+        #expect(catalog.selection(latitude: 2, longitude: 1, level: .suburb)?.boundary.id == "nested")
+        #expect(catalog.selection(latitude: 2, longitude: 3, level: .suburb) == nil)
+        #expect(catalog.selection(latitude: 2, longitude: 1, level: .state)?.boundary.id == "child")
+        #expect(catalog.selection(latitude: 5, longitude: 7, level: .suburb) == nil)
+        #expect(catalog.selection(latitude: 20, longitude: 20, level: .suburb) == nil)
+    }
+
+    @Test func suburbCollectionsRequireParents() {
+        let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
+        let orphan = feature(id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "suburb")
+        let countryData = Data("""
+        {"type":"FeatureCollection","features":[\(countries)]}
+        """.utf8)
+        let suburbData = Data("""
+        {"type":"FeatureCollection","features":[\(orphan)]}
+        """.utf8)
+        #expect(throws: RegionBoundaryError.self) {
+            try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData, .suburb: suburbData])
+        }
+    }
+
+    @Test func missingSuburbCollectionIsTolerated() throws {
+        let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
+        let countryData = Data("""
+        {"type":"FeatureCollection","features":[\(countries)]}
+        """.utf8)
+        let catalog = try RegionBoundaryCatalog(data: [.medium: countryData, .coarse: countryData])
+        #expect(catalog.selection(latitude: 5, longitude: 5, level: .suburb) == nil)
+    }
+
     @Test func stateCollectionsRequireParents() {
         let countries = feature(id: "land", geometry: "[[[0,0],[10,0],[10,10],[0,10],[0,0]]]")
         let orphan = feature(id: "child", geometry: "[[[0,0],[5,0],[5,10],[0,10],[0,0]]]", kind: "state")

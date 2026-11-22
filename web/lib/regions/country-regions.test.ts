@@ -1,5 +1,8 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { regionIdForPoint, stateIdForPoint } from "./country-regions";
+import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "./country-regions";
 
 const NONE = BigInt(0);
 
@@ -59,5 +62,34 @@ describe("stateIdForPoint", () => {
 
   it("returns 'none' for the 'none' region", () => {
     expect(stateIdForPoint(NONE, -33.8, 151.2)).toBe(NONE);
+  });
+});
+
+describe("suburbIdForPoint", () => {
+  const AUSTRALIA = regionIdForPoint(-25, 134);
+  const NSW = stateIdForPoint(AUSTRALIA, -33.8, 151.2);
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const hasSuburbData = [
+    path.resolve(moduleDir, "../../data/regions/suburbs-medium.geojson"),
+    path.resolve(process.cwd(), "data/regions/suburbs-medium.geojson"),
+  ].some(existsSync);
+
+  it("returns 'none' for the 'none' region", () => {
+    expect(suburbIdForPoint(NONE, -33.8, 151.2)).toBe(NONE);
+  });
+
+  it("returns 'none' for a state without suburbs", () => {
+    const victoria = stateIdForPoint(AUSTRALIA, -37.8, 145.0);
+    expect(victoria).not.toBe(NONE);
+    expect(suburbIdForPoint(victoria, -37.8, 145.0)).toBe(NONE);
+  });
+
+  it.runIf(hasSuburbData)("returns a suburb id for a point inside a NSW suburb", () => {
+    expect(NSW).not.toBe(NONE);
+    expect(suburbIdForPoint(NSW, -33.898, 151.179)).not.toBe(NONE);
+  });
+
+  it.runIf(hasSuburbData)("returns 'none' for a NSW point outside every suburb", () => {
+    expect(suburbIdForPoint(NSW, -33.0, 141.0)).toBe(NONE);
   });
 });

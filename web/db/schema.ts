@@ -19,16 +19,18 @@ export const hexVisit = pgTable("hex_visit", {
 
 export const noRegion = BigInt(0);
 
-export const regionType = { none: 0, country: 1, state: 2 } as const;
+export const regionType = { none: 0, country: 1, state: 2, suburb: 3 } as const;
 
 export const hexDetails = pgTable("hex_details", {
   cell: bigint("cell", { mode: "bigint" }).notNull(),
   regionCountry: bigint("region_country", { mode: "bigint" }),
   regionState: bigint("region_state", { mode: "bigint" }),
+  regionSuburb: bigint("region_suburb", { mode: "bigint" }),
 }, (table) => [
   primaryKey({ columns: [table.cell] }),
   check("hex_details_region_country_positive", sql`${table.regionCountry} > 0`),
   check("hex_details_region_state_positive", sql`${table.regionState} > 0`),
+  check("hex_details_region_suburb_positive", sql`${table.regionSuburb} > 0`),
 ]);
 
 export const hexVisitUpload = pgTable("hex_visit_upload", {

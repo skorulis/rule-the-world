@@ -137,19 +137,35 @@ function catalog(fileName: string): Region[] {
   return regions;
 }
 
+function childrenByParent(fileName: string, optional = false): Map<bigint, Region[]> {
+  let children: Region[];
+  try {
+    children = catalog(fileName);
+  } catch (error) {
+    if (optional && (error as NodeJS.ErrnoException).code === "ENOENT") return new Map();
+    throw error;
+  }
+  const grouped = new Map<bigint, Region[]>();
+  for (const child of children) {
+    if (child.parent === undefined) throw new Error("Invalid region collection");
+    const siblings = grouped.get(child.parent) ?? [];
+    siblings.push(child);
+    grouped.set(child.parent, siblings);
+  }
+  return grouped;
+}
+
 let statesByParent: Map<bigint, Region[]> | undefined;
+let suburbsByParent: Map<bigint, Region[]> | undefined;
 
 function states(parent: bigint): Region[] {
-  if (!statesByParent) {
-    statesByParent = new Map();
-    for (const state of catalog("states-medium.geojson")) {
-      if (state.parent === undefined) throw new Error("Invalid region collection");
-      const siblings = statesByParent.get(state.parent) ?? [];
-      siblings.push(state);
-      statesByParent.set(state.parent, siblings);
-    }
-  }
+  statesByParent ??= childrenByParent("states-medium.geojson");
   return statesByParent.get(parent) ?? [];
+}
+
+function suburbs(parent: bigint): Region[] {
+  suburbsByParent ??= childrenByParent("suburbs-medium.geojson", true);
+  return suburbsByParent.get(parent) ?? [];
 }
 
 function regionContains(region: Region, latitude: number, longitude: number): boolean {
@@ -170,4 +186,9 @@ export function regionIdForPoint(latitude: number, longitude: number): bigint {
 export function stateIdForPoint(parent: bigint, latitude: number, longitude: number): bigint {
   if (parent === noRegion) return noRegion;
   return states(parent).find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
+}
+
+export function suburbIdForPoint(parent: bigint, latitude: number, longitude: number): bigint {
+  if (parent === noRegion) return noRegion;
+  return suburbs(parent).find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
 }

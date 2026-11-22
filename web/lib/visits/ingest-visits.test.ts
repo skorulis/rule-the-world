@@ -6,11 +6,12 @@ vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
 vi.mock("@/lib/regions/country-regions", () => ({
   regionIdForPoint: vi.fn(() => BigInt(42)),
   stateIdForPoint: vi.fn(() => BigInt(0)),
+  suburbIdForPoint: vi.fn(() => BigInt(0)),
 }));
 
 import { db } from "@/lib/db";
 import { hexDetails, hexVisit } from "@/db/schema";
-import { regionIdForPoint, stateIdForPoint } from "@/lib/regions/country-regions";
+import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "@/lib/regions/country-regions";
 import { ingestVisits } from "./ingest-visits";
 import { parseVisitBatch } from "./visit-batch";
 
@@ -23,7 +24,7 @@ const query = (value: SQL) => dialect.sqlToQuery(value);
 
 function harness(previous = "0", current = "0.5", latest = timestamp,
   uploaded: { id: string; cell: bigint; count: number }[] = [],
-  knownRegions: { cell: bigint; regionCountry: bigint | null; regionState: bigint | null }[] = []) {
+  knownRegions: { cell: bigint; regionCountry: bigint | null; regionState: bigint | null; regionSuburb?: bigint | null }[] = []) {
   const lock = vi.fn().mockResolvedValue([{ id: "u1" }]);
   const dayRows = previous === "0" ? [] : [{ userId: "u1", cell: cellId, day: "2026-11-20", score: previous }];
   const select = vi.fn()
@@ -53,6 +54,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(regionIdForPoint).mockReturnValue(BigInt(42));
   vi.mocked(stateIdForPoint).mockReturnValue(BigInt(0));
+  vi.mocked(suburbIdForPoint).mockReturnValue(BigInt(0));
 });
 
 describe("visit ingestion SQL contract", () => {
@@ -148,30 +150,44 @@ describe("visit ingestion SQL contract", () => {
     [null, null],
   ])("skips classification for cached country=%s state=%s", async (regionCountry, regionState) => {
     const mock = harness("0", "0.5", timestamp, [], [
-      { cell: cellId, regionCountry, regionState },
+      { cell: cellId, regionCountry, regionState, regionSuburb: null },
     ]);
     await ingestVisits("u1", batch());
     expect(regionIdForPoint).not.toHaveBeenCalled();
     expect(stateIdForPoint).not.toHaveBeenCalled();
+    expect(suburbIdForPoint).not.toHaveBeenCalled();
     expect(vi.mocked(mock.insert).mock.calls.map(([table]) => table)).not.toContain(hexDetails);
   });
 
-  it("writes country and state in a single conflict-safe row", async () => {
+  it("writes country, state, and suburb in a single conflict-safe row", async () => {
     vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
+    vi.mocked(suburbIdForPoint).mockReturnValueOnce(BigInt(99));
     const mock = harness();
     await ingestVisits("u1", batch());
     expect(stateIdForPoint).toHaveBeenCalledWith(BigInt(42), expect.any(Number), expect.any(Number));
+    expect(suburbIdForPoint).toHaveBeenCalledWith(BigInt(7), expect.any(Number), expect.any(Number));
     expect(mock.detailValues).toHaveBeenCalledWith([
-      { cell: cellId, regionCountry: BigInt(42), regionState: BigInt(7) },
+      { cell: cellId, regionCountry: BigInt(42), regionState: BigInt(7), regionSuburb: BigInt(99) },
     ]);
     expect(mock.regionConflict).toHaveBeenCalledTimes(1);
+  });
+
+  it("caches a state without a matching suburb", async () => {
+    vi.mocked(stateIdForPoint).mockReturnValueOnce(BigInt(7));
+    const mock = harness();
+    await ingestVisits("u1", batch());
+    expect(suburbIdForPoint).toHaveBeenCalledWith(BigInt(7), expect.any(Number), expect.any(Number));
+    expect(mock.detailValues).toHaveBeenCalledWith([
+      { cell: cellId, regionCountry: BigInt(42), regionState: BigInt(7), regionSuburb: null },
+    ]);
   });
 
   it("caches a country without a matching state", async () => {
     const mock = harness();
     await ingestVisits("u1", batch());
+    expect(suburbIdForPoint).not.toHaveBeenCalled();
     expect(mock.detailValues).toHaveBeenCalledWith([
-      { cell: cellId, regionCountry: BigInt(42), regionState: null },
+      { cell: cellId, regionCountry: BigInt(42), regionState: null, regionSuburb: null },
     ]);
   });
 
@@ -180,8 +196,9 @@ describe("visit ingestion SQL contract", () => {
     const mock = harness();
     await ingestVisits("u1", batch());
     expect(stateIdForPoint).not.toHaveBeenCalled();
+    expect(suburbIdForPoint).not.toHaveBeenCalled();
     expect(mock.detailValues).toHaveBeenCalledWith([
-      { cell: cellId, regionCountry: null, regionState: null },
+      { cell: cellId, regionCountry: null, regionState: null, regionSuburb: null },
     ]);
   });
 
@@ -193,7 +210,7 @@ describe("visit ingestion SQL contract", () => {
     ] }));
     expect(regionIdForPoint).toHaveBeenCalledTimes(1);
     expect(mock.detailValues).toHaveBeenCalledWith([
-      { cell: cellId, regionCountry: BigInt(42), regionState: null },
+      { cell: cellId, regionCountry: BigInt(42), regionState: null, regionSuburb: null },
     ]);
   });
 

@@ -14,7 +14,9 @@ const cell = BigInt("0x8a2830828007fff");
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(auth.api.getSession).mockResolvedValue({ user: { id: "u1" }, session: {} } as never);
-  vi.mocked(getOrCreateHexDetails).mockResolvedValue({ cell, regionCountry: BigInt(42), regionState: BigInt(7) });
+  vi.mocked(getOrCreateHexDetails).mockResolvedValue({
+    cell, regionCountry: BigInt(42), regionState: BigInt(7), regionSuburb: BigInt(99),
+  });
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -35,14 +37,16 @@ describe("GET /api/debug/hex_details", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({
-      cell: "8a2830828007fff", region_country: "42", region_state: "7",
+      cell: "8a2830828007fff", region_country: "42", region_state: "7", region_suburb: "99",
     });
   });
 
   it("preserves null region mappings for ocean cells", async () => {
-    vi.mocked(getOrCreateHexDetails).mockResolvedValueOnce({ cell, regionCountry: null, regionState: null });
+    vi.mocked(getOrCreateHexDetails).mockResolvedValueOnce({
+      cell, regionCountry: null, regionState: null, regionSuburb: null,
+    });
     expect(await (await GET()).json()).toEqual({
-      cell: "8a2830828007fff", region_country: null, region_state: null,
+      cell: "8a2830828007fff", region_country: null, region_state: null, region_suburb: null,
     });
   });
 

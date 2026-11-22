@@ -1,0 +1,2 @@
+ALTER TABLE "hex_details" ADD COLUMN "region_suburb" bigint;--> statement-breakpoint
+ALTER TABLE "hex_details" ADD CONSTRAINT "hex_details_region_suburb_positive" CHECK ("hex_details"."region_suburb" > 0);

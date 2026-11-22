@@ -14,7 +14,11 @@ actor RegionBoundaryService: RegionBoundaryProviding {
 
     init(bundle: Bundle = .main) {
         urls = Dictionary(uniqueKeysWithValues: RegionOverlayPolicy.Level.allCases.compactMap { level in
-            let name = level == .state ? "states-coarse" : "countries-\(level.rawValue)"
+            let name = switch level {
+            case .state: "states-coarse"
+            case .suburb: "suburbs-medium"
+            default: "countries-\(level.rawValue)"
+            }
             let url = bundle.url(forResource: name, withExtension: "geojson")
                 ?? bundle.url(forResource: name, withExtension: "geojson", subdirectory: "Regions")
             return url.map { (level, $0) }
@@ -30,7 +34,8 @@ actor RegionBoundaryService: RegionBoundaryProviding {
         if loading == nil {
             let urls = urls
             loading = Task.detached(priority: .utility) {
-                guard urls.count == RegionOverlayPolicy.Level.allCases.count else {
+                let required = Set(RegionOverlayPolicy.Level.allCases).subtracting(RegionBoundaryCatalog.optionalLevels)
+                guard Set(urls.keys).isSuperset(of: required) else {
                     throw RegionBoundaryError.missingResource
                 }
                 let data = try urls.mapValues { try Data(contentsOf: $0) }
@@ -45,15 +50,18 @@ actor RegionBoundaryService: RegionBoundaryProviding {
 }
 
 nonisolated struct RegionBoundaryCatalog: Sendable {
+    static let optionalLevels: Set<RegionOverlayPolicy.Level> = [.suburb]
+
     let boundaries: [RegionOverlayPolicy.Level: [MapRegionBoundary]]
     private let displayBoundaries: [RegionOverlayPolicy.Level: [String: MapRegionBoundary]]
     private let statesByParent: [String: [MapRegionBoundary]]
+    private let suburbsByParent: [String: [MapRegionBoundary]]
 
     init(data: [RegionOverlayPolicy.Level: Data]) throws {
         var decoded: [RegionOverlayPolicy.Level: [MapRegionBoundary]] = [:]
         for level in RegionOverlayPolicy.Level.allCases {
             guard let contents = data[level] else {
-                if level == .state {
+                if level == .state || Self.optionalLevels.contains(level) {
                     decoded[level] = []
                     continue
                 }
@@ -80,6 +88,12 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
             grouped[parent, default: []].append(state)
         }
         statesByParent = grouped
+        var suburbs: [String: [MapRegionBoundary]] = [:]
+        for suburb in decoded[.suburb, default: []] {
+            guard let parent = suburb.parent else { throw RegionBoundaryError.invalidCollection }
+            suburbs[parent, default: []].append(suburb)
+        }
+        suburbsByParent = suburbs
     }
 
     func selection(latitude: Double, longitude: Double, level: RegionOverlayPolicy.Level) -> MapRegionSelection? {
@@ -87,9 +101,13 @@ nonisolated struct RegionBoundaryCatalog: Sendable {
             boundary.contains(latitude: latitude, longitude: longitude)
         }
         guard let region = boundaries[.medium]?.first(where: containsPoint) else { return nil }
-        if level == .state {
+        if level == .state || level == .suburb {
             guard let state = statesByParent[region.id]?.first(where: containsPoint) else { return nil }
-            return MapRegionSelection(boundary: state, level: level)
+            if level == .state {
+                return MapRegionSelection(boundary: state, level: level)
+            }
+            guard let suburb = suburbsByParent[state.id]?.first(where: containsPoint) else { return nil }
+            return MapRegionSelection(boundary: suburb, level: level)
         }
         guard let display = displayBoundaries[level]?[region.id] else { return nil }
         return MapRegionSelection(boundary: display, level: level)

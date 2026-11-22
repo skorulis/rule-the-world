@@ -29,6 +29,7 @@ describe("GET /api/me", () => {
       { region: "1234", kind: 1, overall: 0, visited: "10", owned: "5" },
       { region: "2345", kind: 1, overall: 0, visited: "4", owned: "0" },
       { region: "3456", kind: 2, overall: 0, visited: "6", owned: "2" },
+      { region: "4567", kind: 3, overall: 0, visited: "3", owned: "1" },
       { region: null, kind: null, overall: 1, visited: "20", owned: "8" },
     ] as never);
     const response = await GET(request());
@@ -41,6 +42,7 @@ describe("GET /api/me", () => {
         { id: 1234, kind: "country", visited: 10, owned: 5 },
         { id: 2345, kind: "country", visited: 4, owned: 0 },
         { id: 3456, kind: "state", visited: 6, owned: 2 },
+        { id: 4567, kind: "suburb", visited: 3, owned: 1 },
       ],
     });
   });
@@ -74,6 +76,7 @@ describe("GET /api/me", () => {
     expect(query.sql).toContain('cross join lateral (values');
     expect(query.sql).toContain('("hex_details"."region_country", 1)');
     expect(query.sql).toContain('("hex_details"."region_state", 2)');
+    expect(query.sql).toContain('("hex_details"."region_suburb", 3)');
     expect(query.sql).toContain('where membership.region is not null');
     expect(query.sql).toContain('group by membership.region, membership.kind');
     expect(query.sql).toContain('union all');

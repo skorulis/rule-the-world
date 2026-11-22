@@ -1,0 +1,23 @@
+{
+  "source": "NSW Administrative Boundaries Theme - Suburb (FeatureServer layer 2)",
+  "url": "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Administrative_Boundaries_Theme/FeatureServer/2",
+  "license": "Creative Commons Attribution",
+  "licenseURL": "https://data.nsw.gov.au/data/dataset/nsw-foundation-spatial-data-framework-administrative-boundaries-suburb",
+  "tool": "mapshaper@0.7.101",
+  "simplification": "spherical weighted Visvalingam; keep-shapes",
+  "precisionDegrees": 1e-05,
+  "idBase": 9000000000000,
+  "parents": {
+    "New South Wales": "1159313299"
+  },
+  "levels": {
+    "medium": {
+      "intervalMeters": 100,
+      "suburbs": 4607,
+      "polygonParts": 4611,
+      "vertices": 344449,
+      "bytes": 8274211,
+      "sha256": "197c8ec4b8bbeda56c16f428fb19819074343bccf1a3a03e57db0833e335eae2"
+    }
+  }
+}

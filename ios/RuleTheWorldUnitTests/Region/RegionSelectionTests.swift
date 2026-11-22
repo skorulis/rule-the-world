@@ -67,6 +67,23 @@ struct RegionSelectionTests {
         #expect(model.selectedRegion?.level == .state)
     }
 
+    @Test func zoomedPastStateRequestsSuburbAndClearsWhenMissing() async throws {
+        let provider = ControlledRegionProvider()
+        let model = try model(provider: provider)
+        defer { model.cancelRegionSelection() }
+        move(model, longitude: 1, width: 30_000)
+        let request = await provider.nextRequest()
+        #expect(request.level == .suburb)
+        await complete(request, with: selection(id: "suburb", level: .suburb), observing: model)
+        #expect(model.selectedRegion?.boundary.id == "suburb")
+        #expect(model.selectedRegion?.level == .suburb)
+
+        move(model, longitude: 20, width: 30_000)
+        let missing = await provider.nextRequest()
+        await complete(missing, with: nil, observing: model)
+        #expect(model.selectedRegion == nil)
+    }
+
     @Test func cancellingBeforeWorkerStartsDoesNotConsumeNextCamera() async throws {
         let provider = ControlledRegionProvider()
         let model = try model(provider: provider)
