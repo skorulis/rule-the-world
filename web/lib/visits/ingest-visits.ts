@@ -1,9 +1,8 @@
-import { cellToLatLng } from "h3-js";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
-import { hexDetails, hexVisit, hexVisitDay, hexVisitUpload, noRegion } from "@/db/schema";
+import { hexDetails, hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
 import { db } from "@/lib/db";
-import { regionIdForPoint, stateIdForPoint } from "@/lib/regions/country-regions";
+import { calculateHexDetails } from "@/lib/regions/hex-details";
 import type { VisitBatch } from "./visit-batch";
 
 export async function ingestVisits(userId: string, batch: VisitBatch) {
@@ -21,14 +20,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
     const rows: (typeof hexDetails.$inferInsert)[] = [];
     for (const cell of cells) {
       if (classified.has(cell)) continue;
-      const [latitude, longitude] = cellToLatLng(cell.toString(16));
-      const country = regionIdForPoint(latitude, longitude);
-      const state = country === noRegion ? noRegion : stateIdForPoint(country, latitude, longitude);
-      rows.push({
-        cell,
-        regionCountry: country === noRegion ? null : country,
-        regionState: state === noRegion ? null : state,
-      });
+      rows.push(calculateHexDetails(cell));
     }
     if (rows.length) {
       await tx.insert(hexDetails).values(rows).onConflictDoNothing();
