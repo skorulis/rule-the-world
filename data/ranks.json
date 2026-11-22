@@ -1,0 +1,125 @@
+{
+  "country": [
+    {
+      "number": 1,
+      "name": "King",
+      "femaleName": "Queen",
+      "description": "The sovereign ruler of a kingdom.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxQuantity": 1
+    },
+    {
+      "number": 2,
+      "name": "Prince",
+      "femaleName": "Princess",
+      "description": "A member of a royal family or the ruler of a principality.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxQuantity": 3
+    },
+    {
+      "number": 3,
+      "name": "Duke",
+      "femaleName": "Duchess",
+      "description": "A high-ranking noble who traditionally rules a duchy.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxQuantity": 5
+    },
+    {
+      "number": 4,
+      "name": "Marquis",
+      "femaleName": "Marchioness",
+      "description": "A noble traditionally entrusted with a border territory known as a march.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxQuantity": 25
+    },
+    {
+      "number": 5,
+      "name": "Count",
+      "femaleName": "Countess",
+      "description": "A noble traditionally responsible for a county.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxPercentage": 1
+    },
+    {
+      "number": 6,
+      "name": "Viscount",
+      "femaleName": "Viscountess",
+      "description": "A noble ranking below a count and above a baron, originally a count's deputy.",
+      "minOwnership": 1000,
+      "minVisits": 0,
+      "maxPercentage": 5
+    },
+    {
+      "number": 7,
+      "name": "Baron",
+      "femaleName": "Baroness",
+      "description": "A noble who traditionally holds a barony under a monarch or greater lord.",
+      "minOwnership": 500,
+      "minVisits": 0,
+      "maxPercentage": 10
+    },
+    {
+      "number": 8,
+      "name": "Baronet",
+      "femaleName": "Baronetess",
+      "description": "The holder of a hereditary title ranking below a baron and above most knights.",
+      "minOwnership": 300,
+      "minVisits": 0
+    },
+    {
+      "number": 9,
+      "name": "Knight",
+      "femaleName": "Dame",
+      "description": "A person granted an honorary title for service, traditionally a mounted warrior.",
+      "minOwnership": 150,
+      "minVisits": 0
+    },
+    {
+      "number": 10,
+      "name": "Squire",
+      "description": "An attendant to a knight, traditionally training for knighthood.",
+      "minOwnership": 75,
+      "minVisits": 0
+    },
+    {
+      "number": 11,
+      "name": "Burgess",
+      "description": "A citizen of a borough or town, traditionally possessing civic rights and privileges.",
+      "minOwnership": 30,
+      "minVisits": 0
+    },
+    {
+      "number": 12,
+      "name": "Yeoman",
+      "description": "A freeholder who traditionally owns and farms a small estate.",
+      "minOwnership": 15,
+      "minVisits": 0
+    },
+    {
+      "number": 13,
+      "name": "Crofter",
+      "description": "A tenant farmer who works a small agricultural holding known as a croft.",
+      "minOwnership": 5,
+      "minVisits": 0
+    },
+    {
+      "number": 14,
+      "name": "Settler",
+      "description": "A person who establishes a permanent home in a new place.",
+      "minOwnership": 2,
+      "minVisits": 0
+    },
+    {
+      "number": 15,
+      "name": "Wanderer",
+      "description": "A traveler who roams from place to place without a fixed home or destination.",
+      "minOwnership": 0,
+      "minVisits": 1
+    }
+  ]
+}
