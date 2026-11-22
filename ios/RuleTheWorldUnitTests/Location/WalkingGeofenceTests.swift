@@ -21,7 +21,7 @@ struct WalkingGeofenceTests {
         let fix = location()
         let region = try #require(WalkingGeofence.region(for: fix, replacing: nil, maximumRadius: 1000, now: now))
         #expect(region.identifier == WalkingGeofence.identifier)
-        #expect(region.radius == 100)
+        #expect(region.radius == 50)
         #expect(region.center.latitude == fix.coordinate.latitude)
         #expect(region.center.longitude == fix.coordinate.longitude)
         #expect(!region.notifyOnEntry)
@@ -45,8 +45,8 @@ struct WalkingGeofenceTests {
     }
 
     @Test func respectsDeviceMaximumRadius() throws {
-        let region = try #require(WalkingGeofence.region(for: location(), replacing: nil, maximumRadius: 75, now: now))
-        #expect(region.radius == 75)
+        let region = try #require(WalkingGeofence.region(for: location(), replacing: nil, maximumRadius: 40, now: now))
+        #expect(region.radius == 40)
         #expect(WalkingGeofence.region(for: location(), replacing: nil, maximumRadius: 0, now: now) == nil)
     }
 }

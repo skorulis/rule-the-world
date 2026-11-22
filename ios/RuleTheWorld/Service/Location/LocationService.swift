@@ -9,6 +9,11 @@ import UIKit
 final class LocationService: NSObject {
     private let manager = CLLocationManager()
     private var continuation: AsyncStream<LocationSample>.Continuation?
+    private var backgroundSession: CLBackgroundActivitySession?
+    private var dormancyGeneration = 0
+
+    private static let dormancyDelay: Duration = .seconds(180)
+    private static let movementRecency: TimeInterval = 30
 
     let samples: AsyncStream<LocationSample>
     private(set) var authorizationStatus: CLAuthorizationStatus
@@ -32,6 +37,7 @@ final class LocationService: NSObject {
         manager.distanceFilter = 20
         manager.pausesLocationUpdatesAutomatically = true
         manager.activityType = .fitness
+        backgroundSession = CLBackgroundActivitySession()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appBecameActive),
@@ -60,12 +66,45 @@ final class LocationService: NSObject {
         manager.startMonitoring(for: region)
     }
 
-    private func requestGeofenceLocation(for region: CLRegion) {
+    private func resumeTrackingFromGeofence(for region: CLRegion) {
         guard region.identifier == WalkingGeofence.identifier else { return }
-        manager.requestLocation()
+        if standardUpdatesActive {
+            manager.requestLocation()
+        } else {
+            manager.startUpdatingLocation()
+            standardUpdatesActive = true
+            scheduleDormancyCheck()
+        }
+    }
+
+    private func scheduleDormancyCheck() {
+        dormancyGeneration += 1
+        let generation = dormancyGeneration
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.dormancyDelay)
+            guard let self, generation == self.dormancyGeneration else { return }
+            self.considerGoingDormant()
+        }
+    }
+
+    private func considerGoingDormant() {
+        guard standardUpdatesActive,
+              UIApplication.shared.applicationState != .active else { return }
+        if let timestamp = latestSample?.timestamp,
+           Date().timeIntervalSince(timestamp) < Self.movementRecency {
+            scheduleDormancyCheck()
+        } else {
+            goDormant()
+        }
+    }
+
+    private func goDormant() {
+        manager.stopUpdatingLocation()
+        standardUpdatesActive = false
     }
 
     @objc private func appBecameActive() {
+        dormancyGeneration += 1
         manager.startUpdatingLocation()
         standardUpdatesActive = true
         if CLLocationManager.headingAvailable() {
@@ -75,16 +114,15 @@ final class LocationService: NSObject {
     }
 
     @objc private func appEnteredBackground() {
-        manager.stopUpdatingLocation()
         manager.stopUpdatingHeading()
-        standardUpdatesActive = false
+        scheduleDormancyCheck()
     }
 }
 
 extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         MainActor.assumeIsolated {
-            let locationType: LocationType = standardUpdatesActive ? .foreground : .background
+            let locationType: LocationType = UIApplication.shared.applicationState == .active ? .foreground : .background
             for location in locations {
                 let sample = LocationSample(location: location, locationType: locationType)
                 latestSample = sample
@@ -98,14 +136,22 @@ extension LocationService: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         MainActor.assumeIsolated {
-            requestGeofenceLocation(for: region)
+            resumeTrackingFromGeofence(for: region)
         }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
         guard state == .outside else { return }
         MainActor.assumeIsolated {
-            requestGeofenceLocation(for: region)
+            resumeTrackingFromGeofence(for: region)
+        }
+    }
+
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
+        MainActor.assumeIsolated {
+            if UIApplication.shared.applicationState != .active {
+                goDormant()
+            }
         }
     }
 
@@ -146,7 +192,7 @@ extension LocationService: CLLocationManagerDelegate {
 
 enum WalkingGeofence {
     static let identifier = "walking-location"
-    static let radius: CLLocationDistance = 100
+    static let radius: CLLocationDistance = 50
 
     static func region(
         for location: CLLocation,
