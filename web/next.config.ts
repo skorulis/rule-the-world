@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
       "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
     "/api/me": ["./data/powerups.json", "../data/powerups.json"],
+    "/api/powerup/consume": ["./data/powerups.json", "../data/powerups.json"],
     "/api/debug/add_powerup": ["./data/powerups.json", "../data/powerups.json"],
   },
   async headers() {

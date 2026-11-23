@@ -18,12 +18,23 @@ final class PowerUpInventoryViewModel {
 
     private let service: AuthenticatedService
     private let catalog: PowerUpCatalog
+    private let locationService: LocationService
+    private let store: HexInfoStore
     private(set) var items: [Item] = []
+    private(set) var isConsuming = false
+    private(set) var message: String?
 
     @Resolvable<Resolver>
-    init(service: AuthenticatedService, catalog: PowerUpCatalog) {
+    init(
+        service: AuthenticatedService,
+        catalog: PowerUpCatalog,
+        locationService: LocationService,
+        store: HexInfoStore
+    ) {
         self.service = service
         self.catalog = catalog
+        self.locationService = locationService
+        self.store = store
     }
 
     func load() async {
@@ -38,5 +49,32 @@ final class PowerUpInventoryViewModel {
                 default: return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
                 }
             }
+    }
+
+    func consume(item: Item, location: LocationSample? = nil) async {
+        guard !isConsuming, item.count > 0 else { return }
+        guard let sample = location ?? locationService.latestSample else {
+            message = "Location unavailable — try again when your position is known."
+            return
+        }
+        isConsuming = true
+        defer { isConsuming = false }
+        do {
+            let response = try await service.consumePowerUp(
+                id: item.id,
+                latitude: sample.latitude,
+                longitude: sample.longitude
+            )
+            guard !Task.isCancelled else { return }
+            try await store.restore(response.visits)
+            let powerups = response.powerups
+            items = items.compactMap { entry in
+                let count = powerups[String(entry.id)] ?? 0
+                return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
+            }
+            message = "\(item.name) applied."
+        } catch {
+            message = "Couldn't use \(item.name)."
+        }
     }
 }
