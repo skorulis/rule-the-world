@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#3E8FEF"/>
+      <stop offset=".55" stop-color="#1E5FD0"/>
+      <stop offset="1" stop-color="#123A8F"/>
+    </linearGradient>
+    <linearGradient id="tileEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#8FD0FF"/>
+      <stop offset=".5" stop-color="#2E6BD8"/>
+      <stop offset="1" stop-color="#0B2C6B"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#BFEBFF"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop stop-color="#9FE6FF" stop-opacity=".85"/>
+      <stop offset=".6" stop-color="#5FC4FF" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#5FC4FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%">
+      <stop stop-color="#FFFFFF" stop-opacity=".5"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.2"/>
+    </filter>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#04133A" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <!-- glow behind tile -->
+  <polygon points="128,26 216,77 216,179 128,230 40,179 40,77" fill="url(#halo)"/>
+
+  <!-- hex tile -->
+  <g filter="url(#drop)">
+    <polygon points="128,22 219,74.5 219,181.5 128,234 37,181.5 37,74.5" fill="url(#tileEdge)"/>
+    <polygon points="128,32 209,79 209,177 128,224 47,177 47,79" fill="url(#tile)"/>
+  </g>
+  <!-- inner bevel -->
+  <polygon points="128,44 198,84.5 198,171.5 128,212 58,171.5 58,84.5" fill="none" stroke="#0A2A66" stroke-opacity=".55" stroke-width="3"/>
+  <!-- gloss -->
+  <polygon points="128,32 209,79 209,120 47,120 47,79" fill="url(#gloss)"/>
+
+  <!-- circular revisit arrow -->
+  <g filter="url(#soft)" opacity=".9">
+    <path d="M128 84a44 44 0 1 1-31 12.7" fill="none" stroke="#6FE3FF" stroke-width="18" stroke-linecap="round"/>
+    <path d="M88 74l14 30 22-21z" fill="#6FE3FF"/>
+  </g>
+  <path d="M128 84a44 44 0 1 1-31 12.7" fill="none" stroke="url(#arrow)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M88 74l14 30 22-21z" fill="url(#arrow)" stroke="#EAF9FF" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- sparkles -->
+  <g fill="#FFF6C8">
+    <path d="m192 62 4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
+    <path d="m66 168 3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <circle cx="196" cy="150" r="3.5"/>
+    <circle cx="60" cy="104" r="3"/>
+  </g>
+</svg>

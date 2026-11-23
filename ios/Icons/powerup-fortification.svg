@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F08A4B"/>
+      <stop offset=".55" stop-color="#D0552B"/>
+      <stop offset="1" stop-color="#8F2E18"/>
+    </linearGradient>
+    <linearGradient id="tileEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFC89F"/>
+      <stop offset=".5" stop-color="#D8673A"/>
+      <stop offset="1" stop-color="#6E1F0F"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFF3E2"/>
+      <stop offset=".5" stop-color="#FFD9AE"/>
+      <stop offset="1" stop-color="#F0A968"/>
+    </linearGradient>
+    <linearGradient id="shieldCore" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#C93A1E"/>
+      <stop offset="1" stop-color="#7E1D0C"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop stop-color="#FFD3A8" stop-opacity=".8"/>
+      <stop offset=".6" stop-color="#FF9C5F" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#FF9C5F" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%">
+      <stop stop-color="#FFFFFF" stop-opacity=".5"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.4"/>
+    </filter>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#2E0D04" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <polygon points="128,26 216,77 216,179 128,230 40,179 40,77" fill="url(#halo)"/>
+
+  <g filter="url(#drop)">
+    <polygon points="128,22 219,74.5 219,181.5 128,234 37,181.5 37,74.5" fill="url(#tileEdge)"/>
+    <polygon points="128,32 209,79 209,177 128,224 47,177 47,79" fill="url(#tile)"/>
+  </g>
+  <polygon points="128,44 198,84.5 198,171.5 128,212 58,171.5 58,84.5" fill="none" stroke="#571804" stroke-opacity=".55" stroke-width="3"/>
+  <polygon points="128,32 209,79 209,120 47,120 47,79" fill="url(#gloss)"/>
+
+  <!-- shield, glow + body -->
+  <g filter="url(#soft)" opacity=".9">
+    <path d="M92 82h72v44c0 28-16 48-36 58-20-10-36-30-36-58z" fill="#FFC890"/>
+  </g>
+  <path d="M92 82h72v44c0 28-16 48-36 58-20-10-36-30-36-58z" fill="url(#shield)" stroke="#8A3A12" stroke-width="3" stroke-linejoin="round"/>
+  <!-- battlements -->
+  <path d="M92 82v-10h12v10h16v-10h16v10h16v-10h12v10z" fill="url(#shield)" stroke="#8A3A12" stroke-width="3" stroke-linejoin="round"/>
+  <!-- red core + ridge -->
+  <path d="M104 92h48v36c0 21-11 36-24 44-13-8-24-23-24-44z" fill="url(#shieldCore)"/>
+  <path d="M128 92v80" stroke="#FFCF9F" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  <path d="M104 110h48" stroke="#FFCF9F" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>
+
+  <!-- sparkles -->
+  <g fill="#FFF1D8">
+    <path d="m192 60 4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
+    <path d="m64 168 3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <circle cx="198" cy="152" r="3.5"/>
+    <circle cx="58" cy="102" r="3"/>
+  </g>
+</svg>

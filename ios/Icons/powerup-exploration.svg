@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#3FBF7F"/>
+      <stop offset=".55" stop-color="#1E8F57"/>
+      <stop offset="1" stop-color="#0E5A37"/>
+    </linearGradient>
+    <linearGradient id="tileEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#9FF0C4"/>
+      <stop offset=".5" stop-color="#2E9E62"/>
+      <stop offset="1" stop-color="#0A4A2C"/>
+    </linearGradient>
+    <linearGradient id="star" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFF3A8"/>
+      <stop offset=".5" stop-color="#FFD23E"/>
+      <stop offset="1" stop-color="#F09A1B"/>
+    </linearGradient>
+    <radialGradient id="gem" cx="40%" cy="35%" r="70%">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset=".5" stop-color="#FFE27A"/>
+      <stop offset="1" stop-color="#E07E14"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop stop-color="#C8FFD9" stop-opacity=".8"/>
+      <stop offset=".6" stop-color="#6FFFA8" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#6FFFA8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%">
+      <stop stop-color="#FFFFFF" stop-opacity=".5"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.4"/>
+    </filter>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#032312" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <polygon points="128,26 216,77 216,179 128,230 40,179 40,77" fill="url(#halo)"/>
+
+  <g filter="url(#drop)">
+    <polygon points="128,22 219,74.5 219,181.5 128,234 37,181.5 37,74.5" fill="url(#tileEdge)"/>
+    <polygon points="128,32 209,79 209,177 128,224 47,177 47,79" fill="url(#tile)"/>
+  </g>
+  <polygon points="128,44 198,84.5 198,171.5 128,212 58,171.5 58,84.5" fill="none" stroke="#063B20" stroke-opacity=".55" stroke-width="3"/>
+  <polygon points="128,32 209,79 209,120 47,120 47,79" fill="url(#gloss)"/>
+
+  <!-- compass ring -->
+  <circle cx="128" cy="128" r="46" fill="none" stroke="#0B4A2A" stroke-opacity=".6" stroke-width="4"/>
+  <circle cx="128" cy="128" r="46" fill="none" stroke="#BFFFD9" stroke-opacity=".35" stroke-width="1.6"/>
+
+  <!-- eight-point star, glow + body -->
+  <g filter="url(#soft)" opacity=".95">
+    <path d="M128 76l11 41 41 11-41 11-11 41-11-41-41-11 41-11z" fill="#FFE97A"/>
+    <path d="M128 100l7 21 21 7-21 7-7 21-7-21-21-7 21-7z" fill="#FFE97A" transform="rotate(45 128 128)"/>
+  </g>
+  <path d="M128 76l11 41 41 11-41 11-11 41-11-41-41-11 41-11z" fill="url(#star)" stroke="#A85E08" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M128 100l7 21 21 7-21 7-7 21-7-21-21-7 21-7z" fill="url(#star)" stroke="#A85E08" stroke-width="1.6" stroke-linejoin="round" transform="rotate(45 128 128)"/>
+  <circle cx="128" cy="128" r="9" fill="url(#gem)" stroke="#8A4A06" stroke-width="1.6"/>
+
+  <!-- sparkles -->
+  <g fill="#EFFFF4">
+    <path d="m190 60 4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/>
+    <path d="m64 170 3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+    <circle cx="198" cy="150" r="3.5"/>
+    <circle cx="58" cy="100" r="3"/>
+  </g>
+</svg>
