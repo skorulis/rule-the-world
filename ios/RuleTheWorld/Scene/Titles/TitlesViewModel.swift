@@ -51,7 +51,7 @@ final class TitlesViewModel {
                     name: definition?.name ?? "Title #\(ranking.number)",
                     icon: definition?.icon,
                     rarity: definition?.rarity,
-                    regionName: regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)",
+                    regionName: ranking.type == "global" ? "World" : (regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)"),
                     detail: definition?.description,
                     visited: ranking.visited,
                     owned: ranking.owned

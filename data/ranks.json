@@ -6,6 +6,7 @@
       "rarity": "mythic",
       "femaleName": "Empress",
       "description": "The supreme ruler of a worldwide empire.",
+      "icon": "RankEmperor",
       "minOwnership": 10000,
       "minVisits": 500,
       "maxQuantity": 1
@@ -15,6 +16,7 @@
       "name": "High Regent",
       "rarity": "mythic",
       "description": "A supreme imperial guardian entrusted with authority beneath the emperor.",
+      "icon": "RankHighRegent",
       "minOwnership": 8000,
       "minVisits": 400,
       "maxQuantity": 3
@@ -24,6 +26,7 @@
       "name": "Overlord",
       "rarity": "legendary",
       "description": "A powerful ruler whose influence extends across many territories.",
+      "icon": "RankOverlord",
       "minOwnership": 7000,
       "minVisits": 300,
       "maxQuantity": 10
@@ -34,6 +37,7 @@
       "rarity": "legendary",
       "femaleName": "Vicereine",
       "description": "An imperial representative who governs vast territories on behalf of the emperor.",
+      "icon": "RankViceroy",
       "minOwnership": 6000,
       "minVisits": 250,
       "maxQuantity": 25
@@ -43,6 +47,7 @@
       "name": "High Chancellor",
       "rarity": "legendary",
       "description": "A senior imperial official who oversees the affairs of the empire.",
+      "icon": "RankHighChancellor",
       "minOwnership": 5000,
       "minVisits": 200,
       "maxQuantity": 50
@@ -52,6 +57,7 @@
       "name": "Chancellor",
       "rarity": "epic",
       "description": "A trusted official who directs imperial administration and policy.",
+      "icon": "RankChancellor",
       "minOwnership": 4000,
       "minVisits": 175,
       "maxPercentage": 1
@@ -61,6 +67,7 @@
       "name": "Proconsul",
       "rarity": "epic",
       "description": "A senior governor entrusted with an important imperial province.",
+      "icon": "RankProconsul",
       "minOwnership": 3000,
       "minVisits": 150,
       "maxPercentage": 2
@@ -70,6 +77,7 @@
       "name": "Consul",
       "rarity": "rare",
       "description": "A distinguished official who exercises authority in the service of the empire.",
+      "icon": "RankConsul",
       "minOwnership": 2500,
       "minVisits": 125,
       "maxPercentage": 5
@@ -79,6 +87,7 @@
       "name": "Prefect",
       "rarity": "rare",
       "description": "An administrator responsible for maintaining order across imperial territories.",
+      "icon": "RankPrefect",
       "minOwnership": 2000,
       "minVisits": 100,
       "maxPercentage": 10
@@ -88,6 +97,7 @@
       "name": "Legate",
       "rarity": "rare",
       "description": "An appointed representative entrusted with carrying imperial authority abroad.",
+      "icon": "RankLegate",
       "minOwnership": 1500,
       "minVisits": 80
     },
@@ -96,6 +106,7 @@
       "name": "Ambassador",
       "rarity": "rare",
       "description": "A respected representative who builds influence among distant nations.",
+      "icon": "RankAmbassador",
       "minOwnership": 1000,
       "minVisits": 60
     },
@@ -104,6 +115,7 @@
       "name": "Emissary",
       "rarity": "rare",
       "description": "A trusted agent sent on important missions beyond familiar borders.",
+      "icon": "RankEmissary",
       "minOwnership": 800,
       "minVisits": 45
     },
@@ -112,6 +124,7 @@
       "name": "Envoy",
       "rarity": "rare",
       "description": "A representative establishing a presence in faraway lands.",
+      "icon": "RankEnvoy",
       "minOwnership": 500,
       "minVisits": 30
     },
@@ -120,6 +133,7 @@
       "name": "Pioneer",
       "rarity": "common",
       "description": "An enterprising explorer who establishes a lasting foothold in new territories.",
+      "icon": "RankPioneer",
       "minOwnership": 300,
       "minVisits": 20
     },
@@ -128,6 +142,7 @@
       "name": "Pathfinder",
       "rarity": "common",
       "description": "A skilled traveler who charts routes through unfamiliar lands.",
+      "icon": "RankPathfinder",
       "minOwnership": 175,
       "minVisits": 15
     },
@@ -136,6 +151,7 @@
       "name": "Trailblazer",
       "rarity": "common",
       "description": "An adventurous traveler who opens new paths for others to follow.",
+      "icon": "RankTrailblazer",
       "minOwnership": 100,
       "minVisits": 10
     },
@@ -144,6 +160,7 @@
       "name": "Explorer",
       "rarity": "common",
       "description": "A curious adventurer discovering the world beyond familiar surroundings.",
+      "icon": "RankExplorer",
       "minOwnership": 50,
       "minVisits": 7
     },
@@ -152,6 +169,7 @@
       "name": "Voyager",
       "rarity": "common",
       "description": "A traveler embarking on journeys to distant places.",
+      "icon": "RankVoyager",
       "minOwnership": 20,
       "minVisits": 5
     },
@@ -160,6 +178,7 @@
       "name": "Wayfarer",
       "rarity": "common",
       "description": "A traveler taking the first steps toward a wider world.",
+      "icon": "RankWayfarer",
       "minOwnership": 5,
       "minVisits": 3
     },
@@ -168,6 +187,7 @@
       "name": "Citizen",
       "rarity": "common",
       "description": "A new participant beginning their journey on the world stage.",
+      "icon": "RankCitizen",
       "minOwnership": 0,
       "minVisits": 1
     }

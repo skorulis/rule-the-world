@@ -3,7 +3,7 @@ import { type RegionRanking, user } from "@/db/auth-schema";
 import { hexDetails, hexVisit } from "@/db/schema";
 import { db } from "@/lib/db";
 import { allocateRanks, type RegionPlayer } from "./allocate";
-import { countryRanks, suburbRanks } from "./ranks";
+import { countryRanks, globalRanks, suburbRanks } from "./ranks";
 
 export interface RankingsSummary {
   regions: number;
@@ -21,7 +21,7 @@ export async function calculateRankings(): Promise<RankingsSummary> {
     const rows = await tx.execute<{
       user_id: string;
       region: string;
-      type: "country" | "suburb";
+      type: "global" | "country" | "suburb";
       visited: number;
       owned: number;
       score: number;
@@ -38,8 +38,9 @@ export async function calculateRankings(): Promise<RankingsSummary> {
         count(*) filter (where cells.position = 1 and cells.tied = 1 and cells.score > 0)::int as owned,
         coalesce(sum(cells.score), 0)::float8 as score
       from cells
-      join ${hexDetails} on ${hexDetails.cell} = cells.cell
+      left join ${hexDetails} on ${hexDetails.cell} = cells.cell
       cross join lateral (values
+        ('global', 1::bigint),
         ('country', ${hexDetails.regionCountry}),
         ('suburb', ${hexDetails.regionSuburb})
       ) as regions(type, id)
@@ -47,7 +48,7 @@ export async function calculateRankings(): Promise<RankingsSummary> {
       group by cells.user_id, regions.type, regions.id
     `);
 
-    const regions = new Map<string, { id: number; type: "country" | "suburb"; players: RegionPlayer[] }>();
+    const regions = new Map<string, { id: number; type: "global" | "country" | "suburb"; players: RegionPlayer[] }>();
     for (const row of rows) {
       const id = Number(row.region);
       if (!Number.isSafeInteger(id) || id <= 0) continue;
@@ -59,11 +60,13 @@ export async function calculateRankings(): Promise<RankingsSummary> {
 
     const rankings = new Map<string, RegionRanking[]>();
     let assignments = 0;
+    const priority = { global: 0, country: 1, suburb: 2 };
+    const definitions = { global: globalRanks, country: countryRanks, suburb: suburbRanks };
     const ordered = [...regions.values()].sort((a, b) =>
-      (a.type === b.type ? 0 : a.type === "country" ? -1 : 1) || a.id - b.id);
+      priority[a.type] - priority[b.type] || a.id - b.id);
     for (const { id, type, players } of ordered) {
       const byId = new Map(players.map((player) => [player.userId, player]));
-      for (const [userId, number] of allocateRanks(players, type === "country" ? countryRanks : suburbRanks)) {
+      for (const [userId, number] of allocateRanks(players, definitions[type])) {
         const player = byId.get(userId);
         rankings.set(userId, [...rankings.get(userId) ?? [],
           { id, type, number, visited: player?.visited ?? 0, owned: player?.owned ?? 0 }]);

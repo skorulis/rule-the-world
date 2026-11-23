@@ -11,7 +11,7 @@ struct TitlesViewModelTests {
         return TitlesViewModel(
             service: AuthenticatedService(tokenStore: tokens, urlSession: session),
             catalog: RankCatalog(data: Data(#"""
-                {"country":[
+                {"global":[{"number":1,"name":"Emperor","rarity":"mythic","description":"World ruler","icon":"RankEmperor"}],"country":[
                 {"number":1,"name":"King","rarity":"legendary","femaleName":"Queen","description":"Sovereign"},
                 {"number":15,"name":"Wanderer","rarity":"common","description":"Traveler"}]}
                 """#.utf8)),
@@ -63,6 +63,23 @@ struct TitlesViewModelTests {
         #expect(model.items[2].regionName == "Region #99")
         #expect(model.items[2].detail == nil)
         #expect(model.items[3].id == "country:99")
+    }
+
+    @Test func globalTitleResolvesWorldNameAndIconWithoutCollidingWithCountry() async {
+        let model = makeModel(body: #"""
+            {"rankings":[
+            {"id":1,"type":"global","number":1,"visited":12000,"owned":10000},
+            {"id":1,"type":"country","number":1,"visited":2000,"owned":1000}]}
+            """#)
+        await model.load()
+        #expect(model.items.count == 2)
+        let global = model.items.first { $0.id == "global:1" }
+        #expect(global?.name == "Emperor")
+        #expect(global?.regionName == "World")
+        #expect(global?.icon == "RankEmperor")
+        #expect(global?.rarity == .mythic)
+        #expect(global?.owned == 10000)
+        #expect(model.items.first { $0.id == "country:1" }?.regionName == "Zedland")
     }
 
     @Test func emptyAwardsLoadSuccessfully() async {

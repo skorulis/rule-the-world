@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countryRanks, suburbRanks, parseRanks } from "./ranks";
+import { countryRanks, globalRanks, suburbRanks, parseRanks } from "./ranks";
 
 const valid = { number: 1, name: "King", rarity: "mythic", description: "Ruler", minOwnership: 10, minVisits: 1, maxQuantity: 1 };
 
@@ -26,6 +26,18 @@ describe("rank definitions", () => {
     expect(countryRanks.filter((rank) => rank.rarity === "mythic").map((rank) => rank.name)).toEqual(["King"]);
     expect(countryRanks.find((rank) => rank.name === "Prince")?.rarity).toBe("legendary");
     expect(suburbRanks.some((rank) => rank.rarity === "mythic")).toBe(false);
+  });
+
+  it("loads twenty global ranks with icons and increasing eligibility requirements", () => {
+    expect(globalRanks.map((rank) => rank.number)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
+    expect(globalRanks[0]).toMatchObject({ name: "Emperor", femaleName: "Empress", maxQuantity: 1 });
+    for (const [index, rank] of globalRanks.entries()) {
+      expect(rank.icon).toBe(`Rank${rank.name.replaceAll(" ", "")}`);
+      if (index > 0) {
+        expect(rank.minOwnership).toBeLessThanOrEqual(globalRanks[index - 1].minOwnership);
+        expect(rank.minVisits).toBeLessThanOrEqual(globalRanks[index - 1].minVisits);
+      }
+    }
   });
 
   it("accepts a valid definition", () => {

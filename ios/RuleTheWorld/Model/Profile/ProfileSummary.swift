@@ -59,9 +59,8 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
         init(from decoder: any Decoder) throws {
             let ranking = try? Ranking(from: decoder)
             value = ranking.flatMap {
-                guard $0.id > 0, $0.number > 0, ["country", "state", "suburb"].contains($0.type),
-                      ($0.visited ?? 0) >= 0, ($0.owned ?? 0) >= 0,
-                      ($0.owned ?? 0) <= ($0.visited ?? .max) else { return nil }
+                guard $0.id > 0, $0.number > 0, ["global", "country", "state", "suburb"].contains($0.type),
+                      ($0.visited ?? 0) >= 0, ($0.owned ?? 0) >= 0 else { return nil }
                 return $0
             }
         }

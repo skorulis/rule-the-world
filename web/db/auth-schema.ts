@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, boolean, index, jsonb, date } from "drizzle-o
 
 export type RegionRanking = {
   id: number;
-  type: "country" | "state" | "suburb";
+  type: "global" | "country" | "state" | "suburb";
   number: number;
   visited: number;
   owned: number;

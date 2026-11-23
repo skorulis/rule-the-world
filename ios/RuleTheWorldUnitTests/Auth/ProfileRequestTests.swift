@@ -116,6 +116,27 @@ struct ProfileRequestTests {
         #expect(summary.rankings.map(\.type) == ["country", "state", "suburb"])
     }
 
+    @Test func decodesRankingsWhenOwnershipExceedsVisits() async throws {
+        let summary = try await service(body: #"""
+            {"rankings":[
+            {"id":1,"owned":16,"number":19,"type":"global","visited":15},
+            {"id":1159320355,"owned":14,"number":13,"type":"country","visited":14},
+            {"id":9000108033078,"owned":14,"number":3,"type":"suburb","visited":14}]}
+            """#).fetchProfile()
+        #expect(summary.rankings.map(\.type) == ["global", "country", "suburb"])
+        #expect(summary.rankings.first?.owned == 16)
+        #expect(summary.rankings.first?.visited == 15)
+    }
+
+    @Test func rankingsStillRejectNegativeCounts() async throws {
+        let summary = try await service(body: #"""
+            {"rankings":[
+            {"id":1,"type":"global","number":19,"owned":-1,"visited":15},
+            {"id":1,"type":"global","number":19,"owned":16,"visited":-1}]}
+            """#).fetchProfile()
+        #expect(summary.rankings.isEmpty)
+    }
+
     @Test func absentOrInvalidRankingsAreEmpty() async throws {
         for body in ["{}", #"{"rankings":null}"#, #"{"rankings":{}}"#] {
             let summary = try await service(body: body).fetchProfile()

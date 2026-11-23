@@ -81,6 +81,29 @@ describe("calculateRankings", () => {
     ]);
   });
 
+  it("allocates global titles independently with one emperor and worldwide totals", async () => {
+    execute.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      { user_id: "a", type: "global", region: "1", visited: 12000, owned: 11000, score: 22000 },
+      { user_id: "b", type: "global", region: "1", visited: 11000, owned: 10000, score: 20000 },
+      { user_id: "a", type: "country", region: "1", visited: 6000, owned: 5500, score: 11000 },
+      { user_id: "c", type: "global", region: "1", visited: 1, owned: 0, score: 1 },
+      { user_id: "d", type: "global", region: "1", visited: 0, owned: 0, score: 0 },
+    ]);
+    expect(await calculateRankings()).toMatchObject({ regions: 2, players: 4, assignments: 4 });
+    const aggregate = queries()[1].sql;
+    expect(aggregate).toContain("left join \"hex_details\"");
+    expect(aggregate).toContain("('global', 1::bigint)");
+    const payload = JSON.parse(queries()[3].params[0] as string);
+    expect(payload).toEqual([
+      { user_id: "a", rankings: [
+        { id: 1, type: "global", number: 1, visited: 12000, owned: 11000 },
+        { id: 1, type: "country", number: 1, visited: 6000, owned: 5500 },
+      ] },
+      { user_id: "b", rankings: [{ id: 1, type: "global", number: 2, visited: 11000, owned: 10000 }] },
+      { user_id: "c", rankings: [{ id: 1, type: "global", number: 20, visited: 1, owned: 0 }] },
+    ]);
+  });
+
   it("only resets rankings when nobody has visited a region", async () => {
     const summary = await calculateRankings();
     expect(summary).toMatchObject({ regions: 0, players: 0, assignments: 0 });

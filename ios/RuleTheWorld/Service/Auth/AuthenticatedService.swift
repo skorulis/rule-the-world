@@ -10,7 +10,7 @@ final class AuthenticatedService: HTTPService {
         urlSession: URLSessionProtocol = URLSession(configuration: .default)
     ) {
         self.tokenStore = tokenStore
-        super.init(baseURL: baseURL, logger: .init(level: .errors), urlSession: urlSession)
+        super.init(baseURL: baseURL, logger: .init(level: .full), urlSession: urlSession)
     }
 
     func fetchProfile() async throws -> ProfileSummary {

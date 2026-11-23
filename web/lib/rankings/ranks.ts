@@ -57,7 +57,9 @@ export function parseRanks(raw: unknown): RankDefinition[] {
   });
 }
 
-const definitions = JSON.parse(readFileSync(definitionsPath(), "utf8")) as { country?: unknown; suburb?: unknown };
+const definitions = JSON.parse(readFileSync(definitionsPath(), "utf8")) as { global?: unknown; country?: unknown; suburb?: unknown };
+
+export const globalRanks: RankDefinition[] = parseRanks(definitions.global);
 
 export const countryRanks: RankDefinition[] = parseRanks(definitions.country);
 export const suburbRanks: RankDefinition[] = parseRanks(definitions.suburb);
