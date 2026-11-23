@@ -14,6 +14,7 @@ export interface RankDefinition {
   minVisits: number;
   maxQuantity?: number;
   maxPercentage?: number;
+  stipend?: number;
 }
 
 function definitionsPath(): string {
@@ -48,6 +49,7 @@ export function parseRanks(raw: unknown): RankDefinition[] {
       !isOptional(rank.icon, (value) => typeof value === "string") ||
       !isCount(rank.minOwnership) || !isCount(rank.minVisits) ||
       !isOptional(rank.maxQuantity, isCount) ||
+      !isOptional(rank.stipend, isCount) ||
       !isOptional(rank.maxPercentage, (value) => typeof value === "number" && value >= 0 && value <= 100) ||
       (rank.maxQuantity !== undefined && rank.maxPercentage !== undefined)
     ) {

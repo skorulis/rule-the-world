@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, jsonb, date } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, jsonb, date, integer } from "drizzle-orm/pg-core";
 
 export type RegionRanking = {
   id: number;
@@ -23,6 +23,8 @@ export const user = pgTable("user", {
   powerups: jsonb("powerups").$type<Record<string, number>>().default({}).notNull(),
   rankings: jsonb("rankings").$type<RegionRanking[]>().default([]).notNull(),
   dailyRewardDay: date("daily_reward_day", { mode: "string" }),
+  coins: integer("coins").default(0).notNull(),
+  stipendDay: date("stipend_day", { mode: "string" }),
 });
 
 export const session = pgTable(

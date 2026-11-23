@@ -7,6 +7,9 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
     let rankings: [Ranking]
     let powerups: [Int: Int]
     let dailyRewardAvailableAt: Date?
+    let coins: Int?
+    let stipend: Int?
+    let stipendAvailableAt: Date?
 
     struct Ranking: Decodable, Sendable {
         let id: Int64
@@ -25,6 +28,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case visited, owned, regions, rankings, powerups, dailyRewardAvailableAt
+        case coins, stipend, stipendAvailableAt
     }
 
     init(from decoder: any Decoder) throws {
@@ -45,6 +49,10 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
             result[id] = entry.value
         }
         dailyRewardAvailableAt = (try? container.decode(String.self, forKey: .dailyRewardAvailableAt))
+            .flatMap(Self.parseDate)
+        coins = (try? container.decode(Int.self, forKey: .coins)).flatMap { $0 >= 0 ? $0 : nil }
+        stipend = (try? container.decode(Int.self, forKey: .stipend)).flatMap { $0 >= 0 ? $0 : nil }
+        stipendAvailableAt = (try? container.decode(String.self, forKey: .stipendAvailableAt))
             .flatMap(Self.parseDate)
     }
 

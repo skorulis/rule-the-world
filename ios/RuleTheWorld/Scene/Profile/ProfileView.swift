@@ -16,11 +16,17 @@ struct ProfileView: View {
                     if let owned = model.ownedHexCount {
                         LabeledContent("Hexes owned", value: owned.formatted())
                     }
+                    if let coins = model.coins {
+                        LabeledContent("Coins", value: coins.formatted())
+                    }
                 }
             }
             Section("Daily reward") {
                 DailyRewardButton(model: model.dailyReward) { response in
                     model.applyInventory(response.powerups)
+                }
+                StipendButton(model: model.stipend) { response in
+                    model.applyCoins(response.coins)
                 }
             }
             Section {

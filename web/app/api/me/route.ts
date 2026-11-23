@@ -5,6 +5,7 @@ import { hexDetails, hexVisit, regionType } from "@/db/schema";
 import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
 import { dailyRewardAvailableAt } from "@/lib/powerups/daily-reward";
+import { dailyStipend } from "@/lib/stipend";
 
 export const dynamic = "force-dynamic";
 
@@ -68,14 +69,18 @@ export async function GET(request: Request) {
       powerups: Record<string, number> | null;
       rankings: RegionRanking[] | null;
       daily_reward_day: string | null;
+      coins: number | null;
+      stipend_day: string | null;
     }>(sql`
       select ${user.powerups} as powerups, ${user.rankings} as rankings,
-        ${user.dailyRewardDay}::text as daily_reward_day
+        ${user.dailyRewardDay}::text as daily_reward_day,
+        ${user.coins} as coins, ${user.stipendDay}::text as stipend_day
       from ${user} where ${user.id} = ${session.user.id}
     `);
     const powerups = powerupRows[0]?.powerups ?? {};
     const rankings = powerupRows[0]?.rankings ?? [];
     const dailyRewardDay = powerupRows[0]?.daily_reward_day ?? null;
+    const stipendDay = powerupRows[0]?.stipend_day ?? null;
     const { id, name, email, createdAt } = session.user;
     return NextResponse.json({
       user: { id, name, email, createdAt },
@@ -85,6 +90,9 @@ export async function GET(request: Request) {
       powerups,
       rankings,
       dailyRewardAvailableAt: dailyRewardAvailableAt(dailyRewardDay, new Date()).toISOString(),
+      coins: Number(powerupRows[0]?.coins ?? 0),
+      stipend: dailyStipend(rankings),
+      stipendAvailableAt: dailyRewardAvailableAt(stipendDay, new Date()).toISOString(),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return serverError("Profile summary failed", undefined, "Unable to load profile");
