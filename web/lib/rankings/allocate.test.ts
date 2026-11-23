@@ -3,7 +3,7 @@ import { allocateRanks, type RegionPlayer } from "./allocate";
 import { countryRanks, type RankDefinition } from "./ranks";
 
 const rank = (number: number, overrides: Partial<RankDefinition> = {}): RankDefinition => ({
-  number, name: `Rank ${number}`, description: "", minOwnership: 0, minVisits: 1, ...overrides,
+  number, name: `Rank ${number}`, rarity: "common", description: "", minOwnership: 0, minVisits: 1, ...overrides,
 });
 const player = (userId: string, owned: number, visited = owned, score = 0): RegionPlayer => ({ userId, owned, visited, score });
 

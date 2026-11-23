@@ -20,6 +20,7 @@ final class ProfileViewModel {
     private(set) var visitedHexCount: Int?
     private(set) var ownedHexCount: Int?
     private(set) var powerUpCount: Int?
+    private(set) var titleCount: Int?
     private(set) var regions: [Region] = []
 
     @Resolvable<Resolver>
@@ -35,6 +36,7 @@ final class ProfileViewModel {
         visitedHexCount = summary.visited
         ownedHexCount = summary.owned
         powerUpCount = summary.powerups.values.reduce(0, +)
+        titleCount = Set(summary.rankings.map { "\($0.type):\($0.id)" }).count
         dailyReward.update(availableAt: summary.dailyRewardAvailableAt)
         var seen: Set<Int64> = []
         regions = summary.regions.compactMap { region -> Region? in

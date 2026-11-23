@@ -12,8 +12,8 @@ struct TitlesViewModelTests {
             service: AuthenticatedService(tokenStore: tokens, urlSession: session),
             catalog: RankCatalog(data: Data(#"""
                 {"country":[
-                {"number":1,"name":"King","femaleName":"Queen","description":"Sovereign"},
-                {"number":15,"name":"Wanderer","description":"Traveler"}]}
+                {"number":1,"name":"King","rarity":"legendary","femaleName":"Queen","description":"Sovereign"},
+                {"number":15,"name":"Wanderer","rarity":"common","description":"Traveler"}]}
                 """#.utf8)),
             regionNames: RegionNameCatalog(data: Data(#"{"1":"Zedland","2":"Arcadia","3":"Arcadia"}"#.utf8))
         )
@@ -56,6 +56,7 @@ struct TitlesViewModelTests {
             """#)
         await model.load()
         #expect(model.items.map(\.number) == [1, 15, 16, 17])
+        #expect(model.items.map(\.rarity) == [.legendary, .common, nil, nil])
         #expect(model.items[2].name == "Title #16")
         #expect(model.items[2].regionName == "Region #99")
         #expect(model.items[2].detail == nil)

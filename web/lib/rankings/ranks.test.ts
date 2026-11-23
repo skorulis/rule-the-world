@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { countryRanks, suburbRanks, parseRanks } from "./ranks";
 
-const valid = { number: 1, name: "King", description: "Ruler", minOwnership: 10, minVisits: 1, maxQuantity: 1 };
+const valid = { number: 1, name: "King", rarity: "mythic", description: "Ruler", minOwnership: 10, minVisits: 1, maxQuantity: 1 };
 
 describe("rank definitions", () => {
   it("loads the country ranks in ascending order", () => {
@@ -22,6 +22,12 @@ describe("rank definitions", () => {
     ]);
   });
 
+  it("reserves mythic for kings", () => {
+    expect(countryRanks.filter((rank) => rank.rarity === "mythic").map((rank) => rank.name)).toEqual(["King"]);
+    expect(countryRanks.find((rank) => rank.name === "Prince")?.rarity).toBe("legendary");
+    expect(suburbRanks.some((rank) => rank.rarity === "mythic")).toBe(false);
+  });
+
   it("accepts a valid definition", () => {
     expect(parseRanks([valid])).toEqual([valid]);
   });
@@ -35,6 +41,8 @@ describe("rank definitions", () => {
     ["negative minimum", [{ ...valid, minOwnership: -1 }]],
     ["fractional minimum", [{ ...valid, minVisits: 1.5 }]],
     ["missing name", [{ ...valid, name: undefined }]],
+    ["missing rarity", [{ ...valid, rarity: undefined }]],
+    ["unknown rarity", [{ ...valid, rarity: "unknown" }]],
     ["both caps", [{ ...valid, maxPercentage: 5 }]],
     ["percentage over 100", [{ ...valid, maxQuantity: undefined, maxPercentage: 101 }]],
   ])("rejects %s", (_, raw) => {

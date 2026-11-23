@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { rarities, type Rarity } from "../rarity";
 
 export interface RankDefinition {
   number: number;
   name: string;
+  rarity: Rarity;
   femaleName?: string;
   description: string;
   icon?: string;
@@ -41,6 +43,7 @@ export function parseRanks(raw: unknown): RankDefinition[] {
       !Number.isSafeInteger(rank.number) || (rank.number as number) <= 0 ||
       (index > 0 && (rank.number as number) <= (raw[index - 1] as RankDefinition).number) ||
       typeof rank.name !== "string" || typeof rank.description !== "string" ||
+      !rarities.includes(rank.rarity as Rarity) ||
       !isOptional(rank.femaleName, (value) => typeof value === "string") ||
       !isOptional(rank.icon, (value) => typeof value === "string") ||
       !isCount(rank.minOwnership) || !isCount(rank.minVisits) ||

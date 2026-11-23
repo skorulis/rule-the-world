@@ -4,7 +4,7 @@ import SwiftUI
 /// Sources are hand-authored SVGs in ios/Icons, rasterized into the asset catalog.
 struct PowerUpIcon: View {
     let type: PowerUpType
-    let rarity: PowerUpRarity?
+    let rarity: Rarity?
     var size: CGFloat = 56
 
     var body: some View {
@@ -30,14 +30,4 @@ struct PowerUpIcon: View {
     }
 
     private var color: Color { rarity?.color ?? .secondary }
-}
-
-extension PowerUpRarity {
-    var color: Color {
-        switch self {
-        case .common: .gray
-        case .rare: .blue
-        case .epic: .purple
-        }
-    }
 }

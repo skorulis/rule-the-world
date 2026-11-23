@@ -3,6 +3,7 @@
     {
       "number": 1,
       "name": "King",
+      "rarity": "mythic",
       "femaleName": "Queen",
       "description": "The sovereign ruler of a kingdom.",
       "icon": "RankKing",
@@ -13,6 +14,7 @@
     {
       "number": 2,
       "name": "Prince",
+      "rarity": "legendary",
       "femaleName": "Princess",
       "description": "A member of a royal family or the ruler of a principality.",
       "icon": "RankPrince",
@@ -23,6 +25,7 @@
     {
       "number": 3,
       "name": "Duke",
+      "rarity": "epic",
       "femaleName": "Duchess",
       "description": "A high-ranking noble who traditionally rules a duchy.",
       "icon": "RankDuke",
@@ -33,6 +36,7 @@
     {
       "number": 4,
       "name": "Marquis",
+      "rarity": "epic",
       "femaleName": "Marchioness",
       "description": "A noble traditionally entrusted with a border territory known as a march.",
       "icon": "RankMarquis",
@@ -43,6 +47,7 @@
     {
       "number": 5,
       "name": "Count",
+      "rarity": "epic",
       "femaleName": "Countess",
       "description": "A noble traditionally responsible for a county.",
       "icon": "RankCount",
@@ -53,6 +58,7 @@
     {
       "number": 6,
       "name": "Viscount",
+      "rarity": "rare",
       "femaleName": "Viscountess",
       "description": "A noble ranking below a count and above a baron, originally a count's deputy.",
       "icon": "RankViscount",
@@ -63,6 +69,7 @@
     {
       "number": 7,
       "name": "Baron",
+      "rarity": "rare",
       "femaleName": "Baroness",
       "description": "A noble who traditionally holds a barony under a monarch or greater lord.",
       "icon": "RankBaron",
@@ -73,6 +80,7 @@
     {
       "number": 8,
       "name": "Baronet",
+      "rarity": "rare",
       "femaleName": "Baronetess",
       "description": "The holder of a hereditary title ranking below a baron and above most knights.",
       "icon": "RankBaronet",
@@ -82,6 +90,7 @@
     {
       "number": 9,
       "name": "Knight",
+      "rarity": "rare",
       "femaleName": "Dame",
       "description": "A person granted an honorary title for service, traditionally a mounted warrior.",
       "icon": "RankKnight",
@@ -91,6 +100,7 @@
     {
       "number": 10,
       "name": "Squire",
+      "rarity": "common",
       "description": "An attendant to a knight, traditionally training for knighthood.",
       "icon": "RankSquire",
       "minOwnership": 75,
@@ -99,6 +109,7 @@
     {
       "number": 11,
       "name": "Burgess",
+      "rarity": "common",
       "description": "A citizen of a borough or town, traditionally possessing civic rights and privileges.",
       "icon": "RankBurgess",
       "minOwnership": 30,
@@ -107,6 +118,7 @@
     {
       "number": 12,
       "name": "Yeoman",
+      "rarity": "common",
       "description": "A freeholder who traditionally owns and farms a small estate.",
       "icon": "RankYeoman",
       "minOwnership": 15,
@@ -115,6 +127,7 @@
     {
       "number": 13,
       "name": "Crofter",
+      "rarity": "common",
       "description": "A tenant farmer who works a small agricultural holding known as a croft.",
       "icon": "RankCrofter",
       "minOwnership": 5,
@@ -123,6 +136,7 @@
     {
       "number": 14,
       "name": "Settler",
+      "rarity": "common",
       "description": "A person who establishes a permanent home in a new place.",
       "icon": "RankSettler",
       "minOwnership": 2,
@@ -131,6 +145,7 @@
     {
       "number": 15,
       "name": "Wanderer",
+      "rarity": "common",
       "description": "A traveler who roams from place to place without a fixed home or destination.",
       "icon": "RankWanderer",
       "minOwnership": 0,
@@ -141,6 +156,7 @@
     {
       "number": 1,
       "name": "Mayor",
+      "rarity": "epic",
       "description": "The civic leader of a local community.",
       "icon": "RankMayor",
       "minOwnership": 20,
@@ -150,6 +166,7 @@
     {
       "number": 2,
       "name": "Deputy Mayor",
+      "rarity": "epic",
       "description": "A civic official who supports the mayor and acts in their place when needed.",
       "icon": "RankDeputyMayor",
       "minOwnership": 15,
@@ -159,6 +176,7 @@
     {
       "number": 3,
       "name": "Councillor",
+      "rarity": "rare",
       "description": "A member of a local council who represents the community.",
       "icon": "RankCouncillor",
       "minOwnership": 10,
@@ -168,6 +186,7 @@
     {
       "number": 4,
       "name": "Steward",
+      "rarity": "common",
       "description": "A trusted caretaker who looks after the interests of a local community.",
       "icon": "RankSteward",
       "minOwnership": 5,
@@ -176,6 +195,7 @@
     {
       "number": 5,
       "name": "Local",
+      "rarity": "common",
       "description": "An established member of the local community.",
       "icon": "RankLocal",
       "minOwnership": 2,
@@ -184,6 +204,7 @@
     {
       "number": 6,
       "name": "Visitor",
+      "rarity": "common",
       "description": "A traveler exploring the local area.",
       "icon": "RankVisitor",
       "minOwnership": 0,

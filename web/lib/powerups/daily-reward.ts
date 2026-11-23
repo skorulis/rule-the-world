@@ -1,6 +1,6 @@
-import type { PowerUpRarity } from "./powerups";
+import type { Rarity } from "../rarity";
 
-export const dailyRewardRarity: PowerUpRarity = "common";
+export const dailyRewardRarity: Rarity = "common";
 
 /** The UTC calendar day of `now` as `YYYY-MM-DD`. */
 export function utcDay(now: Date): string {

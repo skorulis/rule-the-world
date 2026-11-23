@@ -29,8 +29,10 @@ struct ProfileView: View {
                 } label: {
                     LabeledContent("Power-ups", value: (model.powerUpCount ?? 0).formatted())
                 }
-                Button("Titles") {
+                Button {
                     coordinator?.push(MainPath.titles)
+                } label: {
+                    LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())
                 }
             }
             if !model.regions.isEmpty {

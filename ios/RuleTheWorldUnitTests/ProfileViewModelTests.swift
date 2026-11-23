@@ -86,6 +86,32 @@ struct ProfileViewModelTests {
         #expect(model.regions.isEmpty)
     }
 
+    @Test func countsUniqueTitlesMatchingTheTitlesScreen() async throws {
+        let (model, _) = try makeModel { request in
+            (Data("""
+                {"rankings":[
+                {"id":1,"type":"country","number":1},
+                {"id":1,"type":"country","number":2},
+                {"id":1,"type":"state","number":3},
+                {"id":99,"type":"suburb","number":4},
+                {"id":0,"type":"country","number":1},
+                {"id":2,"type":"country","number":0}]}
+                """.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        #expect(model.titleCount == nil)
+        await model.load()
+        #expect(model.titleCount == 3)
+    }
+
+    @Test func loadsZeroTitlesWhenRankingsAreEmpty() async throws {
+        let (model, _) = try makeModel { request in
+            (Data(#"{"rankings":[]}"#.utf8),
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        await model.load()
+        #expect(model.titleCount == 0)
+    }
+
     @Test func forwardsDailyRewardAvailabilityToTheDailyRewardModel() async throws {
         let (model, _) = try makeModel { request in
             (Data(#"{"visited":1,"owned":0,"dailyRewardAvailableAt":"2026-11-24T00:00:00.000Z"}"#.utf8),

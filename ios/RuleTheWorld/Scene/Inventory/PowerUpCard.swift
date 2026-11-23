@@ -7,9 +7,9 @@ struct PowerUpCard: View {
     let isConsuming: Bool
     let onUse: () -> Void
 
-    private var rarity: PowerUpRarity? { item.rarity }
+    private var rarity: Rarity? { item.rarity }
     private var color: Color { rarity?.color ?? .secondary }
-    private var isEpic: Bool { rarity == .epic }
+    private var isHighRarity: Bool { rarity.map { $0 >= .epic } ?? false }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -32,7 +32,7 @@ struct PowerUpCard: View {
                     Spacer()
                     Button("Use", action: onUse)
                         .buttonStyle(.borderedProminent)
-                        .tint(isEpic ? .purple : nil)
+                        .tint(isHighRarity ? color : nil)
                         .disabled(isConsuming || item.count < 1)
                 }
             }
@@ -40,18 +40,18 @@ struct PowerUpCard: View {
         .padding(12)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(color.opacity(isEpic ? 0.14 : 0.07))
+                .fill(color.opacity(isHighRarity ? 0.14 : 0.07))
         }
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(border, lineWidth: isEpic ? 1.5 : 1)
+                .strokeBorder(border, lineWidth: isHighRarity ? 1.5 : 1)
         }
-        .shadow(color: isEpic ? color.opacity(0.45) : .clear, radius: 8)
+        .shadow(color: isHighRarity ? color.opacity(0.45) : .clear, radius: 8)
     }
 
     private var border: AnyShapeStyle {
-        if isEpic {
-            AnyShapeStyle(LinearGradient(colors: [.purple, .indigo],
+        if isHighRarity {
+            AnyShapeStyle(LinearGradient(colors: [color, rarity == .legendary ? .yellow : .indigo],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
         } else {
             AnyShapeStyle(color.opacity(rarity == nil ? 0.3 : 0.7))

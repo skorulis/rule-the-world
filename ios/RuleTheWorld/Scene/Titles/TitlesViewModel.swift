@@ -11,6 +11,7 @@ final class TitlesViewModel {
         let number: Int
         let name: String
         let icon: String?
+        let rarity: Rarity?
         let regionName: String
         let detail: String?
     }
@@ -47,6 +48,7 @@ final class TitlesViewModel {
                     number: ranking.number,
                     name: definition?.name ?? "Title #\(ranking.number)",
                     icon: definition?.icon,
+                    rarity: definition?.rarity,
                     regionName: regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)",
                     detail: definition?.description
                 )

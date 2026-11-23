@@ -1,17 +1,15 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { rarities, type Rarity } from "../rarity";
 
 export const powerUpTypes = ["revisit", "exploration", "fortification"] as const;
 export type PowerUpType = (typeof powerUpTypes)[number];
 
-export const powerUpRarities = ["common", "rare", "epic"] as const;
-export type PowerUpRarity = (typeof powerUpRarities)[number];
-
 export interface PowerUpDefinition {
   id: number;
   type: PowerUpType;
-  rarity: PowerUpRarity;
+  rarity: Rarity;
   bonus: number;
   description: string;
 }
@@ -40,7 +38,7 @@ function parseDefinitions(raw: unknown): PowerUpDefinition[] {
     if (
       !Number.isSafeInteger(def.id) || (def.id as number) <= 0 ||
       !powerUpTypes.includes(def.type as PowerUpType) ||
-      !powerUpRarities.includes(def.rarity as PowerUpRarity) ||
+      !rarities.includes(def.rarity as Rarity) ||
       !Number.isSafeInteger(def.bonus) ||
       typeof def.description !== "string"
     ) {
@@ -66,7 +64,7 @@ export function powerUpDefinition(id: number): PowerUpDefinition | undefined {
 /** Uniform random pick, optionally limited to one rarity — used by the grant endpoints. */
 export function randomPowerUp(
   random: () => number = Math.random,
-  rarity?: PowerUpRarity,
+  rarity?: Rarity,
 ): PowerUpDefinition {
   const pool = rarity ? powerUpDefinitions.filter((def) => def.rarity === rarity) : powerUpDefinitions;
   if (pool.length === 0) throw new Error(`No power-up definitions${rarity ? ` for rarity ${rarity}` : ""}`);

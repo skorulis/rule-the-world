@@ -4,6 +4,7 @@ import SwiftUI
 /// Sources are hand-authored SVGs in ios/Icons, rasterized into the asset catalog.
 struct RankIcon: View {
     let name: String
+    var rarity: Rarity? = nil
     var size: CGFloat = 44
 
     var body: some View {
@@ -11,6 +12,13 @@ struct RankIcon: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
+            .overlay {
+                if let rarity {
+                    RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                        .strokeBorder(rarity.color.opacity(0.8), lineWidth: 1.5)
+                }
+            }
+            .shadow(color: rarity?.color.opacity(0.5) ?? .clear, radius: 4)
             .accessibilityHidden(true)
     }
 }

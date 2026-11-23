@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import RuleTheWorld
 
@@ -28,8 +29,25 @@ struct PowerUpCatalogTests {
         #expect(catalog.definition(for: 2)?.formattedDescription == "+3 score")
     }
 
+    @Test func decodesLegendaryPowerUp() {
+        let data = Data(#"[{"id":3,"type":"revisit","rarity":"legendary","bonus":4,"description":"+{bonus} score"}]"#.utf8)
+        let definition = PowerUpCatalog(data: data).definition(for: 3)
+        #expect(definition?.rarity == .legendary)
+        #expect(definition?.displayName == "Legendary Revisit")
+    }
+
+    @Test func raritiesHaveColors() {
+        #expect(Rarity.common.color == Color.gray)
+        #expect(Rarity.rare.color == Color.blue)
+        #expect(Rarity.epic.color == Color.purple)
+        #expect(Rarity.legendary.color == Color.orange)
+        #expect(Rarity.mythic.color == Color.red)
+    }
+
     @Test func raritiesSortByProgression() {
-        #expect([PowerUpRarity.epic, .common, .rare].sorted() == [.common, .rare, .epic])
-        #expect(PowerUpRarity.rare.displayName == "Rare")
+        #expect([Rarity.mythic, .legendary, .epic, .common, .rare].sorted() == [.common, .rare, .epic, .legendary, .mythic])
+        #expect(Rarity.allCases == [.common, .rare, .epic, .legendary, .mythic])
+        #expect(Rarity.rare.displayName == "Rare")
+        #expect(Rarity.legendary.displayName == "Legendary")
     }
 }

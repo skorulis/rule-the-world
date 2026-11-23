@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { rarities } from "../rarity";
 import {
   powerUpDefinition,
   powerUpDefinitions,
-  powerUpRarities,
   powerUpTypes,
   randomPowerUp,
 } from "./powerups";
@@ -15,7 +15,7 @@ describe("powerup definitions", () => {
     for (const def of powerUpDefinitions) {
       expect(def.id).toBeGreaterThan(0);
       expect(powerUpTypes).toContain(def.type);
-      expect(powerUpRarities).toContain(def.rarity);
+      expect(rarities).toContain(def.rarity);
       expect(Number.isInteger(def.bonus)).toBe(true);
       expect(def.description.trim()).not.toBe("");
       expect(def.description).toContain("{bonus}");

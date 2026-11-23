@@ -15,7 +15,7 @@ struct TitlesView: View {
             ForEach(model.items) { item in
                 HStack(alignment: .top, spacing: 12) {
                     if let icon = item.icon {
-                        RankIcon(name: icon)
+                        RankIcon(name: icon, rarity: item.rarity)
                             .padding(.top, 2)
                     }
                     VStack(alignment: .leading, spacing: 6) {
