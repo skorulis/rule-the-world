@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countryRanks, parseRanks } from "./ranks";
+import { countryRanks, suburbRanks, parseRanks } from "./ranks";
 
 const valid = { number: 1, name: "King", description: "Ruler", minOwnership: 10, minVisits: 1, maxQuantity: 1 };
 
@@ -9,6 +9,17 @@ describe("rank definitions", () => {
     const numbers = countryRanks.map((rank) => rank.number);
     expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
     expect(new Set(numbers).size).toBe(numbers.length);
+  });
+
+  it("loads the suburb ranks in ascending order", () => {
+    expect(suburbRanks.map((rank) => [rank.number, rank.name])).toEqual([
+      [1, "Mayor"],
+      [2, "Deputy Mayor"],
+      [3, "Councillor"],
+      [4, "Steward"],
+      [5, "Local"],
+      [6, "Visitor"],
+    ]);
   });
 
   it("accepts a valid definition", () => {
