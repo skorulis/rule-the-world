@@ -9,7 +9,8 @@
       "icon": "RankEmperor",
       "minOwnership": 10000,
       "minVisits": 500,
-      "maxQuantity": 1
+      "maxQuantity": 1,
+      "stipend": 1000
     },
     {
       "number": 2,
@@ -19,7 +20,8 @@
       "icon": "RankHighRegent",
       "minOwnership": 8000,
       "minVisits": 400,
-      "maxQuantity": 3
+      "maxQuantity": 3,
+      "stipend": 750
     },
     {
       "number": 3,
@@ -29,7 +31,8 @@
       "icon": "RankOverlord",
       "minOwnership": 7000,
       "minVisits": 300,
-      "maxQuantity": 10
+      "maxQuantity": 10,
+      "stipend": 500
     },
     {
       "number": 4,
@@ -40,7 +43,8 @@
       "icon": "RankViceroy",
       "minOwnership": 6000,
       "minVisits": 250,
-      "maxQuantity": 25
+      "maxQuantity": 25,
+      "stipend": 400
     },
     {
       "number": 5,
@@ -50,7 +54,8 @@
       "icon": "RankHighChancellor",
       "minOwnership": 5000,
       "minVisits": 200,
-      "maxQuantity": 50
+      "maxQuantity": 50,
+      "stipend": 300
     },
     {
       "number": 6,
@@ -60,7 +65,8 @@
       "icon": "RankChancellor",
       "minOwnership": 4000,
       "minVisits": 175,
-      "maxPercentage": 1
+      "maxPercentage": 1,
+      "stipend": 250
     },
     {
       "number": 7,
@@ -70,7 +76,8 @@
       "icon": "RankProconsul",
       "minOwnership": 3000,
       "minVisits": 150,
-      "maxPercentage": 2
+      "maxPercentage": 2,
+      "stipend": 200
     },
     {
       "number": 8,
@@ -80,7 +87,8 @@
       "icon": "RankConsul",
       "minOwnership": 2500,
       "minVisits": 125,
-      "maxPercentage": 5
+      "maxPercentage": 5,
+      "stipend": 160
     },
     {
       "number": 9,
@@ -90,7 +98,8 @@
       "icon": "RankPrefect",
       "minOwnership": 2000,
       "minVisits": 100,
-      "maxPercentage": 10
+      "maxPercentage": 10,
+      "stipend": 130
     },
     {
       "number": 10,
@@ -99,7 +108,8 @@
       "description": "An appointed representative entrusted with carrying imperial authority abroad.",
       "icon": "RankLegate",
       "minOwnership": 1500,
-      "minVisits": 80
+      "minVisits": 80,
+      "stipend": 100
     },
     {
       "number": 11,
@@ -108,7 +118,8 @@
       "description": "A respected representative who builds influence among distant nations.",
       "icon": "RankAmbassador",
       "minOwnership": 1000,
-      "minVisits": 60
+      "minVisits": 60,
+      "stipend": 85
     },
     {
       "number": 12,
@@ -117,7 +128,8 @@
       "description": "A trusted agent sent on important missions beyond familiar borders.",
       "icon": "RankEmissary",
       "minOwnership": 800,
-      "minVisits": 45
+      "minVisits": 45,
+      "stipend": 70
     },
     {
       "number": 13,
@@ -126,7 +138,8 @@
       "description": "A representative establishing a presence in faraway lands.",
       "icon": "RankEnvoy",
       "minOwnership": 500,
-      "minVisits": 30
+      "minVisits": 30,
+      "stipend": 60
     },
     {
       "number": 14,
@@ -135,7 +148,8 @@
       "description": "An enterprising explorer who establishes a lasting foothold in new territories.",
       "icon": "RankPioneer",
       "minOwnership": 300,
-      "minVisits": 20
+      "minVisits": 20,
+      "stipend": 50
     },
     {
       "number": 15,
@@ -144,7 +158,8 @@
       "description": "A skilled traveler who charts routes through unfamiliar lands.",
       "icon": "RankPathfinder",
       "minOwnership": 175,
-      "minVisits": 15
+      "minVisits": 15,
+      "stipend": 40
     },
     {
       "number": 16,
@@ -153,7 +168,8 @@
       "description": "An adventurous traveler who opens new paths for others to follow.",
       "icon": "RankTrailblazer",
       "minOwnership": 100,
-      "minVisits": 10
+      "minVisits": 10,
+      "stipend": 32
     },
     {
       "number": 17,
@@ -162,7 +178,8 @@
       "description": "A curious adventurer discovering the world beyond familiar surroundings.",
       "icon": "RankExplorer",
       "minOwnership": 50,
-      "minVisits": 7
+      "minVisits": 7,
+      "stipend": 25
     },
     {
       "number": 18,
@@ -171,7 +188,8 @@
       "description": "A traveler embarking on journeys to distant places.",
       "icon": "RankVoyager",
       "minOwnership": 20,
-      "minVisits": 5
+      "minVisits": 5,
+      "stipend": 18
     },
     {
       "number": 19,
@@ -180,7 +198,8 @@
       "description": "A traveler taking the first steps toward a wider world.",
       "icon": "RankWayfarer",
       "minOwnership": 5,
-      "minVisits": 3
+      "minVisits": 3,
+      "stipend": 12
     },
     {
       "number": 20,
@@ -189,7 +208,8 @@
       "description": "A new participant beginning their journey on the world stage.",
       "icon": "RankCitizen",
       "minOwnership": 0,
-      "minVisits": 1
+      "minVisits": 1,
+      "stipend": 5
     }
   ],
   "country": [
@@ -202,7 +222,8 @@
       "icon": "RankKing",
       "minOwnership": 1000,
       "minVisits": 20,
-      "maxQuantity": 1
+      "maxQuantity": 1,
+      "stipend": 300
     },
     {
       "number": 2,
@@ -213,7 +234,8 @@
       "icon": "RankPrince",
       "minOwnership": 1000,
       "minVisits": 20,
-      "maxQuantity": 3
+      "maxQuantity": 3,
+      "stipend": 200
     },
     {
       "number": 3,
@@ -224,7 +246,8 @@
       "icon": "RankDuke",
       "minOwnership": 1000,
       "minVisits": 20,
-      "maxQuantity": 5
+      "maxQuantity": 5,
+      "stipend": 150
     },
     {
       "number": 4,
@@ -235,7 +258,8 @@
       "icon": "RankMarquis",
       "minOwnership": 1000,
       "minVisits": 15,
-      "maxQuantity": 25
+      "maxQuantity": 25,
+      "stipend": 120
     },
     {
       "number": 5,
@@ -246,7 +270,8 @@
       "icon": "RankCount",
       "minOwnership": 1000,
       "minVisits": 15,
-      "maxPercentage": 1
+      "maxPercentage": 1,
+      "stipend": 100
     },
     {
       "number": 6,
@@ -257,7 +282,8 @@
       "icon": "RankViscount",
       "minOwnership": 1000,
       "minVisits": 10,
-      "maxPercentage": 5
+      "maxPercentage": 5,
+      "stipend": 80
     },
     {
       "number": 7,
@@ -268,7 +294,8 @@
       "icon": "RankBaron",
       "minOwnership": 500,
       "minVisits": 10,
-      "maxPercentage": 10
+      "maxPercentage": 10,
+      "stipend": 65
     },
     {
       "number": 8,
@@ -278,7 +305,8 @@
       "description": "The holder of a hereditary title ranking below a baron and above most knights.",
       "icon": "RankBaronet",
       "minOwnership": 300,
-      "minVisits": 5
+      "minVisits": 5,
+      "stipend": 50
     },
     {
       "number": 9,
@@ -288,7 +316,8 @@
       "description": "A person granted an honorary title for service, traditionally a mounted warrior.",
       "icon": "RankKnight",
       "minOwnership": 150,
-      "minVisits": 5
+      "minVisits": 5,
+      "stipend": 40
     },
     {
       "number": 10,
@@ -297,7 +326,8 @@
       "description": "An attendant to a knight, traditionally training for knighthood.",
       "icon": "RankSquire",
       "minOwnership": 75,
-      "minVisits": 5
+      "minVisits": 5,
+      "stipend": 30
     },
     {
       "number": 11,
@@ -306,7 +336,8 @@
       "description": "A citizen of a borough or town, traditionally possessing civic rights and privileges.",
       "icon": "RankBurgess",
       "minOwnership": 30,
-      "minVisits": 4
+      "minVisits": 4,
+      "stipend": 22
     },
     {
       "number": 12,
@@ -315,7 +346,8 @@
       "description": "A freeholder who traditionally owns and farms a small estate.",
       "icon": "RankYeoman",
       "minOwnership": 15,
-      "minVisits": 3
+      "minVisits": 3,
+      "stipend": 15
     },
     {
       "number": 13,
@@ -324,7 +356,8 @@
       "description": "A tenant farmer who works a small agricultural holding known as a croft.",
       "icon": "RankCrofter",
       "minOwnership": 5,
-      "minVisits": 2
+      "minVisits": 2,
+      "stipend": 10
     },
     {
       "number": 14,
@@ -333,7 +366,8 @@
       "description": "A person who establishes a permanent home in a new place.",
       "icon": "RankSettler",
       "minOwnership": 2,
-      "minVisits": 1
+      "minVisits": 1,
+      "stipend": 6
     },
     {
       "number": 15,
@@ -342,7 +376,8 @@
       "description": "A traveler who roams from place to place without a fixed home or destination.",
       "icon": "RankWanderer",
       "minOwnership": 0,
-      "minVisits": 1
+      "minVisits": 1,
+      "stipend": 2
     }
   ],
   "suburb": [
@@ -354,7 +389,8 @@
       "icon": "RankMayor",
       "minOwnership": 20,
       "minVisits": 5,
-      "maxQuantity": 1
+      "maxQuantity": 1,
+      "stipend": 40
     },
     {
       "number": 2,
@@ -364,7 +400,8 @@
       "icon": "RankDeputyMayor",
       "minOwnership": 15,
       "minVisits": 4,
-      "maxQuantity": 1
+      "maxQuantity": 1,
+      "stipend": 30
     },
     {
       "number": 3,
@@ -374,7 +411,8 @@
       "icon": "RankCouncillor",
       "minOwnership": 10,
       "minVisits": 3,
-      "maxQuantity": 3
+      "maxQuantity": 3,
+      "stipend": 20
     },
     {
       "number": 4,
@@ -383,7 +421,8 @@
       "description": "A trusted caretaker who looks after the interests of a local community.",
       "icon": "RankSteward",
       "minOwnership": 5,
-      "minVisits": 2
+      "minVisits": 2,
+      "stipend": 12
     },
     {
       "number": 5,
@@ -392,7 +431,8 @@
       "description": "An established member of the local community.",
       "icon": "RankLocal",
       "minOwnership": 2,
-      "minVisits": 1
+      "minVisits": 1,
+      "stipend": 6
     },
     {
       "number": 6,
@@ -401,7 +441,8 @@
       "description": "A traveler exploring the local area.",
       "icon": "RankVisitor",
       "minOwnership": 0,
-      "minVisits": 1
+      "minVisits": 1,
+      "stipend": 0
     }
   ]
 }
