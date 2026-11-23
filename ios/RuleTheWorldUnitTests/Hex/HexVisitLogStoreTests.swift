@@ -117,14 +117,30 @@ struct HexVisitLogStoreTests {
         #expect(try await store.pending().isEmpty)
     }
 
-    @Test func uploadedRowsAreNotMergedWithNewSamples() async throws {
-        let store = try makeStore()
-        let first = try await store.record(entry(cell: cellA))
+    @Test func uploadedRowsMergeWithNewSamplesAndBecomePendingAgain() async throws {
+        let database = try AppDatabase.inMemory()
+        let store = HexVisitLogStore(database: database)
+        let first = try await store.record(entry(cell: cellA, score: 0.5))
         try await store.markUploaded([first], acceptedIDs: [first.uploadID])
-        let second = try await store.record(entry(cell: cellA))
-        #expect(second.id != first.id)
-        #expect(second.uploadID != first.uploadID)
-        #expect(try await store.pending().map(\.uploadID) == [second.uploadID])
+        let reopened = HexVisitLogStore(database: database)
+        let second = try await reopened.record(entry(cell: cellA))
+        #expect(second.id == first.id)
+        #expect(second.uploadID == first.uploadID)
+        #expect(second.count == 2)
+        #expect(second.score == 1)
+        #expect(!second.uploaded)
+        #expect(try await reopened.all().count == 1)
+        #expect(try await reopened.pending() == [second])
+        try await reopened.markUploaded([first], acceptedIDs: [first.uploadID])
+        #expect(try await reopened.pending() == [second])
+        try await reopened.markUploaded([second], acceptedIDs: [second.uploadID])
+        #expect(try await reopened.pending().isEmpty)
+        let third = try await reopened.record(entry(cell: cellA))
+        #expect(third.id == first.id)
+        #expect(third.uploadID == first.uploadID)
+        #expect(third.count == 3)
+        #expect(try await reopened.all().count == 1)
+        #expect(try await reopened.pending() == [third])
     }
 
     @Test func sameCellDoesNotMergeAcrossUTCMidnight() async throws {

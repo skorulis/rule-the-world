@@ -139,6 +139,29 @@ struct LocationCaptureServiceTests {
         #expect(logs.first?.count == 2)
     }
 
+    @Test func captureRestartMergesUploadedBackgroundVisit() async throws {
+        let database = try AppDatabase.inMemory()
+        let logStore = HexVisitLogStore(database: database)
+        let firstService = LocationCaptureService(
+            grid: grid, store: HexInfoStore(database: database), logStore: logStore
+        )
+        let sample = sample(speed: nil, locationType: .background)
+        await firstService.handle(sample)
+        let first = try #require(try await logStore.latest())
+        try await logStore.markUploaded([first], acceptedIDs: [first.uploadID])
+        let restartedService = LocationCaptureService(
+            grid: grid, store: HexInfoStore(database: database), logStore: logStore
+        )
+        await restartedService.handle(sample)
+        let logs = try await logStore.all()
+        #expect(logs.count == 1)
+        #expect(logs.first?.id == first.id)
+        #expect(logs.first?.uploadID == first.uploadID)
+        #expect(logs.first?.count == 2)
+        #expect(logs.first?.uploaded == false)
+        #expect(logs.first?.locationType == .background)
+    }
+
     @Test func differentCellsAppendLogRows() async throws {
         let service = try makeService()
         await service.handle(sample(speed: nil, latitude: -33.89, longitude: 151.19))
