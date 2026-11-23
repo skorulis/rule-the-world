@@ -6,6 +6,7 @@ import Observation
 @MainActor
 final class HexVisitSyncService {
     private let store: HexVisitLogStore
+    private let hexInfoStore: HexInfoStore
     private let uploader: AuthenticatedService
     private let tokenStore: AuthTokenStore
     private let waitForNextCheck: () async throws -> Void
@@ -13,11 +14,13 @@ final class HexVisitSyncService {
 
     init(
         store: HexVisitLogStore,
+        hexInfoStore: HexInfoStore,
         uploader: AuthenticatedService,
         tokenStore: AuthTokenStore,
         waitForNextCheck: @escaping () async throws -> Void = { try await Task.sleep(for: .seconds(600)) }
     ) {
         self.store = store
+        self.hexInfoStore = hexInfoStore
         self.uploader = uploader
         self.tokenStore = tokenStore
         self.waitForNextCheck = waitForNextCheck
@@ -52,10 +55,13 @@ final class HexVisitSyncService {
             let entries = try await store.pending(after: afterID, through: lastID)
             try Task.checkCancellation()
             guard tokenStore.token == token, let nextID = entries.last?.id else { return }
-            let accepted = try await uploader.upload(entries)
+            let response = try await uploader.upload(entries)
             try Task.checkCancellation()
             guard tokenStore.token == token else { return }
-            try await store.markUploaded(entries, acceptedIDs: accepted)
+            try await hexInfoStore.restore(response.hexInfos)
+            try Task.checkCancellation()
+            guard tokenStore.token == token else { return }
+            try await store.markUploaded(entries, acceptedIDs: Set(response.acceptedIds))
             afterID = nextID
         }
     }

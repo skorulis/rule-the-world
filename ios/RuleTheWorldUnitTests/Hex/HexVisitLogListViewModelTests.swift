@@ -12,18 +12,18 @@ struct HexVisitLogListViewModelTests {
         try HexVisitLogStore(database: AppDatabase.inMemory())
     }
 
-    private func makeModel(store: HexVisitLogStore, fails: Bool = false) -> HexVisitLogListViewModel {
+    private func makeModel(store: HexVisitLogStore, fails: Bool = false) throws -> HexVisitLogListViewModel {
         let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         tokens.save("token")
         let uploader = AuthenticatedService(tokenStore: tokens, urlSession: FakeURLSession { request in
             if fails { throw URLError(.notConnectedToInternet) }
             let body = try JSONSerialization.jsonObject(with: request.httpBody!) as! [String: [[String: Any]]]
             let ids = body["visits"]!.compactMap { $0["id"] as? String }
-            let data = try JSONSerialization.data(withJSONObject: ["acceptedIds": ids])
+            let data = try JSONSerialization.data(withJSONObject: ["acceptedIds": ids, "hexInfos": []])
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (data, response)
         })
-        let sync = HexVisitSyncService(store: store, uploader: uploader, tokenStore: tokens)
+        let sync = HexVisitSyncService(store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()), uploader: uploader, tokenStore: tokens)
         return HexVisitLogListViewModel(store: store, syncService: sync)
     }
 
@@ -51,7 +51,7 @@ struct HexVisitLogListViewModelTests {
             cell: cellB,
             timestamp: Date(timeIntervalSince1970: 1_700_000_100)
         ))
-        let model = makeModel(store: store)
+        let model = try makeModel(store: store)
         await model.load()
         #expect(model.entries.count == 2)
         #expect(model.entries.first?.cell == cellB)
@@ -61,7 +61,7 @@ struct HexVisitLogListViewModelTests {
     @Test func manualSyncUploadsPendingEntriesAndUpdatesCount() async throws {
         let store = try makeStore()
         _ = try await store.record(entry(cell: cellA, timestamp: .now))
-        let model = makeModel(store: store)
+        let model = try makeModel(store: store)
         await model.load()
         #expect(model.pendingCount == 1)
         await model.sync()
@@ -74,7 +74,7 @@ struct HexVisitLogListViewModelTests {
     @Test func manualSyncFailureKeepsOutstandingCountAndShowsError() async throws {
         let store = try makeStore()
         _ = try await store.record(entry(cell: cellA, timestamp: .now))
-        let model = makeModel(store: store, fails: true)
+        let model = try makeModel(store: store, fails: true)
         await model.load()
         await model.sync()
         #expect(model.pendingCount == 1)
@@ -88,7 +88,7 @@ struct HexVisitLogListViewModelTests {
         let uploaded = try await store.record(entry(cell: cellA, timestamp: .now))
         try await store.markUploaded([uploaded], acceptedIDs: [uploaded.uploadID])
         _ = try await store.record(entry(cell: cellB, timestamp: .now))
-        let model = makeModel(store: store)
+        let model = try makeModel(store: store)
         await model.load()
         #expect(model.entries.count == 2)
         #expect(model.pendingCount == 1)
@@ -96,7 +96,7 @@ struct HexVisitLogListViewModelTests {
 
     @Test func loadWithEmptyStoreReturnsNoEntries() async throws {
         let store = try makeStore()
-        let model = makeModel(store: store)
+        let model = try makeModel(store: store)
         await model.load()
         #expect(model.entries.isEmpty)
         #expect(model.errorMessage == nil)

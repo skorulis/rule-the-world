@@ -62,6 +62,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexVisitSyncService.self) {
             HexVisitSyncService(
                 store: $0.hexVisitLogStore(),
+                hexInfoStore: $0.hexInfoStore(),
                 uploader: $0.authenticatedService(),
                 tokenStore: $0.authTokenStore()
             )

@@ -4,6 +4,7 @@ import { hexDetails, hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
 import { db } from "@/lib/db";
 import { calculateHexDetails } from "@/lib/regions/hex-details";
 import type { VisitBatch } from "./visit-batch";
+import { getHexInfo } from "./hex-info";
 
 export async function ingestVisits(userId: string, batch: VisitBatch) {
   return db.transaction(async (tx) => {
@@ -74,6 +75,10 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
         lastScore: Number(visit.lastScore),
       });
     }
-    return { acceptedIds: batch.acceptedIds, visits };
+    const hexInfos = await Promise.all(cells.map(async (cell) => ({
+      cell: cell.toString(16),
+      ...await getHexInfo(userId, cell, tx),
+    })));
+    return { acceptedIds: batch.acceptedIds, visits, hexInfos };
   });
 }

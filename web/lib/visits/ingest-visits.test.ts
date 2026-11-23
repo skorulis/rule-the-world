@@ -3,6 +3,7 @@ import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
+vi.mock("./hex-info", () => ({ getHexInfo: vi.fn() }));
 vi.mock("@/lib/regions/country-regions", () => ({
   regionIdForPoint: vi.fn(() => BigInt(42)),
   stateIdForPoint: vi.fn(() => BigInt(0)),
@@ -13,6 +14,7 @@ import { db } from "@/lib/db";
 import { hexDetails, hexVisit } from "@/db/schema";
 import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "@/lib/regions/country-regions";
 import { ingestVisits } from "./ingest-visits";
+import { getHexInfo } from "./hex-info";
 import { parseVisitBatch } from "./visit-batch";
 
 const cell = "8a2830828007fff";
@@ -52,6 +54,7 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(getHexInfo).mockResolvedValue({ totals: { totalVisits: 1, rivalScore: 0 }, userVisit: null });
   vi.mocked(regionIdForPoint).mockReturnValue(BigInt(42));
   vi.mocked(stateIdForPoint).mockReturnValue(BigInt(0));
   vi.mocked(suburbIdForPoint).mockReturnValue(BigInt(0));
@@ -109,6 +112,8 @@ describe("visit ingestion SQL contract", () => {
       [cell, 1.25, 1], [other, 0.5, 0.5],
     ]);
     expect(result.acceptedIds).toEqual(["1", "2", "3"]);
+    expect(result.hexInfos.map((info) => info.cell)).toEqual([cell, other]);
+    expect(getHexInfo).toHaveBeenCalledTimes(2);
   });
 
   it.each([[0, 7, 7], [7, 7, 0], [7, 10, 3], [10, 7, 0]])(
@@ -212,6 +217,31 @@ describe("visit ingestion SQL contract", () => {
     expect(mock.detailValues).toHaveBeenCalledWith([
       { cell: cellId, regionCountry: BigInt(42), regionState: null, regionSuburb: null },
     ]);
+  });
+
+  it("returns fresh HexInfo once per touched cell after updating visits, including retries", async () => {
+    const mock = harness("0.5", "0.5", timestamp, [{ id: "1", cell: cellId, count: 1 }]);
+    const info = {
+      totals: { totalVisits: 8, rivalScore: 2 },
+      userVisit: { cell, total: 1, lastVisit: timestamp, score: 0.5, lastScore: 0.5 },
+    };
+    vi.mocked(getHexInfo).mockImplementation(async (_userId, _cell, executor) => {
+      expect(mock.set).toHaveBeenCalledTimes(1);
+      expect(executor?.select).toBe(mock.select);
+      return info;
+    });
+    const result = await ingestVisits("u1", parseVisitBatch({ visits: [
+      { id: "1", cell, timestamp, score: 0.5 },
+      { id: "2", cell, timestamp, score: 0.5 },
+    ] }));
+    expect(getHexInfo).toHaveBeenCalledExactlyOnceWith("u1", cellId, expect.anything());
+    expect(result.hexInfos).toEqual([{ cell, ...info }]);
+  });
+
+  it("does not acknowledge if HexInfo cannot be loaded", async () => {
+    harness();
+    vi.mocked(getHexInfo).mockRejectedValueOnce(new Error("projection failed"));
+    await expect(ingestVisits("u1", batch())).rejects.toThrow("projection failed");
   });
 
   it("propagates transaction failures without acknowledging", async () => {

@@ -26,7 +26,11 @@ describe("POST /api/hex-visits/batch", () => {
   });
 
   it("uses the signed-in player, not a submitted player ID", async () => {
-    const result = { acceptedIds: ["123"], visits: [{ cell: visit.cell, lastVisit: visit.timestamp, total: 1, score: 0.5, lastScore: 0.5 }] };
+    const userVisit = { cell: visit.cell, lastVisit: visit.timestamp, total: 1, score: 0.5, lastScore: 0.5 };
+    const result = {
+      acceptedIds: ["123"], visits: [userVisit],
+      hexInfos: [{ cell: visit.cell, totals: { totalVisits: 4, rivalScore: 1 }, userVisit }],
+    };
     vi.mocked(ingestVisits).mockResolvedValueOnce(result);
     const response = await POST(request({ userId: "someone-else", visits: [visit] }));
     expect(response.status).toBe(200);
@@ -55,7 +59,7 @@ describe("POST /api/hex-visits/batch", () => {
     const response = POST(request()).then((result) => { finished = true; return result; });
     await vi.waitFor(() => expect(ingestVisits).toHaveBeenCalled());
     expect(finished).toBe(false);
-    complete({ acceptedIds: ["123"], visits: [] });
+    complete({ acceptedIds: ["123"], visits: [], hexInfos: [] });
     expect((await response).status).toBe(200);
   });
 

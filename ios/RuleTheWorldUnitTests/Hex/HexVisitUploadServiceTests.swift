@@ -64,7 +64,7 @@ struct HexVisitUploadServiceTests {
         let uploader = AuthenticatedService(tokenStore: tokenStore(), urlSession: FakeURLSession { request in
             box.request = request
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
-            return (Data("{\"acceptedIds\":[\"visit-1\"],\"visits\":[]}".utf8), response)
+            return (Data("{\"acceptedIds\":[\"visit-1\"],\"visits\":[],\"hexInfos\":[]}".utf8), response)
         })
         let accepted = try await uploader.upload([entry()])
         let request = try #require(box.request)
@@ -82,7 +82,8 @@ struct HexVisitUploadServiceTests {
         #expect(visits[0]["score"] as? Double == 0.5)
         #expect(visits[0]["count"] as? Int == 1)
         #expect(visits[0]["latitude"] == nil)
-        #expect(accepted == ["visit-1"])
+        #expect(accepted.acceptedIds == ["visit-1"])
+        #expect(accepted.hexInfos.isEmpty)
     }
 
     @Test func rejectsFailedRequestsAndMalformedAcknowledgements() async {
@@ -90,8 +91,9 @@ struct HexVisitUploadServiceTests {
             service(status: 401, body: "{}"),
             service(status: 500, body: "{\"acceptedIds\":[\"visit-1\"]}"),
             service(body: "{}"),
-            service(body: "{\"acceptedIds\":[\"unknown\"]}"),
-            service(body: "{\"acceptedIds\":[\"visit-1\",\"visit-1\"]}"),
+            service(body: "{\"acceptedIds\":[\"unknown\"],\"hexInfos\":[]}"),
+            service(body: "{\"acceptedIds\":[\"visit-1\",\"visit-1\"],\"hexInfos\":[]}"),
+            service(body: "{\"acceptedIds\":[\"visit-1\"]}"),
         ] {
             await #expect(throws: (any Error).self) {
                 _ = try await uploader.upload([entry()])
@@ -100,7 +102,7 @@ struct HexVisitUploadServiceTests {
     }
 
     @Test func allowsPartialAcknowledgementsWithoutAcknowledgingOtherRows() async throws {
-        let accepted = try await service(body: "{\"acceptedIds\":[]}").upload([entry()])
-        #expect(accepted.isEmpty)
+        let accepted = try await service(body: "{\"acceptedIds\":[],\"hexInfos\":[]}").upload([entry()])
+        #expect(accepted.acceptedIds.isEmpty)
     }
 }
