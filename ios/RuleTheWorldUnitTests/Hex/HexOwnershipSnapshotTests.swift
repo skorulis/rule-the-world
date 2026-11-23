@@ -17,7 +17,7 @@ struct HexOwnershipSnapshotTests {
         let midnight = HexVisit.scoringCalendar.startOfDay(for: Date(timeIntervalSince1970: 1_800_000_000))
         let info = HexInfo(
             cell: sydneyCell, totals: nil,
-            userVisit: HexVisit(lastVisit: midnight, score: 0.5, lastScore: 0.5)
+            userVisit: HexVisit(lastVisit: midnight, score: 0.5, lastScore: 0.5, total: 1)
         )
         let today = HexOwnershipSnapshot(infos: [info], at: midnight.addingTimeInterval(86_399))
         #expect(today.visitedToday == [sydneyCell])
@@ -58,6 +58,24 @@ struct HexOwnershipSnapshotTests {
         #expect(HexState.forScore(3.5, rivalScore: nil) == .visited)
         #expect(HexState.forScore(0.5, rivalScore: nil) == .partialVisit)
         #expect(HexState.forScore(0, rivalScore: nil) == .partialVisit)
+    }
+
+    @Test func unvisitedScoreIsExploredUnlessOwned() {
+        #expect(HexState.forScore(1, rivalScore: nil, hasVisited: false) == .explored)
+        #expect(HexState.forScore(1, rivalScore: 3.5, hasVisited: false) == .explored)
+        #expect(HexState.forScore(2, rivalScore: 2, hasVisited: false) == .explored)
+        #expect(HexState.forScore(3.5, rivalScore: 1, hasVisited: false) == .owned)
+    }
+
+    @Test func visitWithNoOrganicVisitsMapsToExplored() {
+        let info = HexInfo(
+            cell: sydneyCell,
+            totals: HexTotals(totalVisits: 0, rivalScore: 5),
+            userVisit: HexVisit(lastVisit: .distantPast, score: 1, lastScore: 0, total: 0)
+        )
+        let snapshot = HexOwnershipSnapshot(infos: [info])
+        #expect(snapshot.states[sydneyCell] == .explored)
+        #expect(snapshot.visitedToday.isEmpty)
     }
 
     @Test func baseResolutionAggregationReturnsStates() {

@@ -2,6 +2,7 @@ import Foundation
 
 nonisolated enum PowerUpType: String, Decodable, Sendable {
     case revisit
+    case exploration
 }
 
 nonisolated enum PowerUpRarity: String, Decodable, Sendable, CaseIterable, Comparable {

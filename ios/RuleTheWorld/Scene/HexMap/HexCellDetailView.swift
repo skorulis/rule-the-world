@@ -10,10 +10,12 @@ struct HexCellDetailView: View {
             LabeledContent("Visits", value: "\(model.visitCount)")
             if let visit = model.visit {
                 LabeledContent("Score", value: visit.score.formatted())
-                LabeledContent(
-                    "Last visit",
-                    value: visit.lastVisit.formatted(.relative(presentation: .named))
-                )
+                if visit.total > 0 {
+                    LabeledContent(
+                        "Last visit",
+                        value: visit.lastVisit.formatted(.relative(presentation: .named))
+                    )
+                }
             }
             if model.isLoadingTotals {
                 ProgressView()

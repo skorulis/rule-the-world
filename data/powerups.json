@@ -22,5 +22,13 @@
     "bonus": 3,
     "name": "Epic Revisit",
     "description": "+{bonus} score to a square you have visited"
+  },
+  {
+    "id": 4,
+    "type": "exploration",
+    "rarity": "common",
+    "bonus": 1,
+    "name": "Exploration",
+    "description": "+{bonus} score to a nearby square you haven't visited"
   }
 ]

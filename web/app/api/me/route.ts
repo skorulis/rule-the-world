@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     }>(sql`
       with user_cells as (
         select ${hexVisit.cell} as cell,
+          ${hexVisit.total} > 0 as visited,
           ${hexVisit.score} > coalesce((
             select max(rival.score) from ${hexVisit} as rival
             where rival.cell = ${hexVisit.cell} and rival.user_id <> ${session.user.id}
@@ -29,8 +30,8 @@ export async function GET(request: Request) {
         where ${hexVisit.userId} = ${session.user.id}
       ), region_counts as (
         select membership.region, membership.kind,
-          count(*)::text as visited,
-          count(*) filter (where user_cells.owned)::text as owned
+          count(*) filter (where user_cells.visited)::text as visited,
+          count(*) filter (where user_cells.owned and user_cells.visited)::text as owned
         from user_cells
         join ${hexDetails} on ${hexDetails.cell} = user_cells.cell
         cross join lateral (values
@@ -44,8 +45,8 @@ export async function GET(request: Request) {
       select region::text, kind, 0 as overall, visited, owned from region_counts
       union all
       select null, null, 1,
-        count(*)::text as visited,
-        count(*) filter (where owned)::text as owned
+        count(*) filter (where visited)::text as visited,
+        count(*) filter (where owned and visited)::text as owned
       from user_cells
       order by overall desc, region nulls first
     `);

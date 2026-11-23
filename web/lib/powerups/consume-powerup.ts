@@ -47,18 +47,44 @@ export async function consumePowerUp(
       const ring = [...disk].filter((entry) => !previous.has(entry)).map((entry) => BigInt(`0x${entry}`));
       previous = disk;
       if (!ring.length) continue;
-      const [visit] = await tx.select().from(hexVisit)
-        .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
-        .orderBy(hexVisit.cell).limit(1);
-      target = visit;
+      if (definition.type === "exploration") {
+        const claimed = new Set((await tx.select({ cell: hexVisit.cell }).from(hexVisit)
+          .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring))))
+          .map(({ cell }) => cell));
+        const unvisited = ring.filter((entry) => !claimed.has(entry)).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        for (const candidate of unvisited) {
+          const [inserted] = await tx.insert(hexVisit).values({
+            userId,
+            cell: candidate,
+            lastVisit: new Date(0),
+            score: String(definition.bonus),
+          }).onConflictDoNothing().returning();
+          if (inserted) {
+            target = inserted;
+            break;
+          }
+        }
+      } else {
+        const [visit] = await tx.select().from(hexVisit)
+          .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
+          .orderBy(hexVisit.cell).limit(1);
+        target = visit;
+      }
     }
-    if (!target) throw new ConsumePowerUpError("No visited hex in range", 404);
+    if (!target) {
+      throw new ConsumePowerUpError(
+        definition.type === "exploration" ? "No unvisited hex in range" : "No visited hex in range",
+        404,
+      );
+    }
 
     switch (definition.type) {
       case "revisit":
         await tx.update(hexVisit)
           .set({ score: sql`${hexVisit.score} + ${definition.bonus}` })
           .where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, target.cell)));
+        break;
+      case "exploration":
         break;
       default:
         throw new ConsumePowerUpError("Unsupported power-up");
