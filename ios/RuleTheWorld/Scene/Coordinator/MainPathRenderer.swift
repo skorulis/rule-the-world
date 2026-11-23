@@ -10,6 +10,8 @@ struct MainPathRenderer: CoordinatorPathRenderer {
     @MainActor @ViewBuilder
     func render(path: MainPath, in coordinator: Coordinator) -> some View {
         switch path {
+        case .signedOut:
+            SignedOutView(loginModel: LoginViewModel.make(resolver: resolver))
         case .hexMap:
             HexMapView(model: HexMapViewModel.make(resolver: resolver))
         case .visitLog:

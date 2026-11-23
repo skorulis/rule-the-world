@@ -1,3 +1,4 @@
+import ASKCoordinator
 import ASKCore
 import Knit
 import SwiftUI
@@ -5,6 +6,7 @@ import SwiftUI
 @main
 struct RuleTheWorldApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    @State private var signedOutCoordinator = Coordinator(root: MainPath.signedOut)
     private let assembler: ScopedModuleAssembler<Resolver> = {
         let assembler = ScopedModuleAssembler<Resolver>(
             [
@@ -50,7 +52,9 @@ struct RuleTheWorldApp: App {
                     ContentView(model: ContentViewModel.make(resolver: assembler.resolver))
                         .environment(\.resolver, assembler.resolver)
                 } else {
-                    SignedOutView(loginModel: LoginViewModel.make(resolver: assembler.resolver))
+                    CoordinatorView(coordinator: signedOutCoordinator)
+                        .withRenderers(resolver: assembler.resolver)
+                        .environment(\.resolver, assembler.resolver)
                 }
             }
             .debugMenu(resolver: assembler.resolver)

@@ -1,6 +1,7 @@
 import ASKCoordinator
 
 enum MainPath: CoordinatorPath {
+    case signedOut
     case hexMap
     case visitLog
     case profile
@@ -9,6 +10,8 @@ enum MainPath: CoordinatorPath {
 
     var id: String {
         switch self {
+        case .signedOut:
+            "signedOut"
         case .hexMap:
             "hexMap"
         case .visitLog:
