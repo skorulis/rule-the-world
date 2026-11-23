@@ -7,7 +7,7 @@ vi.mock("@/lib/db", () => ({ db: { execute: vi.fn() } }));
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { powerUpDefinitions } from "@/lib/powerups/powerups";
-import { GET } from "./route";
+import { POST } from "./route";
 
 const user = { id: "u1", name: "Alex", email: "a@b.c" };
 const request = () => new Request("http://test/api/debug/add_powerup");
@@ -18,15 +18,15 @@ beforeEach(() => {
   vi.mocked(db.execute).mockResolvedValue([{ powerups: { "1": 2 } }] as never);
 });
 
-describe("GET /api/debug/add_powerup", () => {
+describe("POST /api/debug/add_powerup", () => {
   it("requires authentication", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValueOnce(null);
-    expect((await GET(request())).status).toBe(401);
+    expect((await POST(request())).status).toBe(401);
     expect(db.execute).not.toHaveBeenCalled();
   });
 
   it("grants a defined power-up and returns the updated inventory", async () => {
-    const response = await GET(request());
+    const response = await POST(request());
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     const body = await response.json();
@@ -35,7 +35,7 @@ describe("GET /api/debug/add_powerup", () => {
   });
 
   it("scopes the increment to the session user and grants exactly one", async () => {
-    await GET(request());
+    await POST(request());
     const statement = vi.mocked(db.execute).mock.calls[0][0];
     if (typeof statement === "string") throw new Error("Expected parameterized SQL");
     const query = new PgDialect().sqlToQuery(statement.getSQL());
@@ -51,7 +51,7 @@ describe("GET /api/debug/add_powerup", () => {
     const logger = vi.spyOn(console, "error").mockImplementation(() => {});
     try {
       vi.mocked(db.execute).mockRejectedValueOnce(new Error("private SQL"));
-      const response = await GET(request());
+      const response = await POST(request());
       expect(response.status).toBe(500);
       expect(await response.json()).toEqual({ error: "Unable to add power-up" });
     } finally {

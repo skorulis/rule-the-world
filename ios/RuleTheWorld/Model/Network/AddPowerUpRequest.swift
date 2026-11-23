@@ -5,7 +5,7 @@ struct AddPowerUpRequest: HTTPRequest {
     typealias ResponseType = AddPowerUpResponse
 
     let endpoint = "api/debug/add_powerup"
-    let method = "GET"
+    let method = "POST"
     let params: [String: String] = [:]
     let body: Data? = nil
     let headers: [String: String] = [:]

@@ -10,7 +10,7 @@ struct AddPowerUpRequestTests {
         tokens.save("session-token")
         return AuthenticatedService(tokenStore: tokens, urlSession: FakeURLSession { request in
             #expect(request.url?.path == "/api/debug/add_powerup")
-            #expect(request.httpMethod == "GET")
+            #expect(request.httpMethod == "POST")
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
             let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
             return (Data(body.utf8), response)
