@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, max, ne, sql } from "drizzle-orm";
 import { gridDisk } from "h3-js";
 import { user } from "@/db/auth-schema";
 import { hexVisit } from "@/db/schema";
@@ -64,6 +64,17 @@ export async function consumePowerUp(
             break;
           }
         }
+      } else if (definition.type === "fortification") {
+        const [visits, rivals] = await Promise.all([
+          tx.select().from(hexVisit)
+            .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
+            .orderBy(hexVisit.cell),
+          tx.select({ cell: hexVisit.cell, rivalScore: max(hexVisit.score) }).from(hexVisit)
+            .where(and(ne(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
+            .groupBy(hexVisit.cell),
+        ]);
+        const rivalScores = new Map(rivals.map(({ cell, rivalScore }) => [cell, Number(rivalScore ?? 0)]));
+        target = visits.find((visit) => Number(visit.score) > (rivalScores.get(visit.cell) ?? 0));
       } else {
         const [visit] = await tx.select().from(hexVisit)
           .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
@@ -72,14 +83,17 @@ export async function consumePowerUp(
       }
     }
     if (!target) {
-      throw new ConsumePowerUpError(
-        definition.type === "exploration" ? "No unvisited hex in range" : "No visited hex in range",
-        404,
-      );
+      const errors: Record<PowerUpDefinition["type"], string> = {
+        revisit: "No visited hex in range",
+        exploration: "No unvisited hex in range",
+        fortification: "No owned hex in range",
+      };
+      throw new ConsumePowerUpError(errors[definition.type] ?? "No target hex in range", 404);
     }
 
     switch (definition.type) {
       case "revisit":
+      case "fortification":
         await tx.update(hexVisit)
           .set({ score: sql`${hexVisit.score} + ${definition.bonus}` })
           .where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, target.cell)));

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const powerUpTypes = ["revisit", "exploration"] as const;
+export const powerUpTypes = ["revisit", "exploration", "fortification"] as const;
 export type PowerUpType = (typeof powerUpTypes)[number];
 
 export const powerUpRarities = ["common", "rare", "epic"] as const;
