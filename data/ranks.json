@@ -1,4 +1,177 @@
 {
+  "global": [
+    {
+      "number": 1,
+      "name": "Emperor",
+      "rarity": "mythic",
+      "femaleName": "Empress",
+      "description": "The supreme ruler of a worldwide empire.",
+      "minOwnership": 10000,
+      "minVisits": 500,
+      "maxQuantity": 1
+    },
+    {
+      "number": 2,
+      "name": "High Regent",
+      "rarity": "mythic",
+      "description": "A supreme imperial guardian entrusted with authority beneath the emperor.",
+      "minOwnership": 8000,
+      "minVisits": 400,
+      "maxQuantity": 3
+    },
+    {
+      "number": 3,
+      "name": "Overlord",
+      "rarity": "legendary",
+      "description": "A powerful ruler whose influence extends across many territories.",
+      "minOwnership": 7000,
+      "minVisits": 300,
+      "maxQuantity": 10
+    },
+    {
+      "number": 4,
+      "name": "Viceroy",
+      "rarity": "legendary",
+      "femaleName": "Vicereine",
+      "description": "An imperial representative who governs vast territories on behalf of the emperor.",
+      "minOwnership": 6000,
+      "minVisits": 250,
+      "maxQuantity": 25
+    },
+    {
+      "number": 5,
+      "name": "High Chancellor",
+      "rarity": "legendary",
+      "description": "A senior imperial official who oversees the affairs of the empire.",
+      "minOwnership": 5000,
+      "minVisits": 200,
+      "maxQuantity": 50
+    },
+    {
+      "number": 6,
+      "name": "Chancellor",
+      "rarity": "epic",
+      "description": "A trusted official who directs imperial administration and policy.",
+      "minOwnership": 4000,
+      "minVisits": 175,
+      "maxPercentage": 1
+    },
+    {
+      "number": 7,
+      "name": "Proconsul",
+      "rarity": "epic",
+      "description": "A senior governor entrusted with an important imperial province.",
+      "minOwnership": 3000,
+      "minVisits": 150,
+      "maxPercentage": 2
+    },
+    {
+      "number": 8,
+      "name": "Consul",
+      "rarity": "rare",
+      "description": "A distinguished official who exercises authority in the service of the empire.",
+      "minOwnership": 2500,
+      "minVisits": 125,
+      "maxPercentage": 5
+    },
+    {
+      "number": 9,
+      "name": "Prefect",
+      "rarity": "rare",
+      "description": "An administrator responsible for maintaining order across imperial territories.",
+      "minOwnership": 2000,
+      "minVisits": 100,
+      "maxPercentage": 10
+    },
+    {
+      "number": 10,
+      "name": "Legate",
+      "rarity": "rare",
+      "description": "An appointed representative entrusted with carrying imperial authority abroad.",
+      "minOwnership": 1500,
+      "minVisits": 80
+    },
+    {
+      "number": 11,
+      "name": "Ambassador",
+      "rarity": "rare",
+      "description": "A respected representative who builds influence among distant nations.",
+      "minOwnership": 1000,
+      "minVisits": 60
+    },
+    {
+      "number": 12,
+      "name": "Emissary",
+      "rarity": "rare",
+      "description": "A trusted agent sent on important missions beyond familiar borders.",
+      "minOwnership": 800,
+      "minVisits": 45
+    },
+    {
+      "number": 13,
+      "name": "Envoy",
+      "rarity": "rare",
+      "description": "A representative establishing a presence in faraway lands.",
+      "minOwnership": 500,
+      "minVisits": 30
+    },
+    {
+      "number": 14,
+      "name": "Pioneer",
+      "rarity": "common",
+      "description": "An enterprising explorer who establishes a lasting foothold in new territories.",
+      "minOwnership": 300,
+      "minVisits": 20
+    },
+    {
+      "number": 15,
+      "name": "Pathfinder",
+      "rarity": "common",
+      "description": "A skilled traveler who charts routes through unfamiliar lands.",
+      "minOwnership": 175,
+      "minVisits": 15
+    },
+    {
+      "number": 16,
+      "name": "Trailblazer",
+      "rarity": "common",
+      "description": "An adventurous traveler who opens new paths for others to follow.",
+      "minOwnership": 100,
+      "minVisits": 10
+    },
+    {
+      "number": 17,
+      "name": "Explorer",
+      "rarity": "common",
+      "description": "A curious adventurer discovering the world beyond familiar surroundings.",
+      "minOwnership": 50,
+      "minVisits": 7
+    },
+    {
+      "number": 18,
+      "name": "Voyager",
+      "rarity": "common",
+      "description": "A traveler embarking on journeys to distant places.",
+      "minOwnership": 20,
+      "minVisits": 5
+    },
+    {
+      "number": 19,
+      "name": "Wayfarer",
+      "rarity": "common",
+      "description": "A traveler taking the first steps toward a wider world.",
+      "minOwnership": 5,
+      "minVisits": 3
+    },
+    {
+      "number": 20,
+      "name": "Citizen",
+      "rarity": "common",
+      "description": "A new participant beginning their journey on the world stage.",
+      "minOwnership": 0,
+      "minVisits": 1
+    }
+  ],
   "country": [
     {
       "number": 1,
