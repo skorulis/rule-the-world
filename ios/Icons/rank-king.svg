@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFE9A8"/>
+      <stop offset=".55" stop-color="#F5B93E"/>
+      <stop offset="1" stop-color="#B97718"/>
+    </linearGradient>
+    <linearGradient id="tileEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFE9A8"/>
+      <stop offset="1" stop-color="#8A5A10"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%">
+      <stop stop-color="#FFFFFF" stop-opacity=".45"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#1A1208" flood-opacity=".5"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#drop)">
+    <rect x="24" y="24" width="208" height="208" rx="52" fill="url(#tileEdge)"/>
+    <rect x="34" y="34" width="188" height="188" rx="44" fill="url(#tile)"/>
+  </g>
+  <rect x="48" y="48" width="160" height="160" rx="36" fill="none" stroke="#8A5A10" stroke-opacity=".55" stroke-width="3"/>
+  <path d="M34 120V78a44 44 0 0 1 44-44h100a44 44 0 0 1 44 44v42z" fill="url(#gloss)"/>
+
+  <g filter="url(#drop)">
+  <path d="M74,148 L74.0,104.0 L84.8,66.0 L95.6,104.0 L106.4,66.0 L117.2,104.0 L128.0,66.0 L138.8,104.0 L149.6,66.0 L160.4,104.0 L171.2,66.0 L182.0,104.0 L182,148 Z" fill="#FFFFFF"/>
+  <circle cx="84.8" cy="58.0" r="6" fill="#FFFFFF"/>
+  <circle cx="106.4" cy="58.0" r="6" fill="#FFFFFF"/>
+  <circle cx="128.0" cy="58.0" r="6" fill="#FFFFFF"/>
+  <circle cx="149.6" cy="58.0" r="6" fill="#FFFFFF"/>
+  <circle cx="171.2" cy="58.0" r="6" fill="#FFFFFF"/>
+  <rect x="74" y="148" width="108" height="20" rx="4" fill="#FFFFFF"/>
+  <circle cx="128" cy="86" r="9" fill="#FFFFFF"/>
+  <rect x="124.5" y="66" width="7" height="16" rx="3" fill="#FFFFFF"/>
+  </g>
+</svg>

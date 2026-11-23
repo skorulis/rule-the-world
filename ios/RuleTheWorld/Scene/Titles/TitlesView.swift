@@ -13,11 +13,17 @@ struct TitlesView: View {
                 }
             }
             ForEach(model.items) { item in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(item.name).font(.headline)
-                    Text(item.regionName).font(.subheadline)
-                    if let detail = item.detail {
-                        Text(detail).font(.footnote).foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 12) {
+                    if let icon = item.icon {
+                        RankIcon(name: icon)
+                            .padding(.top, 2)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(item.name).font(.headline)
+                        Text(item.regionName).font(.subheadline)
+                        if let detail = item.detail {
+                            Text(detail).font(.footnote).foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .padding(.vertical, 4)
