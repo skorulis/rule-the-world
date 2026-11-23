@@ -22,6 +22,10 @@ describe("powerup definitions", () => {
     }
   });
 
+  it("includes Common Attack with a +1 bonus", () => {
+    expect(powerUpDefinition(6)).toMatchObject({ type: "attack", rarity: "common", bonus: 1 });
+  });
+
   it("looks up definitions by id", () => {
     const first = powerUpDefinitions[0];
     expect(powerUpDefinition(first.id)).toEqual(first);

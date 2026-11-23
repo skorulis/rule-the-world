@@ -64,6 +64,17 @@ export async function consumePowerUp(
             break;
           }
         }
+      } else if (definition.type === "attack") {
+        const [visits, rivals] = await Promise.all([
+          tx.select().from(hexVisit)
+            .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring))),
+          tx.select({ cell: hexVisit.cell, rivalScore: max(hexVisit.score) }).from(hexVisit)
+            .where(and(ne(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
+            .groupBy(hexVisit.cell).orderBy(hexVisit.cell),
+        ]);
+        const scores = new Map(visits.map((visit) => [visit.cell, Number(visit.score)]));
+        const rival = rivals.find(({ cell, rivalScore }) => scores.has(cell) && Number(rivalScore ?? 0) > scores.get(cell)!);
+        target = rival && visits.find((visit) => visit.cell === rival.cell);
       } else if (definition.type === "fortification") {
         const [visits, rivals] = await Promise.all([
           tx.select().from(hexVisit)
@@ -87,6 +98,7 @@ export async function consumePowerUp(
         revisit: "No visited hex in range",
         exploration: "No unvisited hex in range",
         fortification: "No owned hex in range",
+        attack: "No squares in range where you already have a score and someone else owns it. Your Attack power-up was not consumed.",
       };
       throw new ConsumePowerUpError(errors[definition.type] ?? "No target hex in range", 404);
     }
@@ -94,6 +106,7 @@ export async function consumePowerUp(
     switch (definition.type) {
       case "revisit":
       case "fortification":
+      case "attack":
         await tx.update(hexVisit)
           .set({ score: sql`${hexVisit.score} + ${definition.bonus}` })
           .where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, target.cell)));

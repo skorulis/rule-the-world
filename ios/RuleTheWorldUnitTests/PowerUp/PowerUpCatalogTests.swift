@@ -36,6 +36,14 @@ struct PowerUpCatalogTests {
         #expect(definition?.displayName == "Legendary Revisit")
     }
 
+    @Test func decodesCommonAttack() {
+        let data = Data(#"[{"id":6,"type":"attack","rarity":"common","bonus":1,"description":"+{bonus} score to a nearby square where you already have a score and someone else owns it"}]"#.utf8)
+        let definition = PowerUpCatalog(data: data).definition(for: 6)
+        #expect(definition?.type == .attack)
+        #expect(definition?.displayName == "Common Attack")
+        #expect(definition?.bonus == 1)
+    }
+
     @Test func raritiesHaveColors() {
         #expect(Rarity.common.color == Color.gray)
         #expect(Rarity.rare.color == Color.blue)

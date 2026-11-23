@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rarities, type Rarity } from "../rarity";
 
-export const powerUpTypes = ["revisit", "exploration", "fortification"] as const;
+export const powerUpTypes = ["revisit", "exploration", "fortification", "attack"] as const;
 export type PowerUpType = (typeof powerUpTypes)[number];
 
 export interface PowerUpDefinition {

@@ -9,7 +9,8 @@ struct PowerUpInventoryViewModelTests {
         [
           {"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
           {"id":2,"type":"revisit","rarity":"rare","bonus":2,"description":"+{bonus} score"},
-          {"id":3,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"}
+          {"id":3,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"},
+          {"id":6,"type":"attack","rarity":"common","bonus":1,"description":"+{bonus} score"}
         ]
         """#.utf8)
 
@@ -122,6 +123,20 @@ struct PowerUpInventoryViewModelTests {
         #expect(model.items.map(\.count) == [1])
     }
 
+    @Test func attackWithoutTargetShowsServerErrorAndLeavesInventory() async throws {
+        let message = "No squares in range where you already have a score and someone else owns it. Your Attack power-up was not consumed."
+        let model = try makeModel(
+            body: #"{"powerups":{"6":1}}"#,
+            consumeStatus: 404,
+            consumeBody: #"{"error":"No squares in range where you already have a score and someone else owns it. Your Attack power-up was not consumed."}"#
+        )
+        await model.load()
+        await model.consume(item: try #require(model.items.first), location: sample)
+        #expect(model.items.map(\.count) == [1])
+        #expect(model.message == message)
+        #expect(model.isConsuming == false)
+    }
+
     @Test func consumeFailureLeavesInventory() async throws {
         let model = try makeModel(
             body: #"{"powerups":{"1":1}}"#,
@@ -131,6 +146,6 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         await model.consume(item: try #require(model.items.first), location: sample)
         #expect(model.items.map(\.count) == [1])
-        #expect(model.message == "Couldn't use Common Revisit.")
+        #expect(model.message == "Unable to consume power-up")
     }
 }

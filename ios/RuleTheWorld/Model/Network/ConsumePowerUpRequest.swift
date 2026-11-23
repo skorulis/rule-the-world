@@ -29,10 +29,19 @@ struct ConsumePowerUpRequest: HTTPRequest {
 
     func decode(data: Data, response: URLResponse) throws -> ConsumePowerUpResponse {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            if let error = try? JSONDecoder().decode(ConsumePowerUpFailure.self, from: data) {
+                throw error
+            }
             throw URLError(.badServerResponse)
         }
         return try JSONDecoder().decode(ConsumePowerUpResponse.self, from: data)
     }
+}
+
+nonisolated struct ConsumePowerUpFailure: Decodable, LocalizedError, Sendable {
+    let error: String
+
+    var errorDescription: String? { error }
 }
 
 nonisolated struct ConsumePowerUpResponse: Decodable, Sendable {

@@ -8,7 +8,7 @@ struct PowerUpIcon: View {
     var size: CGFloat = 56
 
     var body: some View {
-        Image(assetName)
+        image
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
@@ -21,11 +21,12 @@ struct PowerUpIcon: View {
             .accessibilityHidden(true)
     }
 
-    private var assetName: String {
+    private var image: Image {
         switch type {
-        case .revisit: "PowerUpRevisit"
-        case .exploration: "PowerUpExploration"
-        case .fortification: "PowerUpFortification"
+        case .revisit: Image("PowerUpRevisit")
+        case .exploration: Image("PowerUpExploration")
+        case .fortification: Image("PowerUpFortification")
+        case .attack: Image(systemName: "bolt.shield.fill")
         }
     }
 

@@ -33,5 +33,12 @@
     "rarity": "common",
     "bonus": 1,
     "description": "+{bonus} score to a square you own"
+  },
+  {
+    "id": 6,
+    "type": "attack",
+    "rarity": "common",
+    "bonus": 1,
+    "description": "+{bonus} score to a nearby square where you already have a score and someone else owns it"
   }
 ]

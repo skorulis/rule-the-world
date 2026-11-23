@@ -73,6 +73,8 @@ final class PowerUpInventoryViewModel {
                 return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
             }
             message = "\(item.name) applied."
+        } catch let error as ConsumePowerUpFailure {
+            message = error.error
         } catch {
             message = "Couldn't use \(item.name)."
         }
