@@ -41,8 +41,11 @@ describe("calculateRankings", () => {
     expect(reset.sql).toContain("update \"user\" set \"rankings\" = '[]'::jsonb");
     expect(write.sql).toContain("jsonb_to_recordset");
     expect(JSON.parse(write.params[0] as string)).toEqual([
-      { user_id: "a", rankings: [{ id: 100, type: "country", number: 1 }, { id: 200, type: "country", number: 15 }] },
-      { user_id: "b", rankings: [{ id: 100, type: "country", number: 15 }] },
+      { user_id: "a", rankings: [
+        { id: 100, type: "country", number: 1, visited: 1500, owned: 1200 },
+        { id: 200, type: "country", number: 15, visited: 1, owned: 1 },
+      ] },
+      { user_id: "b", rankings: [{ id: 100, type: "country", number: 15, visited: 3, owned: 0 }] },
     ]);
   });
 
@@ -66,15 +69,15 @@ describe("calculateRankings", () => {
     const payload = JSON.parse(queries()[3].params[0] as string);
     expect(payload).toEqual([
       { user_id: "a", rankings: [
-        { id: 100, type: "country", number: 12 },
-        { id: 100, type: "suburb", number: 1 },
-        { id: 200, type: "suburb", number: 1 },
+        { id: 100, type: "country", number: 12, visited: 20, owned: 20 },
+        { id: 100, type: "suburb", number: 1, visited: 20, owned: 20 },
+        { id: 200, type: "suburb", number: 1, visited: 20, owned: 20 },
       ] },
-      { user_id: "b", rankings: [{ id: 100, type: "suburb", number: 2 }] },
-      { user_id: "c", rankings: [{ id: 100, type: "suburb", number: 3 }] },
-      { user_id: "d", rankings: [{ id: 100, type: "suburb", number: 4 }] },
-      { user_id: "e", rankings: [{ id: 100, type: "suburb", number: 5 }] },
-      { user_id: "f", rankings: [{ id: 100, type: "suburb", number: 6 }] },
+      { user_id: "b", rankings: [{ id: 100, type: "suburb", number: 2, visited: 20, owned: 20 }] },
+      { user_id: "c", rankings: [{ id: 100, type: "suburb", number: 3, visited: 10, owned: 10 }] },
+      { user_id: "d", rankings: [{ id: 100, type: "suburb", number: 4, visited: 5, owned: 5 }] },
+      { user_id: "e", rankings: [{ id: 100, type: "suburb", number: 5, visited: 2, owned: 2 }] },
+      { user_id: "f", rankings: [{ id: 100, type: "suburb", number: 6, visited: 1, owned: 0 }] },
     ]);
   });
 

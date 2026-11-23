@@ -12,6 +12,8 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
         let id: Int64
         let type: String
         let number: Int
+        let visited: Int?
+        let owned: Int?
     }
 
     struct Region: Decodable, Sendable {
@@ -57,7 +59,10 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
         init(from decoder: any Decoder) throws {
             let ranking = try? Ranking(from: decoder)
             value = ranking.flatMap {
-                $0.id > 0 && $0.number > 0 && ["country", "state", "suburb"].contains($0.type) ? $0 : nil
+                guard $0.id > 0, $0.number > 0, ["country", "state", "suburb"].contains($0.type),
+                      ($0.visited ?? 0) >= 0, ($0.owned ?? 0) >= 0,
+                      ($0.owned ?? 0) <= ($0.visited ?? .max) else { return nil }
+                return $0
             }
         }
     }

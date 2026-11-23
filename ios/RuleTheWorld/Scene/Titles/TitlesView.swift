@@ -21,6 +21,10 @@ struct TitlesView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(item.name).font(.headline)
                         Text(item.regionName).font(.subheadline)
+                        if let visited = item.visited, let owned = item.owned {
+                            Text("\(visited) visited · \(owned) owned")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
                         if let detail = item.detail {
                             Text(detail).font(.footnote).foregroundStyle(.secondary)
                         }

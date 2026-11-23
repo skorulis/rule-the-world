@@ -31,15 +31,17 @@ struct TitlesViewModelTests {
         let model = makeModel(body: #"""
             {"rankings":[
             {"id":1,"type":"country","number":15},
-            {"id":3,"type":"country","number":1},
-            {"id":2,"type":"country","number":1},
+            {"id":3,"type":"country","number":1,"visited":40,"owned":12},
+            {"id":2,"type":"country","number":1,"visited":9,"owned":3},
             {"id":1,"type":"country","number":1},
-            {"id":2,"type":"country","number":1}]}
+            {"id":2,"type":"country","number":1,"visited":9,"owned":3}]}
             """#)
         await model.load()
         #expect(model.items.map(\.id) == ["country:2", "country:3", "country:1"])
         #expect(model.items.map(\.name) == ["King", "King", "King"])
         #expect(model.items.map(\.regionName) == ["Arcadia", "Arcadia", "Zedland"])
+        #expect(model.items.map(\.visited) == [9, 40, nil])
+        #expect(model.items.map(\.owned) == [3, 12, nil])
         #expect(model.items.first?.detail == "Sovereign")
         #expect(model.hasLoaded)
         #expect(!model.isLoading)

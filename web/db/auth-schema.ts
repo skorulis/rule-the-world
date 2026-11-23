@@ -1,7 +1,13 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index, jsonb, date } from "drizzle-orm/pg-core";
 
-export type RegionRanking = { id: number; type: "country" | "state" | "suburb"; number: number };
+export type RegionRanking = {
+  id: number;
+  type: "country" | "state" | "suburb";
+  number: number;
+  visited: number;
+  owned: number;
+};
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),

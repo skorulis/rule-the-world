@@ -62,8 +62,11 @@ export async function calculateRankings(): Promise<RankingsSummary> {
     const ordered = [...regions.values()].sort((a, b) =>
       (a.type === b.type ? 0 : a.type === "country" ? -1 : 1) || a.id - b.id);
     for (const { id, type, players } of ordered) {
+      const byId = new Map(players.map((player) => [player.userId, player]));
       for (const [userId, number] of allocateRanks(players, type === "country" ? countryRanks : suburbRanks)) {
-        rankings.set(userId, [...rankings.get(userId) ?? [], { id, type, number }]);
+        const player = byId.get(userId);
+        rankings.set(userId, [...rankings.get(userId) ?? [],
+          { id, type, number, visited: player?.visited ?? 0, owned: player?.owned ?? 0 }]);
         assignments += 1;
       }
     }

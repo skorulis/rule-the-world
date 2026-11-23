@@ -14,6 +14,8 @@ final class TitlesViewModel {
         let rarity: Rarity?
         let regionName: String
         let detail: String?
+        let visited: Int?
+        let owned: Int?
     }
 
     private let service: AuthenticatedService
@@ -50,7 +52,9 @@ final class TitlesViewModel {
                     icon: definition?.icon,
                     rarity: definition?.rarity,
                     regionName: regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)",
-                    detail: definition?.description
+                    detail: definition?.description,
+                    visited: ranking.visited,
+                    owned: ranking.owned
                 )
             }.sorted { left, right in
                 if left.number != right.number { return left.number < right.number }
