@@ -5,6 +5,7 @@ enum MainPath: CoordinatorPath {
     case visitLog
     case profile
     case powerUpInventory
+    case titles
 
     var id: String {
         switch self {
@@ -16,6 +17,8 @@ enum MainPath: CoordinatorPath {
             "profile"
         case .powerUpInventory:
             "powerUpInventory"
+        case .titles:
+            "titles"
         }
     }
 }

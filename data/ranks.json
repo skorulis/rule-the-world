@@ -121,5 +121,52 @@
       "minOwnership": 0,
       "minVisits": 1
     }
+  ],
+  "suburb": [
+    {
+      "number": 1,
+      "name": "Mayor",
+      "description": "The civic leader of a local community.",
+      "minOwnership": 20,
+      "minVisits": 5,
+      "maxQuantity": 1
+    },
+    {
+      "number": 2,
+      "name": "Deputy Mayor",
+      "description": "A civic official who supports the mayor and acts in their place when needed.",
+      "minOwnership": 15,
+      "minVisits": 4,
+      "maxQuantity": 1
+    },
+    {
+      "number": 3,
+      "name": "Councillor",
+      "description": "A member of a local council who represents the community.",
+      "minOwnership": 10,
+      "minVisits": 3,
+      "maxQuantity": 3
+    },
+    {
+      "number": 4,
+      "name": "Steward",
+      "description": "A trusted caretaker who looks after the interests of a local community.",
+      "minOwnership": 5,
+      "minVisits": 2
+    },
+    {
+      "number": 5,
+      "name": "Local",
+      "description": "An established member of the local community.",
+      "minOwnership": 2,
+      "minVisits": 1
+    },
+    {
+      "number": 6,
+      "name": "Visitor",
+      "description": "A traveler exploring the local area.",
+      "minOwnership": 0,
+      "minVisits": 1
+    }
   ]
 }

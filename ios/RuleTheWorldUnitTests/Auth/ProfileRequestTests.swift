@@ -101,6 +101,28 @@ struct ProfileRequestTests {
         }
     }
 
+    @Test func decodesRankingsSkippingMalformedEntries() async throws {
+        let summary = try await service(body: #"""
+            {"rankings":[null,"bad",{},
+            {"id":0,"type":"country","number":1},
+            {"id":1,"type":"country","number":0},
+            {"id":1,"type":"unknown","number":1},
+            {"id":1159320355,"type":"country","number":13},
+            {"id":2,"type":"state","number":3},
+            {"id":3,"type":"suburb","number":4}]}
+            """#).fetchProfile()
+        #expect(summary.rankings.map(\.id) == [1159320355, 2, 3])
+        #expect(summary.rankings.map(\.number) == [13, 3, 4])
+        #expect(summary.rankings.map(\.type) == ["country", "state", "suburb"])
+    }
+
+    @Test func absentOrInvalidRankingsAreEmpty() async throws {
+        for body in ["{}", #"{"rankings":null}"#, #"{"rankings":{}}"#] {
+            let summary = try await service(body: body).fetchProfile()
+            #expect(summary.rankings.isEmpty)
+        }
+    }
+
     @Test func rejectsFailedOrMalformedResponses() async {
         for (status, body) in [(401, "{}"), (500, "{}"), (200, "not json"), (200, "[]")] {
             await #expect(throws: (any Error).self) {

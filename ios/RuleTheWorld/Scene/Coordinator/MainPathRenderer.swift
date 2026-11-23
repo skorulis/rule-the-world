@@ -16,6 +16,8 @@ struct MainPathRenderer: CoordinatorPathRenderer {
             HexVisitLogListView(model: HexVisitLogListViewModel.make(resolver: resolver))
         case .profile:
             ProfileView(model: ProfileViewModel.make(resolver: resolver))
+        case .titles:
+            TitlesView(model: TitlesViewModel.make(resolver: resolver))
         case .powerUpInventory:
             PowerUpInventoryView(model: PowerUpInventoryViewModel.make(resolver: resolver))
         }

@@ -29,6 +29,9 @@ struct ProfileView: View {
                 } label: {
                     LabeledContent("Power-ups", value: (model.powerUpCount ?? 0).formatted())
                 }
+                Button("Titles") {
+                    coordinator?.push(MainPath.titles)
+                }
             }
             if !model.regions.isEmpty {
                 Section("Regions") {
