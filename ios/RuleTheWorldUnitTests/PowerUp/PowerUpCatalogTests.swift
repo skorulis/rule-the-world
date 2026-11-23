@@ -53,6 +53,14 @@ struct PowerUpCatalogTests {
         #expect(definition?.formattedDescription == "+1 score to a nearby contested square")
     }
 
+    @Test func decodesRareDefend() {
+        let data = Data(#"[{"id":8,"type":"defend","rarity":"rare","bonus":1,"description":"+{bonus} score to a square you own where a rival is closest to taking the lead"}]"#.utf8)
+        let definition = PowerUpCatalog(data: data).definition(for: 8)
+        #expect(definition?.type == .defend)
+        #expect(definition?.rarity == .rare)
+        #expect(definition?.displayName == "Rare Defend")
+    }
+
     @Test func raritiesHaveColors() {
         #expect(Rarity.common.color == Color.gray)
         #expect(Rarity.rare.color == Color.blue)

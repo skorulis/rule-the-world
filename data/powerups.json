@@ -47,5 +47,12 @@
     "rarity": "rare",
     "bonus": 1,
     "description": "+{bonus} score to a nearby contested square where you are tied for the highest score"
+  },
+  {
+    "id": 8,
+    "type": "defend",
+    "rarity": "rare",
+    "bonus": 1,
+    "description": "+{bonus} score to a square you own where a rival is closest to taking the lead"
   }
 ]

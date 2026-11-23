@@ -41,8 +41,25 @@ export async function consumePowerUp(
 
     const center = cell.toString(16);
     let target: typeof hexVisit.$inferSelect | undefined;
+    if (definition.type === "defend") {
+      const disk = [...new Set(gridDisk(center, maxTargetRadius))].map((entry) => BigInt(`0x${entry}`));
+      const [visits, rivals] = await Promise.all([
+        tx.select().from(hexVisit)
+          .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, disk)))
+          .orderBy(hexVisit.cell),
+        tx.select({ cell: hexVisit.cell, rivalScore: max(hexVisit.score) }).from(hexVisit)
+          .where(and(ne(hexVisit.userId, userId), inArray(hexVisit.cell, disk)))
+          .groupBy(hexVisit.cell),
+      ]);
+      const rivalScores = new Map(rivals.map(({ cell, rivalScore }) => [cell, Number(rivalScore ?? 0)]));
+      const lead = (visit: typeof hexVisit.$inferSelect) =>
+        Number(visit.score) - (rivalScores.get(visit.cell) ?? 0);
+      target = visits
+        .filter((visit) => lead(visit) > 0)
+        .sort((a, b) => lead(a) - lead(b))[0];
+    }
     let previous = new Set<string>();
-    for (let radius = 0; radius <= maxTargetRadius && !target; radius++) {
+    for (let radius = 0; radius <= maxTargetRadius && !target && definition.type !== "defend"; radius++) {
       const disk = new Set(gridDisk(center, radius));
       const ring = [...disk].filter((entry) => !previous.has(entry)).map((entry) => BigInt(`0x${entry}`));
       previous = disk;
@@ -102,6 +119,7 @@ export async function consumePowerUp(
         fortification: "No owned hex in range",
         conquer: "No contested squares in range. Your Conquer power-up was not consumed.",
         attack: "No squares in range where you already have a score and someone else owns it. Your Attack power-up was not consumed.",
+        defend: "No owned squares in range that a rival could take. Your Defend power-up was not consumed.",
       };
       throw new ConsumePowerUpError(errors[definition.type] ?? "No target hex in range", 404);
     }
@@ -111,6 +129,7 @@ export async function consumePowerUp(
       case "fortification":
       case "attack":
       case "conquer":
+      case "defend":
         await tx.update(hexVisit)
           .set({ score: sql`${hexVisit.score} + ${definition.bonus}` })
           .where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, target.cell)));

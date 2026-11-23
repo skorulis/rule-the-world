@@ -31,6 +31,10 @@ describe("powerup definitions", () => {
     expect(powerUpDefinitions.some((def) => def.type === "conquer" && def.rarity === "common")).toBe(false);
   });
 
+  it("includes Rare Defend with a +1 bonus", () => {
+    expect(powerUpDefinition(8)).toMatchObject({ type: "defend", rarity: "rare", bonus: 1 });
+  });
+
   it("looks up definitions by id", () => {
     const first = powerUpDefinitions[0];
     expect(powerUpDefinition(first.id)).toEqual(first);

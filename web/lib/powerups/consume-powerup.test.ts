@@ -115,3 +115,42 @@ describe("Attack consumption", () => {
     expect(gridDisk).toHaveBeenLastCalledWith(cell.toString(16), maxTargetRadius);
   });
 });
+
+describe("Defend consumption", () => {
+  const defend = powerUpDefinition(8)!;
+  const otherCell = cell + BigInt(1);
+
+  it("boosts the owned square with the smallest lead over its top rival", async () => {
+    const { tx, set } = transaction(
+      [{ cell, score: "9", total: 3 }, { cell: otherCell, score: "5", total: 4 }],
+      [{ cell, rivalScore: "4" }, { cell: otherCell, rivalScore: "4.5" }],
+      { "8": 1 },
+    );
+    const result = await consumePowerUp("u1", defend, cell);
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(tx.update).toHaveBeenNthCalledWith(1, hexVisit);
+    expect(set).toHaveBeenCalledWith({ score: expect.anything() });
+    expect(tx.update).toHaveBeenNthCalledWith(2, user);
+    expect(set).toHaveBeenCalledWith({ powerups: {} });
+    expect(result).toEqual({ powerups: {}, visits: [changed] });
+    expect(getHexInfo).toHaveBeenCalledWith("u1", otherCell, tx);
+  });
+
+  it.each([
+    { visits: [], rivals: [] },
+    { visits: [], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "4" }], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "3" }], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "5" }], rivals: [{ cell, rivalScore: "9" }] },
+  ])("does not consume without an owned square: %j", async ({ visits, rivals }) => {
+    const { tx } = transaction(visits, rivals, { "8": 1 });
+    await expect(consumePowerUp("u1", defend, cell)).rejects.toMatchObject({
+      status: 404,
+      message: "No owned squares in range that a rival could take. Your Defend power-up was not consumed.",
+    });
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(tx.update).not.toHaveBeenCalled();
+    expect(getHexInfo).not.toHaveBeenCalled();
+    expect(gridDisk).toHaveBeenLastCalledWith(cell.toString(16), maxTargetRadius);
+  });
+});
