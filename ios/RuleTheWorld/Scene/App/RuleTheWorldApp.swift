@@ -50,7 +50,7 @@ struct RuleTheWorldApp: App {
                     ContentView(model: ContentViewModel.make(resolver: assembler.resolver))
                         .environment(\.resolver, assembler.resolver)
                 } else {
-                    LoginView(model: LoginViewModel.make(resolver: assembler.resolver))
+                    SignedOutView(loginModel: LoginViewModel.make(resolver: assembler.resolver))
                 }
             }
             .debugMenu(resolver: assembler.resolver)

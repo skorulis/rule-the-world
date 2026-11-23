@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="2532" viewBox="0 0 1170 2532">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#1B2A6B"/>
+      <stop offset=".4" stop-color="#3B4FA0"/>
+      <stop offset=".75" stop-color="#7A6BC0"/>
+      <stop offset="1" stop-color="#E88FA0"/>
+    </linearGradient>
+    <radialGradient id="sunset" cx="50%" cy="50%" r="50%">
+      <stop stop-color="#FFDF9E" stop-opacity=".9"/>
+      <stop offset=".6" stop-color="#FF9E7A" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FF9E7A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hexBase" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#3D5A80"/>
+      <stop offset="1" stop-color="#24365A"/>
+    </linearGradient>
+    <linearGradient id="hexOwned" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#6FE3A5"/>
+      <stop offset=".5" stop-color="#2FBF7B"/>
+      <stop offset="1" stop-color="#14805A"/>
+    </linearGradient>
+    <linearGradient id="hexOwnedEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#CFFFE0"/>
+      <stop offset="1" stop-color="#0A5C3C"/>
+    </linearGradient>
+    <linearGradient id="hexRival" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F5A06B"/>
+      <stop offset="1" stop-color="#B4532A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop stop-color="#8FFFC4" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#8FFFC4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flag" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#FF5A4C"/>
+      <stop offset="1" stop-color="#C22A20"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#E9C883"/>
+      <stop offset="1" stop-color="#B98A48"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#3EC6B8"/>
+      <stop offset="1" stop-color="#1E8C84"/>
+    </linearGradient>
+    <linearGradient id="pack" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#E08A4C"/>
+      <stop offset="1" stop-color="#A85A24"/>
+    </linearGradient>
+    <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#06182E" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#06182E" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#04101F" stop-opacity=".85"/>
+    </linearGradient>
+    <linearGradient id="cloudNight" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#8A7BD0"/>
+      <stop offset="1" stop-color="#5A4BA0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1170" height="2532" fill="url(#sky)"/>
+
+  <!-- Setting sun glow on horizon -->
+  <ellipse cx="585" cy="1180" rx="700" ry="420" fill="url(#sunset)"/>
+
+  <!-- Stars -->
+  <g fill="#FFFFFF">
+    <circle cx="120" cy="160" r="4" opacity=".9"/>
+    <circle cx="340" cy="90" r="3" opacity=".7"/>
+    <circle cx="620" cy="140" r="4.5" opacity=".9"/>
+    <circle cx="880" cy="70" r="3" opacity=".7"/>
+    <circle cx="1050" cy="220" r="4" opacity=".85"/>
+    <circle cx="200" cy="380" r="3" opacity=".6"/>
+    <circle cx="760" cy="320" r="3.5" opacity=".8"/>
+    <circle cx="480" cy="250" r="2.5" opacity=".6"/>
+    <circle cx="980" cy="430" r="3" opacity=".7"/>
+    <path d="m585 200 7 18 18 7-18 7-7 18-7-18-18-7 18-7z" opacity=".95"/>
+    <path d="m150 540 5 13 13 5-13 5-5 13-5-13-13-5 13-5z" opacity=".8"/>
+    <path d="m1020 640 5 13 13 5-13 5-5 13-5-13-13-5 13-5z" opacity=".8"/>
+  </g>
+
+  <!-- Moon -->
+  <circle cx="180" cy="240" r="70" fill="#F7F3E4"/>
+  <circle cx="160" cy="225" r="14" fill="#DDD5BC" opacity=".8"/>
+  <circle cx="200" cy="258" r="9" fill="#DDD5BC" opacity=".8"/>
+  <circle cx="185" cy="205" r="6" fill="#DDD5BC" opacity=".7"/>
+
+  <!-- Night clouds -->
+  <g fill="url(#cloudNight)" opacity=".55">
+    <ellipse cx="880" cy="420" rx="150" ry="50"/>
+    <ellipse cx="990" cy="390" rx="110" ry="42"/>
+    <ellipse cx="880" cy="450" rx="170" ry="34"/>
+  </g>
+  <g fill="url(#cloudNight)" opacity=".4">
+    <ellipse cx="260" cy="560" rx="120" ry="42"/>
+    <ellipse cx="340" cy="540" rx="90" ry="36"/>
+    <ellipse cx="260" cy="585" rx="135" ry="30"/>
+  </g>
+
+  <!-- Distant skyline silhouette -->
+  <path d="M-40 1180 L-40 1080 L60 1080 L60 1020 L140 1020 L140 1120 L240 1120 L240 980 L320 980 L320 1090 L430 1090 L430 1040 L520 1040 L520 1130 L640 1130 L640 1000 L720 1000 L720 1100 L830 1100 L830 1050 L920 1050 L920 1140 L1030 1140 L1030 1010 L1110 1010 L1110 1090 L1210 1090 L1210 1180 Z"
+        fill="#1E2A55" opacity=".9"/>
+  <g fill="#FFDF9E" opacity=".85">
+    <rect x="90" y="1040" width="10" height="10"/><rect x="115" y="1060" width="10" height="10"/>
+    <rect x="265" y="1010" width="10" height="10"/><rect x="290" y="1035" width="10" height="10"/>
+    <rect x="665" y="1030" width="10" height="10"/><rect x="690" y="1055" width="10" height="10"/>
+    <rect x="855" y="1070" width="10" height="10"/><rect x="880" y="1090" width="10" height="10"/>
+    <rect x="1055" y="1040" width="10" height="10"/><rect x="1075" y="1062" width="10" height="10"/>
+  </g>
+
+  <!-- Hex territory field (perspective rows) -->
+  <g>
+    <!-- back rows: neutral -->
+    <g fill="url(#hexBase)" stroke="#16244A" stroke-width="6">
+      <polygon points="145,1245 215,1285 215,1365 145,1405 75,1365 75,1285"/>
+      <polygon points="295,1245 365,1285 365,1365 295,1405 225,1365 225,1285"/>
+      <polygon points="445,1245 515,1285 515,1365 445,1405 375,1365 375,1285"/>
+      <polygon points="595,1245 665,1285 665,1365 595,1405 525,1365 525,1285"/>
+      <polygon points="745,1245 815,1285 815,1365 745,1405 675,1365 675,1285"/>
+      <polygon points="895,1245 965,1285 965,1365 895,1405 825,1365 825,1285"/>
+      <polygon points="1045,1245 1115,1285 1115,1365 1045,1405 975,1365 975,1285"/>
+    </g>
+    <g fill="url(#hexBase)" stroke="#16244A" stroke-width="7">
+      <polygon points="70,1395 155,1444 155,1542 70,1591 -15,1542 -15,1444"/>
+      <polygon points="240,1395 325,1444 325,1542 240,1591 155,1542 155,1444"/>
+      <polygon points="750,1395 835,1444 835,1542 750,1591 665,1542 665,1444"/>
+      <polygon points="920,1395 1005,1444 1005,1542 920,1591 835,1542 835,1444"/>
+      <polygon points="1090,1395 1175,1444 1175,1542 1090,1591 1005,1542 1005,1444"/>
+    </g>
+    <!-- rival hex -->
+    <g>
+      <polygon points="410,1395 495,1444 495,1542 410,1591 325,1542 325,1444" fill="url(#hexRival)" stroke="#6B2413" stroke-width="7"/>
+      <polygon points="410,1412 478,1451 478,1530 410,1569 342,1530 342,1451" fill="none" stroke="#FFD0B0" stroke-width="4" opacity=".5"/>
+    </g>
+    <g>
+      <polygon points="580,1395 665,1444 665,1542 580,1591 495,1542 495,1444" fill="url(#hexRival)" stroke="#6B2413" stroke-width="7"/>
+      <polygon points="580,1412 648,1451 648,1530 580,1569 512,1530 512,1451" fill="none" stroke="#FFD0B0" stroke-width="4" opacity=".5"/>
+    </g>
+
+    <!-- mid rows: owned -->
+    <g>
+      <polygon points="155,1560 255,1618 255,1734 155,1792 55,1734 55,1618" fill="url(#hexOwnedEdge)"/>
+      <polygon points="155,1576 240,1625 240,1723 155,1772 70,1723 70,1625" fill="url(#hexOwned)"/>
+      <polygon points="155,1576 240,1625 240,1660 70,1660 70,1625" fill="#FFFFFF" opacity=".2"/>
+    </g>
+    <g>
+      <polygon points="375,1560 475,1618 475,1734 375,1792 275,1734 275,1618" fill="url(#hexOwnedEdge)"/>
+      <polygon points="375,1576 460,1625 460,1723 375,1772 290,1723 290,1625" fill="url(#hexOwned)"/>
+      <polygon points="375,1576 460,1625 460,1660 290,1660 290,1625" fill="#FFFFFF" opacity=".2"/>
+    </g>
+    <g>
+      <polygon points="595,1560 695,1618 695,1734 595,1792 495,1734 495,1618" fill="url(#hexOwnedEdge)"/>
+      <polygon points="595,1576 680,1625 680,1723 595,1772 510,1723 510,1625" fill="url(#hexOwned)"/>
+      <polygon points="595,1576 680,1625 680,1660 510,1660 510,1625" fill="#FFFFFF" opacity=".2"/>
+    </g>
+    <g>
+      <polygon points="815,1560 915,1618 915,1734 815,1792 715,1734 715,1618" fill="url(#hexOwnedEdge)"/>
+      <polygon points="815,1576 900,1625 900,1723 815,1772 730,1723 730,1625" fill="url(#hexOwned)"/>
+    </g>
+    <g>
+      <polygon points="1035,1560 1135,1618 1135,1734 1035,1792 935,1734 935,1618" fill="url(#hexOwnedEdge)"/>
+      <polygon points="1035,1576 1120,1625 1120,1723 1035,1772 950,1723 950,1625" fill="url(#hexOwned)"/>
+    </g>
+
+    <!-- front row: large owned -->
+    <g>
+      <polygon points="265,1780 390,1852 390,1996 265,2068 140,1996 140,1852" fill="url(#hexOwnedEdge)"/>
+      <polygon points="265,1798 372,1860 372,1984 265,2046 158,1984 158,1860" fill="url(#hexOwned)"/>
+      <polygon points="265,1798 372,1860 372,1905 158,1905 158,1860" fill="#FFFFFF" opacity=".22"/>
+    </g>
+    <g>
+      <polygon points="905,1780 1030,1852 1030,1996 905,2068 780,1996 780,1852" fill="url(#hexOwnedEdge)"/>
+      <polygon points="905,1798 1012,1860 1012,1984 905,2046 798,1984 798,1860" fill="url(#hexOwned)"/>
+      <polygon points="905,1798 1012,1860 1012,1905 798,1905 798,1860" fill="#FFFFFF" opacity=".22"/>
+    </g>
+  </g>
+
+  <!-- Glow on hero hex -->
+  <ellipse cx="585" cy="1900" rx="360" ry="260" fill="url(#glow)"/>
+
+  <!-- Hero hex (claimed, with flag) -->
+  <g>
+    <polygon points="585,1770 742,1860 742,2040 585,2130 428,2040 428,1860" fill="url(#hexOwnedEdge)"/>
+    <polygon points="585,1792 720,1870 720,2026 585,2104 450,2026 450,1870" fill="url(#hexOwned)"/>
+    <polygon points="585,1792 720,1870 720,1922 450,1922 450,1870" fill="#FFFFFF" opacity=".24"/>
+    <polygon points="585,1818 698,1883 698,2012 585,2077 472,2012 472,1883" fill="none" stroke="#CFFFE0" stroke-width="5" opacity=".6"/>
+  </g>
+
+  <!-- Explorer planting flag on hero hex -->
+  <g transform="translate(585 1660)">
+    <ellipse cx="0" cy="172" rx="90" ry="22" fill="#062A1A" opacity=".5"/>
+    <!-- flag pole -->
+    <rect x="62" y="-160" width="12" height="330" rx="6" fill="#8A5A28"/>
+    <path d="M74 -160 L74 -70 Q34 -58 4 -72 L4 -160 Z" fill="url(#flag)"/>
+    <path d="M74 -160 L74 -70 Q34 -58 4 -72 L4 -160 Z" fill="none" stroke="#8A1B14" stroke-width="4"/>
+    <path d="M14 -150 L60 -150" stroke="#FF9A8C" stroke-width="5" opacity=".6"/>
+    <circle cx="68" cy="-166" r="11" fill="#FFD23E" stroke="#B8860B" stroke-width="4"/>
+    <!-- legs -->
+    <rect x="-36" y="96" width="28" height="76" rx="13" fill="#3E5C41"/>
+    <rect x="10" y="96" width="28" height="76" rx="13" fill="#3E5C41"/>
+    <rect x="-44" y="158" width="44" height="22" rx="11" fill="#5A3B22"/>
+    <rect x="4" y="158" width="44" height="22" rx="11" fill="#5A3B22"/>
+    <!-- backpack -->
+    <rect x="-88" y="-8" width="50" height="82" rx="19" fill="url(#pack)"/>
+    <rect x="-80" y="20" width="34" height="24" rx="8" fill="#7A4418"/>
+    <!-- body -->
+    <rect x="-52" y="0" width="104" height="106" rx="38" fill="url(#shirt)"/>
+    <rect x="-52" y="0" width="104" height="38" rx="19" fill="#FFFFFF" opacity=".14"/>
+    <!-- arm gripping pole -->
+    <rect x="30" y="8" width="60" height="24" rx="12" fill="url(#shirt)" transform="rotate(-30 60 20)"/>
+    <circle cx="74" cy="-20" r="14" fill="#F7C89A"/>
+    <!-- head -->
+    <circle cx="0" cy="-56" r="50" fill="#F7C89A"/>
+    <circle cx="16" cy="-50" r="6" fill="#3A2A1A"/>
+    <circle cx="-12" cy="-50" r="6" fill="#3A2A1A"/>
+    <path d="M-4 -32 q16 10 30 -4" stroke="#3A2A1A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="-32" cy="-38" r="8" fill="#F0A068" opacity=".55"/>
+    <circle cx="36" cy="-38" r="8" fill="#F0A068" opacity=".55"/>
+    <!-- helmet -->
+    <ellipse cx="0" cy="-82" rx="70" ry="19" fill="url(#hat)"/>
+    <path d="M-50 -82 a50 42 0 0 1 100 0 z" fill="url(#hat)"/>
+    <rect x="-50" y="-90" width="100" height="14" rx="7" fill="#8A5A28"/>
+    <ellipse cx="-22" cy="-102" rx="18" ry="9" fill="#F4DDA6" opacity=".7"/>
+  </g>
+
+  <!-- Confetti & sparkles -->
+  <g>
+    <path d="m300 1620 8 20 20 8-20 8-8 20-8-20-20-8 20-8z" fill="#FFF3A8"/>
+    <path d="m880 1560 7 17 17 7-17 7-7 17-7-17-17-7 17-7z" fill="#FFF3A8"/>
+    <path d="m170 1420 6 15 15 6-15 6-6 15-6-15-15-6 15-6z" fill="#8FFFC4"/>
+    <path d="m1010 1480 6 15 15 6-15 6-6 15-6-15-15-6 15-6z" fill="#8FFFC4"/>
+    <rect x="380" y="1500" width="14" height="30" rx="5" fill="#FF9EC6" transform="rotate(30 387 1515)"/>
+    <rect x="780" y="1440" width="14" height="30" rx="5" fill="#FFD23E" transform="rotate(-25 787 1455)"/>
+    <rect x="240" y="1340" width="12" height="26" rx="5" fill="#8FFFC4" transform="rotate(45 246 1353)"/>
+    <rect x="940" y="1330" width="12" height="26" rx="5" fill="#FF9EC6" transform="rotate(-40 946 1343)"/>
+    <circle cx="500" cy="1470" r="7" fill="#FFD23E"/>
+    <circle cx="680" cy="1390" r="6" fill="#FF9EC6"/>
+  </g>
+
+  <!-- Bottom scrim -->
+  <rect y="1900" width="1170" height="632" fill="url(#scrim)"/>
+</svg>
