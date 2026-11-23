@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run vercel-build",
+  "crons": [
+    { "path": "/api/cron/calculate_rankings", "schedule": "0 3 * * *" }
+  ],
   "git": {
     "deploymentEnabled": {
       "main": true,

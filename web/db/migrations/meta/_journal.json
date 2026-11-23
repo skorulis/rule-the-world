@@ -43,6 +43,13 @@
       "when": 1795401342044,
       "tag": "0005_polite_white_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795403636917,
+      "tag": "0006_sloppy_juggernaut",
+      "breakpoints": true
     }
   ]
 }

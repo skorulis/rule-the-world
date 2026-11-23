@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
     "/api/powerup/consume": ["./data/powerups.json", "../data/powerups.json"],
     "/api/powerup/daily": ["./data/powerups.json", "../data/powerups.json"],
     "/api/debug/add_powerup": ["./data/powerups.json", "../data/powerups.json"],
+    "/api/debug/calculate_rankings": ["./data/ranks.json", "../data/ranks.json"],
+    "/api/cron/calculate_rankings": ["./data/ranks.json", "../data/ranks.json"],
   },
   async headers() {
     return [

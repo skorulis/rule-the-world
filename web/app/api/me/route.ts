@@ -66,12 +66,15 @@ export async function GET(request: Request) {
     });
     const powerupRows = await db.execute<{
       powerups: Record<string, number> | null;
+      rankings: Record<string, number> | null;
       daily_reward_day: string | null;
     }>(sql`
-      select ${user.powerups} as powerups, ${user.dailyRewardDay}::text as daily_reward_day
+      select ${user.powerups} as powerups, ${user.rankings} as rankings,
+        ${user.dailyRewardDay}::text as daily_reward_day
       from ${user} where ${user.id} = ${session.user.id}
     `);
     const powerups = powerupRows[0]?.powerups ?? {};
+    const rankings = powerupRows[0]?.rankings ?? {};
     const dailyRewardDay = powerupRows[0]?.daily_reward_day ?? null;
     const { id, name, email, createdAt } = session.user;
     return NextResponse.json({
@@ -80,6 +83,7 @@ export async function GET(request: Request) {
       owned: Number(total?.owned ?? 0),
       regions,
       powerups,
+      rankings,
       dailyRewardAvailableAt: dailyRewardAvailableAt(dailyRewardDay, new Date()).toISOString(),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
