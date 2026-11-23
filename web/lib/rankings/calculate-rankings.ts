@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { user } from "@/db/auth-schema";
+import { type RegionRanking, user } from "@/db/auth-schema";
 import { hexDetails, hexVisit } from "@/db/schema";
 import { db } from "@/lib/db";
 import { allocateRanks, type RegionPlayer } from "./allocate";
@@ -34,7 +34,7 @@ export async function calculateRankings(): Promise<RankingsSummary> {
       )
       select cells.user_id, ${hexDetails.regionCountry}::text as region,
         count(*) filter (where cells.visited)::int as visited,
-        count(*) filter (where cells.visited and cells.position = 1 and cells.tied = 1 and cells.score > 0)::int as owned,
+        count(*) filter (where cells.position = 1 and cells.tied = 1 and cells.score > 0)::int as owned,
         coalesce(sum(cells.score), 0)::float8 as score
       from cells
       join ${hexDetails} on ${hexDetails.cell} = cells.cell
@@ -42,23 +42,25 @@ export async function calculateRankings(): Promise<RankingsSummary> {
       group by cells.user_id, ${hexDetails.regionCountry}
     `);
 
-    const regions = new Map<string, RegionPlayer[]>();
+    const regions = new Map<number, RegionPlayer[]>();
     for (const row of rows) {
-      const players = regions.get(row.region) ?? [];
+      const id = Number(row.region);
+      if (!Number.isSafeInteger(id) || id <= 0) continue;
+      const players = regions.get(id) ?? [];
       players.push({ userId: row.user_id, owned: Number(row.owned), visited: Number(row.visited), score: Number(row.score) });
-      regions.set(row.region, players);
+      regions.set(id, players);
     }
 
-    const rankings = new Map<string, Record<string, number>>();
+    const rankings = new Map<string, RegionRanking[]>();
     let assignments = 0;
-    for (const [region, players] of regions) {
-      for (const [userId, rank] of allocateRanks(players, countryRanks)) {
-        rankings.set(userId, { ...rankings.get(userId), [region]: rank });
+    for (const [id, players] of [...regions].sort(([a], [b]) => a - b)) {
+      for (const [userId, number] of allocateRanks(players, countryRanks)) {
+        rankings.set(userId, [...rankings.get(userId) ?? [], { id, type: "country", number }]);
         assignments += 1;
       }
     }
 
-    await tx.execute(sql`update ${user} set "rankings" = '{}'::jsonb where ${user.rankings} <> '{}'::jsonb`);
+    await tx.execute(sql`update ${user} set "rankings" = '[]'::jsonb where ${user.rankings} <> '[]'::jsonb`);
     if (rankings.size) {
       const payload = JSON.stringify([...rankings].map(([userId, value]) => ({ user_id: userId, rankings: value })));
       await tx.execute(sql`

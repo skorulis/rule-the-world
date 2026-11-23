@@ -39,7 +39,7 @@ describe("GET /api/me", () => {
       user: { ...user, createdAt: user.createdAt.toISOString() },
       visited: 20, owned: 8,
       powerups: {},
-      rankings: {},
+      rankings: [],
       dailyRewardAvailableAt: expect.any(String),
       regions: [
         { id: 1234, kind: "country", visited: 10, owned: 5 },
@@ -74,9 +74,9 @@ describe("GET /api/me", () => {
   it("returns the user's stored rankings", async () => {
     vi.mocked(db.execute)
       .mockResolvedValueOnce([] as never)
-      .mockResolvedValueOnce([{ powerups: {}, rankings: { "1159320379": 15 } }] as never);
+      .mockResolvedValueOnce([{ powerups: {}, rankings: [{ id: 1159320379, type: "country", number: 15 }] }] as never);
     const body = await (await GET(request())).json();
-    expect(body.rankings).toEqual({ "1159320379": 15 });
+    expect(body.rankings).toEqual([{ id: 1159320379, type: "country", number: 15 }]);
     const statement = vi.mocked(db.execute).mock.calls[1][0];
     if (typeof statement === "string") throw new Error("Expected parameterized SQL");
     expect(new PgDialect().sqlToQuery(statement.getSQL()).sql).toContain('"user"."rankings" as rankings');
@@ -86,7 +86,7 @@ describe("GET /api/me", () => {
     vi.mocked(db.execute)
       .mockResolvedValueOnce([] as never)
       .mockResolvedValueOnce([{ powerups: {}, rankings: null }] as never);
-    expect((await (await GET(request())).json()).rankings).toEqual({});
+    expect((await (await GET(request())).json()).rankings).toEqual([]);
   });
 
   describe("dailyRewardAvailableAt", () => {

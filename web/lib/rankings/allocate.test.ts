@@ -36,6 +36,11 @@ describe("allocateRanks", () => {
     expect(allocateRanks([player("a", 5, 5)], ranks).get("a")).toBe(2);
   });
 
+  it("holds back titles from players whose ownership came from power-ups rather than visits", () => {
+    const result = allocateRanks([player("explorer", 1500, 10)], countryRanks);
+    expect(result.get("explorer")).toBe(6);
+  });
+
   it("skips players without visits in the region", () => {
     expect(allocateRanks([player("a", 0, 0)], [rank(1)]).size).toBe(0);
   });
