@@ -4,6 +4,10 @@ nonisolated enum PowerUpType: String, Decodable, Sendable {
     case revisit
     case exploration
     case fortification
+
+    var displayName: String {
+        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+    }
 }
 
 nonisolated enum PowerUpRarity: String, Decodable, Sendable, CaseIterable, Comparable {
@@ -33,8 +37,11 @@ nonisolated struct PowerUpDefinition: Decodable, Sendable, Identifiable {
     let type: PowerUpType
     let rarity: PowerUpRarity
     let bonus: Int
-    let name: String
     let description: String
+
+    var displayName: String {
+        "\(rarity.displayName) \(type.displayName)"
+    }
 
     var formattedDescription: String {
         description.replacingOccurrences(of: "{bonus}", with: String(bonus))

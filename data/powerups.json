@@ -4,7 +4,6 @@
     "type": "revisit",
     "rarity": "common",
     "bonus": 1,
-    "name": "Common Revisit",
     "description": "+{bonus} score to a square you have visited"
   },
   {
@@ -12,7 +11,6 @@
     "type": "revisit",
     "rarity": "rare",
     "bonus": 2,
-    "name": "Rare Revisit",
     "description": "+{bonus} score to a square you have visited"
   },
   {
@@ -20,7 +18,6 @@
     "type": "revisit",
     "rarity": "epic",
     "bonus": 3,
-    "name": "Epic Revisit",
     "description": "+{bonus} score to a square you have visited"
   },
   {
@@ -28,7 +25,6 @@
     "type": "exploration",
     "rarity": "common",
     "bonus": 1,
-    "name": "Exploration",
     "description": "+{bonus} score to a nearby square you haven't visited"
   },
   {
@@ -36,7 +32,6 @@
     "type": "fortification",
     "rarity": "common",
     "bonus": 1,
-    "name": "Fortification",
     "description": "+{bonus} score to a square you own"
   }
 ]

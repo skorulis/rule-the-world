@@ -61,7 +61,7 @@ final class DebugSettingsViewModel {
         defer { isAddingPowerUp = false }
         do {
             let response = try await service.addPowerUp()
-            powerUpMessage = "Granted \(response.powerup.name)."
+            powerUpMessage = "Granted \(response.powerup.displayName)."
         } catch {
             powerUpMessage = error.localizedDescription
         }

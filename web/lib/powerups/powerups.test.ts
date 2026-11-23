@@ -17,7 +17,7 @@ describe("powerup definitions", () => {
       expect(powerUpTypes).toContain(def.type);
       expect(powerUpRarities).toContain(def.rarity);
       expect(Number.isInteger(def.bonus)).toBe(true);
-      expect(def.name.trim()).not.toBe("");
+      expect(def.description.trim()).not.toBe("");
       expect(def.description).toContain("{bonus}");
     }
   });

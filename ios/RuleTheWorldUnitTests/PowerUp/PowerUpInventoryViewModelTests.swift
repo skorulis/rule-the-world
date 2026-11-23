@@ -7,9 +7,9 @@ import Testing
 struct PowerUpInventoryViewModelTests {
     private let catalogData = Data(#"""
         [
-          {"id":1,"type":"revisit","rarity":"common","bonus":1,"name":"Common Revisit","description":"+{bonus} score"},
-          {"id":2,"type":"revisit","rarity":"rare","bonus":2,"name":"Rare Revisit","description":"+{bonus} score"},
-          {"id":3,"type":"revisit","rarity":"epic","bonus":3,"name":"Epic Revisit","description":"+{bonus} score"}
+          {"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
+          {"id":2,"type":"revisit","rarity":"rare","bonus":2,"description":"+{bonus} score"},
+          {"id":3,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"}
         ]
         """#.utf8)
 

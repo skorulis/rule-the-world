@@ -19,11 +19,6 @@ struct AddPowerUpRequest: HTTPRequest {
 }
 
 nonisolated struct AddPowerUpResponse: Decodable, Sendable {
-    struct GrantedPowerUp: Decodable, Sendable {
-        let id: Int
-        let name: String
-    }
-
-    let powerup: GrantedPowerUp
+    let powerup: PowerUpDefinition
     let powerups: [String: Int]
 }

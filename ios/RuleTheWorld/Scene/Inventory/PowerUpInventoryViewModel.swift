@@ -11,7 +11,7 @@ final class PowerUpInventoryViewModel {
         let definition: PowerUpDefinition?
         let count: Int
 
-        var name: String { definition?.name ?? "Unknown power-up #\(id)" }
+        var name: String { definition?.displayName ?? "Unknown power-up #\(id)" }
         var rarity: PowerUpRarity? { definition?.rarity }
         var detail: String? { definition?.formattedDescription }
     }

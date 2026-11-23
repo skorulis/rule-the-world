@@ -5,15 +5,15 @@ import Testing
 struct PowerUpCatalogTests {
     private let data = Data(#"""
         [
-          {"id":1,"type":"revisit","rarity":"common","bonus":1,"name":"Common Revisit","description":"+{bonus} score"},
-          {"id":2,"type":"revisit","rarity":"epic","bonus":3,"name":"Epic Revisit","description":"+{bonus} score"}
+          {"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
+          {"id":2,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"}
         ]
         """#.utf8)
 
     @Test func decodesDefinitionsAndLooksUpById() {
         let catalog = PowerUpCatalog(data: data)
         #expect(catalog.all.count == 2)
-        #expect(catalog.definition(for: 1)?.name == "Common Revisit")
+        #expect(catalog.definition(for: 1)?.displayName == "Common Revisit")
         #expect(catalog.definition(for: 2)?.rarity == .epic)
         #expect(catalog.definition(for: 99) == nil)
     }

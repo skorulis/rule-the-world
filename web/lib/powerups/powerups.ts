@@ -13,7 +13,6 @@ export interface PowerUpDefinition {
   type: PowerUpType;
   rarity: PowerUpRarity;
   bonus: number;
-  name: string;
   description: string;
 }
 
@@ -43,7 +42,6 @@ function parseDefinitions(raw: unknown): PowerUpDefinition[] {
       !powerUpTypes.includes(def.type as PowerUpType) ||
       !powerUpRarities.includes(def.rarity as PowerUpRarity) ||
       !Number.isSafeInteger(def.bonus) ||
-      typeof def.name !== "string" || def.name.trim() === "" ||
       typeof def.description !== "string"
     ) {
       throw new Error(`Invalid power-up definition: ${JSON.stringify(entry)}`);

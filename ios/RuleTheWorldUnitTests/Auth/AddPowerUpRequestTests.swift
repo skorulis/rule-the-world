@@ -19,10 +19,10 @@ struct AddPowerUpRequestTests {
 
     @Test func decodesGrantedPowerUpAndInventory() async throws {
         let response = try await service(body: """
-            {"powerup":{"id":2,"name":"Rare Revisit"},"powerups":{"2":1,"1":3}}
+            {"powerup":{"id":2,"type":"revisit","rarity":"rare","bonus":2,"description":"+{bonus} score"},"powerups":{"2":1,"1":3}}
             """).addPowerUp()
         #expect(response.powerup.id == 2)
-        #expect(response.powerup.name == "Rare Revisit")
+        #expect(response.powerup.displayName == "Rare Revisit")
         #expect(response.powerups == ["1": 3, "2": 1])
     }
 
