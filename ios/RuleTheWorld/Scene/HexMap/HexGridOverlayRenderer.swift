@@ -53,7 +53,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
 
         let cells = grid.cells(in: region, resolution: resolution)
         let (states, visits) = aggregated(at: resolution)
-        let markerPath = CGMutablePath()
+        var todayPath = CGMutablePath()
 
         var unclaimedPath = CGMutablePath()
         var ownedPaths: [HexState: (fill: CGMutablePath, stroke: CGMutablePath)] = [:]
@@ -61,22 +61,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             let boundary = grid.boundary(of: cell)
             guard !boundary.isEmpty else { continue }
             if visits.contains(cell) {
-                let points = boundary.map { point(for: MKMapPoint($0)) }
-                let center = CGPoint(
-                    x: points.map(\.x).reduce(0, +) / CGFloat(points.count),
-                    y: points.map(\.y).reduce(0, +) / CGFloat(points.count)
-                )
-                if let corner = points.max(by: { $0.x - $0.y < $1.x - $1.y }) {
-                    let distance = hypot(corner.x - center.x, corner.y - center.y)
-                    let radius = min(3 / zoomScale, distance * 0.12)
-                    let marker = CGPoint(
-                        x: center.x + (corner.x - center.x) * 0.65,
-                        y: center.y + (corner.y - center.y) * 0.65
-                    )
-                    markerPath.addEllipse(in: CGRect(
-                        x: marker.x - radius, y: marker.y - radius, width: radius * 2, height: radius * 2
-                    ))
-                }
+                appendPath(to: &todayPath, boundary: boundary)
             }
             let cellState = states[cell] ?? .unclaimed
             if cellState == .unclaimed {
@@ -108,11 +93,10 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             context.setStrokeColor(uiColor.cgColor)
             context.strokePath()
         }
-        context.addPath(markerPath)
-        context.setFillColor(UIColor.systemGreen.cgColor)
-        context.setStrokeColor(UIColor.white.cgColor)
-        context.setLineWidth(1 / zoomScale)
-        context.drawPath(using: .fillStroke)
+        context.addPath(todayPath)
+        context.setStrokeColor(UIColor.systemGreen.cgColor)
+        context.setLineWidth(3 / zoomScale)
+        context.strokePath()
     }
 
     private func aggregated(at resolution: Int) -> ([HexCell: HexState], Set<HexCell>) {
