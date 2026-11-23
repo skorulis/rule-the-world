@@ -16,6 +16,7 @@ final class ProfileViewModel {
     private let authManager: AuthManager
     private let service: AuthenticatedService
     private let regionNames: RegionNameCatalog
+    let dailyReward: DailyRewardViewModel
     private(set) var visitedHexCount: Int?
     private(set) var ownedHexCount: Int?
     private(set) var powerUpCount: Int?
@@ -26,6 +27,7 @@ final class ProfileViewModel {
         self.authManager = authManager
         self.service = service
         self.regionNames = regionNames
+        self.dailyReward = DailyRewardViewModel(service: service)
     }
 
     func load() async {
@@ -33,6 +35,7 @@ final class ProfileViewModel {
         visitedHexCount = summary.visited
         ownedHexCount = summary.owned
         powerUpCount = summary.powerups.values.reduce(0, +)
+        dailyReward.update(availableAt: summary.dailyRewardAvailableAt)
         var seen: Set<Int64> = []
         regions = summary.regions.compactMap { region -> Region? in
             guard let name = regionNames.name(for: region.id), seen.insert(region.id).inserted else { return nil }
@@ -40,6 +43,13 @@ final class ProfileViewModel {
         }.sorted {
             let comparison = $0.name.localizedStandardCompare($1.name)
             return comparison == .orderedSame ? $0.id < $1.id : comparison == .orderedAscending
+        }
+    }
+
+    func applyInventory(_ powerups: [String: Int]) {
+        powerUpCount = powerups.reduce(0) { total, entry in
+            guard let id = Int(entry.key), id > 0, entry.value > 0 else { return total }
+            return total + entry.value
         }
     }
 

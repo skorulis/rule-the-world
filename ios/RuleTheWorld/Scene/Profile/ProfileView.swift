@@ -18,6 +18,11 @@ struct ProfileView: View {
                     }
                 }
             }
+            Section("Daily reward") {
+                DailyRewardButton(model: model.dailyReward) { response in
+                    model.applyInventory(response.powerups)
+                }
+            }
             Section {
                 Button {
                     coordinator?.push(MainPath.powerUpInventory)

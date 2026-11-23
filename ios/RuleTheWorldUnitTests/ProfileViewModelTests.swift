@@ -86,6 +86,22 @@ struct ProfileViewModelTests {
         #expect(model.regions.isEmpty)
     }
 
+    @Test func forwardsDailyRewardAvailabilityToTheDailyRewardModel() async throws {
+        let (model, _) = try makeModel { request in
+            (Data(#"{"visited":1,"owned":0,"dailyRewardAvailableAt":"2026-11-24T00:00:00.000Z"}"#.utf8),
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        #expect(model.dailyReward.availableAt == nil)
+        await model.load()
+        #expect(model.dailyReward.availableAt == Date(timeIntervalSince1970: 1_795_478_400))
+    }
+
+    @Test func applyInventoryRefreshesPowerUpCountIgnoringInvalidEntries() throws {
+        let (model, _) = try makeModel { _ in throw URLError(.notConnectedToInternet) }
+        model.applyInventory(["1": 2, "4": 1, "0": 5, "x": 3, "5": -1])
+        #expect(model.powerUpCount == 3)
+    }
+
     @Test func signOutStillClearsAuthentication() throws {
         let (model, manager) = try makeModel { _ in throw URLError(.unsupportedURL) }
         #expect(manager.isSignedIn)

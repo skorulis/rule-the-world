@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
 
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: vi.fn() } } }));
@@ -39,6 +39,7 @@ describe("GET /api/me", () => {
       user: { ...user, createdAt: user.createdAt.toISOString() },
       visited: 20, owned: 8,
       powerups: {},
+      dailyRewardAvailableAt: expect.any(String),
       regions: [
         { id: 1234, kind: "country", visited: 10, owned: 5 },
         { id: 2345, kind: "country", visited: 4, owned: 0 },
@@ -67,6 +68,49 @@ describe("GET /api/me", () => {
       .mockResolvedValueOnce([{ powerups: null }] as never);
     const body = await (await GET(request())).json();
     expect(body.powerups).toEqual({});
+  });
+
+  describe("dailyRewardAvailableAt", () => {
+    const now = new Date("2026-11-23T15:30:00.000Z");
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(now);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("is now when the reward has never been claimed", async () => {
+      const body = await (await GET(request())).json();
+      expect(body.dailyRewardAvailableAt).toBe(now.toISOString());
+    });
+
+    it("is now when the reward was last claimed on an earlier UTC day", async () => {
+      vi.mocked(db.execute)
+        .mockResolvedValueOnce([] as never)
+        .mockResolvedValueOnce([{ powerups: {}, daily_reward_day: "2026-11-22" }] as never);
+      const body = await (await GET(request())).json();
+      expect(body.dailyRewardAvailableAt).toBe(now.toISOString());
+    });
+
+    it("is the next UTC midnight when the reward was claimed today", async () => {
+      vi.mocked(db.execute)
+        .mockResolvedValueOnce([] as never)
+        .mockResolvedValueOnce([{ powerups: {}, daily_reward_day: "2026-11-23" }] as never);
+      const body = await (await GET(request())).json();
+      expect(body.dailyRewardAvailableAt).toBe("2026-11-24T00:00:00.000Z");
+    });
+
+    it("selects the claim day as text for the session user", async () => {
+      await GET(request());
+      const statement = vi.mocked(db.execute).mock.calls[1][0];
+      if (typeof statement === "string") throw new Error("Expected parameterized SQL");
+      const query = new PgDialect().sqlToQuery(statement.getSQL());
+      expect(query.sql).toContain('"user"."daily_reward_day"::text as daily_reward_day');
+      expect(query.params).toEqual(["u1"]);
+    });
   });
 
   it("drops invalid and unsafe region IDs without losing overall counts", async () => {

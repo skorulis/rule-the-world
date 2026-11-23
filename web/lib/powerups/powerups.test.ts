@@ -32,4 +32,14 @@ describe("powerup definitions", () => {
     expect(randomPowerUp(() => 0)).toBe(powerUpDefinitions[0]);
     expect(randomPowerUp(() => 0.999)).toBe(powerUpDefinitions[powerUpDefinitions.length - 1]);
   });
+
+  it("randomPowerUp can be limited to a single rarity", () => {
+    const commons = powerUpDefinitions.filter((def) => def.rarity === "common");
+    expect(commons.length).toBeGreaterThan(0);
+    expect(randomPowerUp(() => 0, "common")).toBe(commons[0]);
+    expect(randomPowerUp(() => 0.999, "common")).toBe(commons[commons.length - 1]);
+    for (let step = 0; step < 20; step++) {
+      expect(randomPowerUp(() => step / 20, "common").rarity).toBe("common");
+    }
+  });
 });

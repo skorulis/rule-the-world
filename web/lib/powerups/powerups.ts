@@ -63,8 +63,12 @@ export function powerUpDefinition(id: number): PowerUpDefinition | undefined {
   return byId.get(id);
 }
 
-/** Uniform random pick — used by the debug grant endpoint. */
-export function randomPowerUp(random: () => number = Math.random): PowerUpDefinition {
-  if (powerUpDefinitions.length === 0) throw new Error("No power-up definitions");
-  return powerUpDefinitions[Math.floor(random() * powerUpDefinitions.length)];
+/** Uniform random pick, optionally limited to one rarity — used by the grant endpoints. */
+export function randomPowerUp(
+  random: () => number = Math.random,
+  rarity?: PowerUpRarity,
+): PowerUpDefinition {
+  const pool = rarity ? powerUpDefinitions.filter((def) => def.rarity === rarity) : powerUpDefinitions;
+  if (pool.length === 0) throw new Error(`No power-up definitions${rarity ? ` for rarity ${rarity}` : ""}`);
+  return pool[Math.floor(random() * pool.length)];
 }

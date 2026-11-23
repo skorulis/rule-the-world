@@ -5,6 +5,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
     let owned: Int?
     let regions: [Region]
     let powerups: [Int: Int]
+    let dailyRewardAvailableAt: Date?
 
     struct Region: Decodable, Sendable {
         let id: Int64
@@ -14,7 +15,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case visited, owned, regions, powerups
+        case visited, owned, regions, powerups, dailyRewardAvailableAt
     }
 
     init(from decoder: any Decoder) throws {
@@ -33,6 +34,13 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
             guard let id = Int(entry.key), id > 0, entry.value > 0 else { return }
             result[id] = entry.value
         }
+        dailyRewardAvailableAt = (try? container.decode(String.self, forKey: .dailyRewardAvailableAt))
+            .flatMap(Self.parseDate)
+    }
+
+    private static func parseDate(_ value: String) -> Date? {
+        (try? Date(value, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
+            ?? (try? Date(value, strategy: Date.ISO8601FormatStyle()))
     }
 
     private struct RegionEntry: Decodable {

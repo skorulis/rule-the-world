@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, jsonb, date } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -13,6 +13,7 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   powerups: jsonb("powerups").$type<Record<string, number>>().default({}).notNull(),
+  dailyRewardDay: date("daily_reward_day", { mode: "string" }),
 });
 
 export const session = pgTable(

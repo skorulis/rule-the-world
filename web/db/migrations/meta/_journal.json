@@ -36,6 +36,13 @@
       "when": 1795397224409,
       "tag": "0004_slimy_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795401342044,
+      "tag": "0005_polite_white_tiger",
+      "breakpoints": true
     }
   ]
 }

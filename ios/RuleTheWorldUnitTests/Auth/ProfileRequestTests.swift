@@ -83,6 +83,24 @@ struct ProfileRequestTests {
         #expect(absent.powerups.isEmpty)
     }
 
+    @Test func decodesDailyRewardAvailabilityWithAndWithoutFractionalSeconds() async throws {
+        let fractional = try await service(body: #"{"dailyRewardAvailableAt":"2026-11-24T00:00:00.000Z"}"#)
+            .fetchProfile()
+        #expect(fractional.dailyRewardAvailableAt == Date(timeIntervalSince1970: 1_795_478_400))
+        let whole = try await service(body: #"{"dailyRewardAvailableAt":"2026-11-23T15:30:00Z"}"#).fetchProfile()
+        #expect(whole.dailyRewardAvailableAt == Date(timeIntervalSince1970: 1_795_447_800))
+    }
+
+    @Test func missingOrInvalidDailyRewardAvailabilityIsNil() async throws {
+        for body in [
+            "{}", #"{"dailyRewardAvailableAt":null}"#, #"{"dailyRewardAvailableAt":"tomorrow"}"#,
+            #"{"dailyRewardAvailableAt":123}"#
+        ] {
+            let summary = try await service(body: body).fetchProfile()
+            #expect(summary.dailyRewardAvailableAt == nil)
+        }
+    }
+
     @Test func rejectsFailedOrMalformedResponses() async {
         for (status, body) in [(401, "{}"), (500, "{}"), (200, "not json"), (200, "[]")] {
             await #expect(throws: (any Error).self) {

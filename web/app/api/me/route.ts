@@ -4,6 +4,7 @@ import { user } from "@/db/auth-schema";
 import { hexDetails, hexVisit, regionType } from "@/db/schema";
 import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
+import { dailyRewardAvailableAt } from "@/lib/powerups/daily-reward";
 
 export const dynamic = "force-dynamic";
 
@@ -63,10 +64,15 @@ export async function GET(request: Request) {
         ? [{ id, kind, visited: Number(row.visited), owned: Number(row.owned) }]
         : [];
     });
-    const powerupRows = await db.execute<{ powerups: Record<string, number> | null }>(sql`
-      select ${user.powerups} as powerups from ${user} where ${user.id} = ${session.user.id}
+    const powerupRows = await db.execute<{
+      powerups: Record<string, number> | null;
+      daily_reward_day: string | null;
+    }>(sql`
+      select ${user.powerups} as powerups, ${user.dailyRewardDay}::text as daily_reward_day
+      from ${user} where ${user.id} = ${session.user.id}
     `);
     const powerups = powerupRows[0]?.powerups ?? {};
+    const dailyRewardDay = powerupRows[0]?.daily_reward_day ?? null;
     const { id, name, email, createdAt } = session.user;
     return NextResponse.json({
       user: { id, name, email, createdAt },
@@ -74,6 +80,7 @@ export async function GET(request: Request) {
       owned: Number(total?.owned ?? 0),
       regions,
       powerups,
+      dailyRewardAvailableAt: dailyRewardAvailableAt(dailyRewardDay, new Date()).toISOString(),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return serverError("Profile summary failed", undefined, "Unable to load profile");
