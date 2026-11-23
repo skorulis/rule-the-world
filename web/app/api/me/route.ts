@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { user } from "@/db/auth-schema";
 import { hexDetails, hexVisit, regionType } from "@/db/schema";
 import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
@@ -61,12 +62,17 @@ export async function GET(request: Request) {
         ? [{ id, kind, visited: Number(row.visited), owned: Number(row.owned) }]
         : [];
     });
+    const powerupRows = await db.execute<{ powerups: Record<string, number> | null }>(sql`
+      select ${user.powerups} as powerups from ${user} where ${user.id} = ${session.user.id}
+    `);
+    const powerups = powerupRows[0]?.powerups ?? {};
     const { id, name, email, createdAt } = session.user;
     return NextResponse.json({
       user: { id, name, email, createdAt },
       visited: Number(total?.visited ?? 0),
       owned: Number(total?.owned ?? 0),
       regions,
+      powerups,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return serverError("Profile summary failed", undefined, "Unable to load profile");

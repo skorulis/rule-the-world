@@ -38,6 +38,7 @@ describe("GET /api/me", () => {
     expect(await response.json()).toEqual({
       user: { ...user, createdAt: user.createdAt.toISOString() },
       visited: 20, owned: 8,
+      powerups: {},
       regions: [
         { id: 1234, kind: "country", visited: 10, owned: 5 },
         { id: 2345, kind: "country", visited: 4, owned: 0 },
@@ -49,7 +50,23 @@ describe("GET /api/me", () => {
 
   it("returns zero totals for a new user", async () => {
     const body = await (await GET(request())).json();
-    expect(body).toMatchObject({ visited: 0, owned: 0, regions: [] });
+    expect(body).toMatchObject({ visited: 0, owned: 0, regions: [], powerups: {} });
+  });
+
+  it("returns the user's power-up inventory", async () => {
+    vi.mocked(db.execute)
+      .mockResolvedValueOnce([{ region: null, kind: null, overall: 1, visited: "2", owned: "1" }] as never)
+      .mockResolvedValueOnce([{ powerups: { "1": 3 } }] as never);
+    const body = await (await GET(request())).json();
+    expect(body.powerups).toEqual({ "1": 3 });
+  });
+
+  it("treats a missing powerups column value as an empty inventory", async () => {
+    vi.mocked(db.execute)
+      .mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([{ powerups: null }] as never);
+    const body = await (await GET(request())).json();
+    expect(body.powerups).toEqual({});
   });
 
   it("drops invalid and unsafe region IDs without losing overall counts", async () => {

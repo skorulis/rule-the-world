@@ -32,14 +32,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     private func registerServices(container: Container<TargetResolver>) {
         let endpoint = DebugSettings().endpoint
 
-        container.register(HexGridService.self) { _ in HexGridService() }
-            .inObjectScope(.container)
-        container.register(RegionNameCatalog.self) { _ in RegionNameCatalog() }
-            .inObjectScope(.container)
-        container.register(RegionBoundaryProviding.self) { _ in RegionBoundaryService() }
-            .inObjectScope(.container)
-        container.register(LocationService.self) { _ in LocationService() }
-            .inObjectScope(.container)
+        registerSupportServices(container: container)
         container.register(LocationCaptureService.self) {
             LocationCaptureService(
                 grid: $0.hexGridService(),
@@ -91,6 +84,20 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
     }
 
     @MainActor
+    private func registerSupportServices(container: Container<TargetResolver>) {
+        container.register(HexGridService.self) { _ in HexGridService() }
+            .inObjectScope(.container)
+        container.register(RegionNameCatalog.self) { _ in RegionNameCatalog() }
+            .inObjectScope(.container)
+        container.register(PowerUpCatalog.self) { _ in PowerUpCatalog() }
+            .inObjectScope(.container)
+        container.register(RegionBoundaryProviding.self) { _ in RegionBoundaryService() }
+            .inObjectScope(.container)
+        container.register(LocationService.self) { _ in LocationService() }
+            .inObjectScope(.container)
+    }
+
+    @MainActor
     private func registerStores(container: Container<TargetResolver>) {
         container.register(AppDatabase.self) { _ in
             do {
@@ -113,6 +120,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
         container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
         container.register(ProfileViewModel.self) { ProfileViewModel.make(resolver: $0) }
+        container.register(PowerUpInventoryViewModel.self) { PowerUpInventoryViewModel.make(resolver: $0) }
         container.register(DebugSettingsViewModel.self) { DebugSettingsViewModel.make(resolver: $0) }
     }
 }

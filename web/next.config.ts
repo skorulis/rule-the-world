@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       "./data/regions/suburbs-medium.pbf", "../data/regions/suburbs-medium.pbf",
       "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
+    "/api/me": ["./data/powerups.json", "../data/powerups.json"],
+    "/api/debug/add_powerup": ["./data/powerups.json", "../data/powerups.json"],
   },
   async headers() {
     return [

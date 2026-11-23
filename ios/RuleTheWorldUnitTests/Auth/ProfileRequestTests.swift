@@ -69,6 +69,20 @@ struct ProfileRequestTests {
         #expect(invalidOwned.owned == nil)
     }
 
+    @Test func decodesPowerUpInventoryDroppingInvalidEntries() async throws {
+        let summary = try await service(body: """
+            {"visited":2,"owned":1,
+            "powerups":{"1":2,"2":1}}
+            """).fetchProfile()
+        #expect(summary.powerups == [1: 2, 2: 1])
+        let filtered = try await service(body: """
+            {"powerups":{"1":2,"0":1,"-3":5,"x":1,"2":0,"3":-1}}
+            """).fetchProfile()
+        #expect(filtered.powerups == [1: 2])
+        let absent = try await service(body: #"{"visited":1}"#).fetchProfile()
+        #expect(absent.powerups.isEmpty)
+    }
+
     @Test func rejectsFailedOrMalformedResponses() async {
         for (status, body) in [(401, "{}"), (500, "{}"), (200, "not json"), (200, "[]")] {
             await #expect(throws: (any Error).self) {

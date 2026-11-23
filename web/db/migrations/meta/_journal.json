@@ -29,6 +29,13 @@
       "when": 1795383886912,
       "tag": "0003_opposite_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795397224409,
+      "tag": "0004_slimy_purple_man",
+      "breakpoints": true
     }
   ]
 }

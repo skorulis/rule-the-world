@@ -17,6 +17,10 @@ final class AuthenticatedService: HTTPService {
         try await execute(request: ProfileRequest())
     }
 
+    func addPowerUp() async throws -> AddPowerUpResponse {
+        try await execute(request: AddPowerUpRequest())
+    }
+
     func fetchVisits() async throws -> [HexInfo] {
         try await execute(request: VisitDownloadRequest())
     }

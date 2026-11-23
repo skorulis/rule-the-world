@@ -4,6 +4,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
     let visited: Int?
     let owned: Int?
     let regions: [Region]
+    let powerups: [Int: Int]
 
     struct Region: Decodable, Sendable {
         let id: Int64
@@ -13,7 +14,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case visited, owned, regions
+        case visited, owned, regions, powerups
     }
 
     init(from decoder: any Decoder) throws {
@@ -27,6 +28,11 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
             return value
         }
         regions = (try? container.decode([RegionEntry].self, forKey: .regions))?.compactMap(\.value) ?? []
+        let rawPowerups = (try? container.decode([String: Int].self, forKey: .powerups)) ?? [:]
+        powerups = rawPowerups.reduce(into: [:]) { result, entry in
+            guard let id = Int(entry.key), id > 0, entry.value > 0 else { return }
+            result[id] = entry.value
+        }
     }
 
     private struct RegionEntry: Decodable {

@@ -1,6 +1,8 @@
+import ASKCoordinator
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(\.coordinator) private var coordinator
     @State var model: ProfileViewModel
     @State private var showSignOutConfirmation = false
 
@@ -14,6 +16,13 @@ struct ProfileView: View {
                     if let owned = model.ownedHexCount {
                         LabeledContent("Hexes owned", value: owned.formatted())
                     }
+                }
+            }
+            Section {
+                Button {
+                    coordinator?.push(MainPath.powerUpInventory)
+                } label: {
+                    LabeledContent("Power-ups", value: (model.powerUpCount ?? 0).formatted())
                 }
             }
             if !model.regions.isEmpty {

@@ -17,15 +17,19 @@ final class DebugSettingsViewModel {
     var showRestartAlert = false
     private(set) var isAddingVisits = false
     private(set) var visitMessage: String?
+    private(set) var isAddingPowerUp = false
+    private(set) var powerUpMessage: String?
 
     private let settings = DebugSettings()
     private let locationService: LocationService
     private let captureService: LocationCaptureService
+    private let service: AuthenticatedService
 
     @Resolvable<Resolver>
-    init(locationService: LocationService, captureService: LocationCaptureService) {
+    init(locationService: LocationService, captureService: LocationCaptureService, service: AuthenticatedService) {
         self.locationService = locationService
         self.captureService = captureService
+        self.service = service
         self.endpoint = settings.endpoint
     }
 
@@ -47,6 +51,19 @@ final class DebugSettingsViewModel {
             visitMessage = "Added 5 visits and updated hex scores."
         } catch {
             visitMessage = error.localizedDescription
+        }
+    }
+
+    func addPowerUp() async {
+        guard !isAddingPowerUp else { return }
+        isAddingPowerUp = true
+        powerUpMessage = nil
+        defer { isAddingPowerUp = false }
+        do {
+            let response = try await service.addPowerUp()
+            powerUpMessage = "Granted \(response.powerup.name)."
+        } catch {
+            powerUpMessage = error.localizedDescription
         }
     }
 }

@@ -4,6 +4,7 @@ enum MainPath: CoordinatorPath {
     case hexMap
     case visitLog
     case profile
+    case powerUpInventory
 
     var id: String {
         switch self {
@@ -13,6 +14,8 @@ enum MainPath: CoordinatorPath {
             "visitLog"
         case .profile:
             "profile"
+        case .powerUpInventory:
+            "powerUpInventory"
         }
     }
 }

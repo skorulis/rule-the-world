@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "type": "revisit",
+    "rarity": "common",
+    "bonus": 1,
+    "name": "Common Revisit",
+    "description": "+{bonus} score to a square you have visited"
+  },
+  {
+    "id": 2,
+    "type": "revisit",
+    "rarity": "rare",
+    "bonus": 2,
+    "name": "Rare Revisit",
+    "description": "+{bonus} score to a square you have visited"
+  },
+  {
+    "id": 3,
+    "type": "revisit",
+    "rarity": "epic",
+    "bonus": 3,
+    "name": "Epic Revisit",
+    "description": "+{bonus} score to a square you have visited"
+  }
+]
