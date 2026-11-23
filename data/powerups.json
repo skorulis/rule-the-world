@@ -40,5 +40,12 @@
     "rarity": "common",
     "bonus": 1,
     "description": "+{bonus} score to a nearby square where you already have a score and someone else owns it"
+  },
+  {
+    "id": 7,
+    "type": "conquer",
+    "rarity": "rare",
+    "bonus": 1,
+    "description": "+{bonus} score to a nearby contested square where you are tied for the highest score"
   }
 ]

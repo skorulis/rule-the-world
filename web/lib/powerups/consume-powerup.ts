@@ -75,7 +75,7 @@ export async function consumePowerUp(
         const scores = new Map(visits.map((visit) => [visit.cell, Number(visit.score)]));
         const rival = rivals.find(({ cell, rivalScore }) => scores.has(cell) && Number(rivalScore ?? 0) > scores.get(cell)!);
         target = rival && visits.find((visit) => visit.cell === rival.cell);
-      } else if (definition.type === "fortification") {
+      } else if (definition.type === "fortification" || definition.type === "conquer") {
         const [visits, rivals] = await Promise.all([
           tx.select().from(hexVisit)
             .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
@@ -85,7 +85,9 @@ export async function consumePowerUp(
             .groupBy(hexVisit.cell),
         ]);
         const rivalScores = new Map(rivals.map(({ cell, rivalScore }) => [cell, Number(rivalScore ?? 0)]));
-        target = visits.find((visit) => Number(visit.score) > (rivalScores.get(visit.cell) ?? 0));
+        target = visits.find((visit) => definition.type === "conquer"
+          ? visit.total > 0 && Number(visit.score) >= 1 && Number(visit.score) === rivalScores.get(visit.cell)
+          : Number(visit.score) > (rivalScores.get(visit.cell) ?? 0));
       } else {
         const [visit] = await tx.select().from(hexVisit)
           .where(and(eq(hexVisit.userId, userId), inArray(hexVisit.cell, ring)))
@@ -98,6 +100,7 @@ export async function consumePowerUp(
         revisit: "No visited hex in range",
         exploration: "No unvisited hex in range",
         fortification: "No owned hex in range",
+        conquer: "No contested squares in range. Your Conquer power-up was not consumed.",
         attack: "No squares in range where you already have a score and someone else owns it. Your Attack power-up was not consumed.",
       };
       throw new ConsumePowerUpError(errors[definition.type] ?? "No target hex in range", 404);
@@ -107,6 +110,7 @@ export async function consumePowerUp(
       case "revisit":
       case "fortification":
       case "attack":
+      case "conquer":
         await tx.update(hexVisit)
           .set({ score: sql`${hexVisit.score} + ${definition.bonus}` })
           .where(and(eq(hexVisit.userId, userId), eq(hexVisit.cell, target.cell)));

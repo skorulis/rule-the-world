@@ -10,7 +10,8 @@ struct PowerUpInventoryViewModelTests {
           {"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
           {"id":2,"type":"revisit","rarity":"rare","bonus":2,"description":"+{bonus} score"},
           {"id":3,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"},
-          {"id":6,"type":"attack","rarity":"common","bonus":1,"description":"+{bonus} score"}
+          {"id":6,"type":"attack","rarity":"common","bonus":1,"description":"+{bonus} score"},
+          {"id":7,"type":"conquer","rarity":"rare","bonus":1,"description":"+{bonus} score"}
         ]
         """#.utf8)
 
@@ -134,6 +135,20 @@ struct PowerUpInventoryViewModelTests {
         await model.consume(item: try #require(model.items.first), location: sample)
         #expect(model.items.map(\.count) == [1])
         #expect(model.message == message)
+        #expect(model.isConsuming == false)
+    }
+
+    @Test func conquerWithoutTargetShowsServerErrorAndLeavesInventory() async throws {
+        let model = try makeModel(
+            body: #"{"powerups":{"7":1}}"#,
+            consumeStatus: 404,
+            consumeBody: #"{"error":"No contested squares in range. Your Conquer power-up was not consumed."}"#
+        )
+        await model.load()
+        #expect(model.items.first?.name == "Rare Conquer")
+        await model.consume(item: try #require(model.items.first), location: sample)
+        #expect(model.items.map(\.count) == [1])
+        #expect(model.message == "No contested squares in range. Your Conquer power-up was not consumed.")
         #expect(model.isConsuming == false)
     }
 

@@ -27,6 +27,7 @@ struct PowerUpIcon: View {
         case .exploration: Image("PowerUpExploration")
         case .fortification: Image("PowerUpFortification")
         case .attack: Image(systemName: "bolt.shield.fill")
+        case .conquer: Image(systemName: "flag.fill")
         }
     }
 

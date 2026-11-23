@@ -5,6 +5,7 @@ nonisolated enum PowerUpType: String, Decodable, Sendable {
     case exploration
     case fortification
     case attack
+    case conquer
 
     var displayName: String {
         rawValue.prefix(1).uppercased() + rawValue.dropFirst()

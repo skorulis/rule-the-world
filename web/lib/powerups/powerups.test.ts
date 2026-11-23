@@ -26,6 +26,11 @@ describe("powerup definitions", () => {
     expect(powerUpDefinition(6)).toMatchObject({ type: "attack", rarity: "common", bonus: 1 });
   });
 
+  it("includes Rare Conquer with a +1 bonus and no common variant", () => {
+    expect(powerUpDefinition(7)).toMatchObject({ type: "conquer", rarity: "rare", bonus: 1 });
+    expect(powerUpDefinitions.some((def) => def.type === "conquer" && def.rarity === "common")).toBe(false);
+  });
+
   it("looks up definitions by id", () => {
     const first = powerUpDefinitions[0];
     expect(powerUpDefinition(first.id)).toEqual(first);

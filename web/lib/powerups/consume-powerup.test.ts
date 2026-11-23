@@ -16,8 +16,12 @@ const cell = BigInt("0x8a2830828767fff");
 const attack = powerUpDefinition(6)!;
 const changed = { totals: { totalVisits: 1, rivalScore: 4 }, userVisit: null };
 
-function transaction(visits: { cell: bigint; score: string }[], rivals: { cell: bigint; rivalScore: string }[]) {
-  const results: unknown[][] = [[{ id: "u1", powerups: { "6": 2 } }], visits, rivals];
+function transaction(
+  visits: { cell: bigint; score: string; total?: number }[],
+  rivals: { cell: bigint; rivalScore: string }[],
+  powerups: Record<string, number> = { "6": 2 },
+) {
+  const results: unknown[][] = [[{ id: "u1", powerups }], visits, rivals];
   const where = vi.fn().mockResolvedValue(undefined);
   const set = vi.fn().mockReturnValue({ where });
   const tx = {
@@ -44,6 +48,40 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(gridDisk).mockImplementation(() => [cell.toString(16)]);
   vi.mocked(getHexInfo).mockResolvedValue(changed);
+});
+
+describe("Conquer consumption", () => {
+  const conquer = powerUpDefinition(7)!;
+
+  it("boosts a contested square and consumes one Rare Conquer", async () => {
+    const { tx, set } = transaction([{ cell, score: "4", total: 2 }], [{ cell, rivalScore: "4" }], { "7": 2 });
+    const result = await consumePowerUp("u1", conquer, cell);
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(tx.update).toHaveBeenNthCalledWith(1, hexVisit);
+    expect(set).toHaveBeenCalledWith({ score: expect.anything() });
+    expect(tx.update).toHaveBeenNthCalledWith(2, user);
+    expect(set).toHaveBeenCalledWith({ powerups: { "7": 1 } });
+    expect(result).toEqual({ powerups: { "7": 1 }, visits: [changed] });
+    expect(getHexInfo).toHaveBeenCalledWith("u1", cell, tx);
+  });
+
+  it.each([
+    { visits: [], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "4", total: 2 }], rivals: [] },
+    { visits: [{ cell, score: "5", total: 2 }], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "3", total: 2 }], rivals: [{ cell, rivalScore: "4" }] },
+    { visits: [{ cell, score: "0.5", total: 1 }], rivals: [{ cell, rivalScore: "0.5" }] },
+    { visits: [{ cell, score: "4", total: 0 }], rivals: [{ cell, rivalScore: "4" }] },
+  ])("preserves inventory for a non-contested square: %j", async ({ visits, rivals }) => {
+    const { tx } = transaction(visits, rivals, { "7": 1 });
+    await expect(consumePowerUp("u1", conquer, cell)).rejects.toMatchObject({
+      status: 404,
+      message: "No contested squares in range. Your Conquer power-up was not consumed.",
+    });
+    expect(tx.insert).not.toHaveBeenCalled();
+    expect(tx.update).not.toHaveBeenCalled();
+    expect(getHexInfo).not.toHaveBeenCalled();
+  });
 });
 
 describe("Attack consumption", () => {
