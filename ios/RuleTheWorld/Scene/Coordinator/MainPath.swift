@@ -5,7 +5,7 @@ enum MainPath: CoordinatorPath {
     case hexMap
     case visitLog
     case profile
-    case powerUpInventory
+    case powerUpInventory(PowerUpInventoryViewModel)
     case titles
 
     var id: String {

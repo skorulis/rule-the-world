@@ -1,8 +1,11 @@
+import ASKCoordinator
 import MapKit
 import SwiftUI
 
 struct HexMapView: View {
     @State var model: HexMapViewModel
+    @State var powerUpInventory: PowerUpInventoryViewModel
+    @Environment(\.coordinator) private var coordinator
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -31,7 +34,30 @@ struct HexMapView: View {
                     .padding()
             }
         }
+        .overlay(alignment: .topTrailing) {
+            Button {
+                coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
+            } label: {
+                HStack {
+                    Image(systemName: "sparkles")
+                    Text(powerUpInventory.totalCount.formatted())
+                        .monospacedDigit()
+                }
+                .font(.headline)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 44)
+                .background(.ultraThinMaterial, in: .capsule)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Power-ups")
+            .accessibilityValue(powerUpInventory.totalCount.formatted())
+            .padding()
+        }
         .animation(.default, value: model.selectedRegion)
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await powerUpInventory.load()
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await model.refreshGameDay()

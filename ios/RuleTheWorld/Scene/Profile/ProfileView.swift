@@ -31,11 +31,6 @@ struct ProfileView: View {
             }
             Section {
                 Button {
-                    coordinator?.push(MainPath.powerUpInventory)
-                } label: {
-                    LabeledContent("Power-ups", value: (model.powerUpCount ?? 0).formatted())
-                }
-                Button {
                     coordinator?.push(MainPath.titles)
                 } label: {
                     LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())

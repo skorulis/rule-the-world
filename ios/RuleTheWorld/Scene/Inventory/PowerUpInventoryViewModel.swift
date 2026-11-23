@@ -37,6 +37,10 @@ final class PowerUpInventoryViewModel {
         self.store = store
     }
 
+    var totalCount: Int {
+        items.reduce(0) { $0 + $1.count }
+    }
+
     func load() async {
         guard let summary = try? await service.fetchProfile(), !Task.isCancelled else { return }
         items = summary.powerups

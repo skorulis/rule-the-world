@@ -53,6 +53,7 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         #expect(model.items.map(\.id) == [1, 2, 3])
         #expect(model.items.map(\.count) == [4, 2, 1])
+        #expect(model.totalCount == 7)
         #expect(model.items.first?.name == "Common Revisit")
         #expect(model.items.last?.detail == "+3 score")
     }
@@ -69,6 +70,7 @@ struct PowerUpInventoryViewModelTests {
         let model = try makeModel(body: #"{"visited":5}"#)
         await model.load()
         #expect(model.items.isEmpty)
+        #expect(model.totalCount == 0)
         let failing = PowerUpInventoryViewModel(
             service: AuthenticatedService(
                 tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
@@ -102,6 +104,7 @@ struct PowerUpInventoryViewModelTests {
         #expect(location?["latitude"] as? Double == -33.89)
         #expect(location?["longitude"] as? Double == 151.19)
         #expect(model.items.map(\.count) == [1])
+        #expect(model.totalCount == 1)
         #expect(model.message == "Common Revisit applied.")
         #expect(model.isConsuming == false)
     }
@@ -114,6 +117,7 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         await model.consume(item: try #require(model.items.first), location: sample)
         #expect(model.items.isEmpty)
+        #expect(model.totalCount == 0)
     }
 
     @Test func consumeWithoutLocationReportsMessage() async throws {

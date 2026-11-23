@@ -13,15 +13,23 @@ struct MainPathRenderer: CoordinatorPathRenderer {
         case .signedOut:
             SignedOutView(loginModel: LoginViewModel.make(resolver: resolver))
         case .hexMap:
-            HexMapView(model: HexMapViewModel.make(resolver: resolver))
+            HexMapView(
+                model: HexMapViewModel.make(resolver: resolver),
+                powerUpInventory: PowerUpInventoryViewModel.make(resolver: resolver)
+            )
         case .visitLog:
             HexVisitLogListView(model: HexVisitLogListViewModel.make(resolver: resolver))
         case .profile:
             ProfileView(model: ProfileViewModel.make(resolver: resolver))
+        case let .powerUpInventory(model):
+            PowerUpInventoryView(model: model)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { coordinator.dismiss() }
+                    }
+                }
         case .titles:
             TitlesView(model: TitlesViewModel.make(resolver: resolver))
-        case .powerUpInventory:
-            PowerUpInventoryView(model: PowerUpInventoryViewModel.make(resolver: resolver))
         }
     }
 }
