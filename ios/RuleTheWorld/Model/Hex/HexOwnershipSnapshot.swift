@@ -10,10 +10,14 @@ struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     }
 
     nonisolated init(infos: [HexInfo], at date: Date = .now) {
-        states = Dictionary(uniqueKeysWithValues: infos.compactMap { info in
-            info.userVisit.map {
-                (info.cell, HexState.forScore($0.score, rivalScore: info.totals?.rivalScore, hasVisited: $0.total > 0))
+        states = Dictionary(uniqueKeysWithValues: infos.compactMap { info -> (HexCell, HexState)? in
+            guard let visit = info.userVisit else {
+                return (info.totals?.rivalScore ?? 0) > 0 ? (info.cell, .rivalOwned) : nil
             }
+            return (
+                info.cell,
+                HexState.forScore(visit.score, rivalScore: info.totals?.rivalScore, hasVisited: visit.total > 0)
+            )
         })
         visitedToday = Set(infos.compactMap { info in
             guard let visit = info.userVisit,

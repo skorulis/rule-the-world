@@ -105,7 +105,7 @@ struct HexVisitSyncServiceTests {
         let sync = HexVisitSyncService(store: store, hexInfoStore: infos, uploader: uploader.service, tokenStore: tokenStore())
         try await sync.syncPendingVisits()
         #expect(try await infos.info(for: visit.cell) == remote)
-        let expected: HexState = rivalScore == 0 ? .owned : rivalScore == 1 ? .contested : .visited
+        let expected: HexState = rivalScore == 0 ? .owned : rivalScore == 1 ? .contested : .rivalOwned
         #expect(infos.snapshot.states[visit.cell] == expected)
         #expect(try await store.pending().isEmpty)
     }

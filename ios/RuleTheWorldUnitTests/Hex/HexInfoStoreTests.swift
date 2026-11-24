@@ -141,6 +141,6 @@ struct HexInfoStoreTests {
         _ = try await store.save(
             HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 99), userVisit: nil)
         )
-        #expect(store.snapshot.states[cell] == .visited)
+        #expect(store.snapshot.states[cell] == .rivalOwned)
     }
 }

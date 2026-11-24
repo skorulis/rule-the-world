@@ -36,6 +36,21 @@ struct HexOwnershipSnapshotTests {
         #expect(snapshot.states.isEmpty)
     }
 
+    @Test func rivalOnlyCellIsRivalOwned() {
+        let snapshot = HexOwnershipSnapshot(infos: [
+            HexInfo(cell: sydneyCell, totals: HexTotals(totalVisits: 3, rivalScore: 2), userVisit: nil)
+        ])
+        #expect(snapshot.states[sydneyCell] == .rivalOwned)
+        #expect(snapshot.visitedToday.isEmpty)
+    }
+
+    @Test func totalsWithoutRivalScoreHasNoState() {
+        let snapshot = HexOwnershipSnapshot(infos: [
+            HexInfo(cell: sydneyCell, totals: HexTotals(totalVisits: 0, rivalScore: 0), userVisit: nil)
+        ])
+        #expect(snapshot.states.isEmpty)
+    }
+
     @Test func todayMarkersAggregateIndependentlyOfOwnership() {
         let parent = grid.parent(of: sydneyCell, at: 7)!
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
@@ -50,7 +65,8 @@ struct HexOwnershipSnapshotTests {
 
     @Test func stateForScore() {
         #expect(HexState.forScore(3.5, rivalScore: 1) == .owned)
-        #expect(HexState.forScore(1, rivalScore: 3.5) == .visited)
+        #expect(HexState.forScore(1, rivalScore: 3.5) == .rivalOwned)
+        #expect(HexState.forScore(0.5, rivalScore: 1) == .rivalOwned)
         #expect(HexState.forScore(2, rivalScore: 2) == .contested)
         #expect(HexState.forScore(0.5, rivalScore: 0) == .partialVisit)
         #expect(HexState.forScore(0.5, rivalScore: 0.5) == .partialVisit)
@@ -62,7 +78,7 @@ struct HexOwnershipSnapshotTests {
 
     @Test func unvisitedScoreIsExploredUnlessOwned() {
         #expect(HexState.forScore(1, rivalScore: nil, hasVisited: false) == .explored)
-        #expect(HexState.forScore(1, rivalScore: 3.5, hasVisited: false) == .explored)
+        #expect(HexState.forScore(1, rivalScore: 3.5, hasVisited: false) == .rivalOwned)
         #expect(HexState.forScore(2, rivalScore: 2, hasVisited: false) == .explored)
         #expect(HexState.forScore(3.5, rivalScore: 1, hasVisited: false) == .owned)
     }
@@ -70,12 +86,31 @@ struct HexOwnershipSnapshotTests {
     @Test func visitWithNoOrganicVisitsMapsToExplored() {
         let info = HexInfo(
             cell: sydneyCell,
-            totals: HexTotals(totalVisits: 0, rivalScore: 5),
+            totals: HexTotals(totalVisits: 0, rivalScore: 1),
             userVisit: HexVisit(lastVisit: .distantPast, score: 1, lastScore: 0, total: 0)
         )
         let snapshot = HexOwnershipSnapshot(infos: [info])
         #expect(snapshot.states[sydneyCell] == .explored)
         #expect(snapshot.visitedToday.isEmpty)
+    }
+
+    @Test func exploredCellWithLeadingRivalIsRivalOwned() {
+        let info = HexInfo(
+            cell: sydneyCell,
+            totals: HexTotals(totalVisits: 0, rivalScore: 5),
+            userVisit: HexVisit(lastVisit: .distantPast, score: 1, lastScore: 0, total: 0)
+        )
+        #expect(HexOwnershipSnapshot(infos: [info]).states[sydneyCell] == .rivalOwned)
+    }
+
+    @Test func aggregatedTiePrefersOwnStateOverRival() {
+        let parent = grid.parent(of: sydneyCell, at: 7)!
+        let children = grid.children(of: parent, at: HexGridService.baseResolution)
+        let snapshot = HexOwnershipSnapshot(states: [
+            children[0]: .rivalOwned,
+            children[1]: .owned
+        ])
+        #expect(snapshot.aggregated(at: 7, grid: grid)[parent] == .owned)
     }
 
     @Test func baseResolutionAggregationReturnsStates() {
