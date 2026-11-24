@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x2="0" y2="1"><stop stop-color="#6FB9FF"/><stop offset=".55" stop-color="#1E8CFF"/><stop offset="1" stop-color="#0A4EC4"/></linearGradient>
+    <linearGradient id="edge" x2="0" y2="1"><stop stop-color="#C2E3FF"/><stop offset=".5" stop-color="#3D9BFF"/><stop offset="1" stop-color="#083F9E"/></linearGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%"><stop stop-color="#FFF" stop-opacity=".5"/><stop offset=".6" stop-color="#FFF" stop-opacity="0"/></radialGradient>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#021433" flood-opacity=".55"/></filter>
+    <filter id="glyphShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#03265E" flood-opacity=".6"/></filter>
+  </defs>
+
+  <g filter="url(#drop)">
+    <polygon points="128,22 219,74.5 219,181.5 128,234 37,181.5 37,74.5" fill="url(#edge)"/>
+    <polygon points="128,32 209,79 209,177 128,224 47,177 47,79" fill="url(#tile)"/>
+  </g>
+  <polygon points="128,44 198,84.5 198,171.5 128,212 58,171.5 58,84.5" fill="none" stroke="#07377E" stroke-opacity=".55" stroke-width="3"/>
+  <polygon points="128,32 209,79 209,120 47,120 47,79" fill="url(#gloss)"/>
+
+  <!-- checkmark -->
+  <g filter="url(#glyphShadow)">
+    <path d="M76 134l36 36 68-78" fill="none" stroke="#0A3E8E" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M76 134l36 36 68-78" fill="none" stroke="#FFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

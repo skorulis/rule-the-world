@@ -27,8 +27,17 @@ struct TitlesView: View {
                             Text(item.name).font(.headline)
                             Text(item.regionName).font(.subheadline)
                             if let visited = item.visited, let owned = item.owned {
-                                Text("\(visited) visited · \(owned) owned")
-                                    .font(.footnote).foregroundStyle(.secondary)
+                                HStack(spacing: 6) {
+                                    Image("HexVisited").resizable().frame(width: 20, height: 20)
+                                    Text(visited.formatted())
+                                    Image("HexOwned").resizable().frame(width: 20, height: 20)
+                                        .padding(.leading, 6)
+                                    Text(owned.formatted())
+                                }
+                                .font(.subheadline.bold())
+                                .foregroundStyle(.secondary)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel("\(visited.formatted()) hexes visited, \(owned.formatted()) hexes owned")
                             }
                             if let detail = item.detail {
                                 Text(detail).font(.footnote).foregroundStyle(.secondary)
