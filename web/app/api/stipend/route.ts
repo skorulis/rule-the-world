@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const updated = await db.execute<{ coins: number }>(sql`
       update ${user}
       set "coins" = coalesce(${user.coins}, 0) + ${stipend},
+        "total_earnings" = coalesce(${user.totalEarnings}, 0) + ${stipend},
         "stipend_day" = ${today}::date
       where ${user.id} = ${session.user.id}
         and (${user.stipendDay} is null or ${user.stipendDay} < ${today}::date)

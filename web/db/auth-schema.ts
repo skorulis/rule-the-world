@@ -24,6 +24,7 @@ export const user = pgTable("user", {
   rankings: jsonb("rankings").$type<RegionRanking[]>().default([]).notNull(),
   dailyRewardDay: date("daily_reward_day", { mode: "string" }),
   coins: integer("coins").default(0).notNull(),
+  totalEarnings: integer("total_earnings").default(0).notNull(),
   stipendDay: date("stipend_day", { mode: "string" }),
 });
 

@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "total_earnings" integer DEFAULT 0 NOT NULL;

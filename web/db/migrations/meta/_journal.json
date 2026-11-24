@@ -64,6 +64,13 @@
       "when": 1795475183373,
       "tag": "0008_bitter_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795479947290,
+      "tag": "0009_steep_amphibian",
+      "breakpoints": true
     }
   ]
 }
