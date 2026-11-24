@@ -8,13 +8,19 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            TabView(selection: $model.currentPage) {
-                ForEach(model.pages) { page in
-                    pageView(page)
-                        .tag(page.id)
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 0) {
+                    ForEach(model.pages) { page in
+                        pageView(page)
+                            .containerRelativeFrame(.horizontal)
+                            .id(page.id)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .scrollTargetBehavior(.paging)
+            .scrollIndicators(.hidden)
+            .scrollPosition(id: scrolledPage)
             .ignoresSafeArea()
 
             VStack {
@@ -51,6 +57,13 @@ struct OnboardingView: View {
             .padding(.top, 8)
             .padding(.bottom, 12)
         }
+    }
+
+    private var scrolledPage: Binding<Int?> {
+        Binding(
+            get: { model.currentPage },
+            set: { model.currentPage = $0 ?? 0 }
+        )
     }
 
     private var pageIndicator: some View {
