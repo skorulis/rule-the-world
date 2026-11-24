@@ -30,6 +30,8 @@ struct MainPathRenderer: CoordinatorPathRenderer {
                 }
         case .titles:
             TitlesView(model: TitlesViewModel.make(resolver: resolver))
+        case let .regionTitles(item):
+            RegionTitlesView(item: item)
         case .shop:
             ShopView(model: ShopViewModel.make(resolver: resolver))
         }

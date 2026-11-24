@@ -1,6 +1,8 @@
+import ASKCoordinator
 import SwiftUI
 
 struct TitlesView: View {
+    @Environment(\.coordinator) private var coordinator
     @State var model: TitlesViewModel
 
     var body: some View {
@@ -13,24 +15,34 @@ struct TitlesView: View {
                 }
             }
             ForEach(model.items) { item in
-                HStack(alignment: .top, spacing: 12) {
-                    if let icon = item.icon {
-                        RankIcon(name: icon, rarity: item.rarity)
-                            .padding(.top, 2)
-                    }
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(item.name).font(.headline)
-                        Text(item.regionName).font(.subheadline)
-                        if let visited = item.visited, let owned = item.owned {
-                            Text("\(visited) visited · \(owned) owned")
-                                .font(.footnote).foregroundStyle(.secondary)
+                Button {
+                    coordinator?.push(MainPath.regionTitles(item))
+                } label: {
+                    HStack(alignment: .top, spacing: 12) {
+                        if let icon = item.icon {
+                            RankIcon(name: icon, rarity: item.rarity)
+                                .padding(.top, 2)
                         }
-                        if let detail = item.detail {
-                            Text(detail).font(.footnote).foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(item.name).font(.headline)
+                            Text(item.regionName).font(.subheadline)
+                            if let visited = item.visited, let owned = item.owned {
+                                Text("\(visited) visited · \(owned) owned")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                            if let detail = item.detail {
+                                Text(detail).font(.footnote).foregroundStyle(.secondary)
+                            }
                         }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote).foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
                     }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
                 }
-                .padding(.vertical, 4)
+                .buttonStyle(.plain)
             }
         }
         .overlay {

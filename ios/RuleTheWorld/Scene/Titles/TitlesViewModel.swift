@@ -9,6 +9,8 @@ final class TitlesViewModel {
     struct Item: Identifiable {
         let id: String
         let number: Int
+        let type: String
+        let ranks: [RankDefinition]
         let name: String
         let icon: String?
         let rarity: Rarity?
@@ -48,6 +50,8 @@ final class TitlesViewModel {
                 return Item(
                     id: id,
                     number: ranking.number,
+                    type: ranking.type,
+                    ranks: catalog.definitions(for: ranking.type),
                     name: definition?.name ?? "Title #\(ranking.number)",
                     icon: definition?.icon,
                     rarity: definition?.rarity,

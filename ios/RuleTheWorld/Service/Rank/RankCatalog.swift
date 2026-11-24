@@ -18,6 +18,10 @@ nonisolated struct RankCatalog: Sendable {
         }
     }
 
+    func definitions(for type: String) -> [RankDefinition] {
+        (definitions[type].map { Array($0.values) } ?? []).sorted { $0.number < $1.number }
+    }
+
     func definition(for number: Int, type: String) -> RankDefinition? {
         definitions[type]?[number]
     }

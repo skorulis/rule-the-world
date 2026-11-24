@@ -82,6 +82,38 @@ struct TitlesViewModelTests {
         #expect(model.items.first { $0.id == "country:1" }?.regionName == "Zedland")
     }
 
+    @Test func detailRetainsRegionalLadderAndAssignedRankRegardlessOfCounts() async {
+        let model = makeModel(body: #"""
+            {"rankings":[
+            {"id":1,"type":"country","number":15,"visited":10000,"owned":5000},
+            {"id":2,"type":"country","number":1,"visited":40,"owned":12},
+            {"id":1,"type":"global","number":1,"visited":20000,"owned":10000},
+            {"id":99,"type":"state","number":16},
+            {"id":99,"type":"country","number":17}]}
+            """#)
+        await model.load()
+        let country = model.items.first { $0.id == "country:1" }
+        #expect(country?.type == "country")
+        #expect(country?.regionName == "Zedland")
+        #expect(country?.visited == 10000)
+        #expect(country?.owned == 5000)
+        #expect(country?.ranks.map(\.number) == [1, 15])
+        #expect(country?.ranks.filter { $0.number == country?.number }.map(\.name) == ["Wanderer"])
+        let global = model.items.first { $0.id == "global:1" }
+        #expect(global?.regionName == "World")
+        #expect(global?.ranks.map(\.name) == ["Emperor"])
+        #expect(global?.visited == 20000)
+        let state = model.items.first { $0.id == "state:99" }
+        #expect(state?.ranks.isEmpty == true)
+        #expect(state?.name == "Title #16")
+        #expect(state?.visited == nil)
+        #expect(state?.owned == nil)
+        let unknown = model.items.first { $0.id == "country:99" }
+        #expect(unknown?.ranks.map(\.number) == [1, 15])
+        #expect(unknown?.number == 17)
+        #expect(unknown?.name == "Title #17")
+    }
+
     @Test func emptyAwardsLoadSuccessfully() async {
         let model = makeModel(body: "{}")
         await model.load()

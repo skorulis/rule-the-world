@@ -7,6 +7,7 @@ enum MainPath: CoordinatorPath {
     case profile
     case powerUpInventory(PowerUpInventoryViewModel)
     case titles
+    case regionTitles(TitlesViewModel.Item)
     case shop
 
     var id: String {
@@ -23,6 +24,8 @@ enum MainPath: CoordinatorPath {
             "powerUpInventory"
         case .titles:
             "titles"
+        case let .regionTitles(item):
+            "regionTitles:\(item.id)"
         case .shop:
             "shop"
         }

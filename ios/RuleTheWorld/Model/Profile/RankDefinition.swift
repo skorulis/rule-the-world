@@ -6,4 +6,8 @@ nonisolated struct RankDefinition: Decodable, Sendable {
     let rarity: Rarity
     let description: String
     let icon: String?
+    let minOwnership: Int?
+    let minVisits: Int?
+    let maxQuantity: Int?
+    let maxPercentage: Double?
 }
