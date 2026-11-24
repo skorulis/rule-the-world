@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Common Reward Box",
+    "cost": 10,
+    "rarity": "common"
+  },
+  {
+    "id": 2,
+    "name": "Rare Reward Box",
+    "cost": 20,
+    "rarity": "rare"
+  }
+]

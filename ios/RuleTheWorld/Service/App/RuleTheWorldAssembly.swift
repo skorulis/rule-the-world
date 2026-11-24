@@ -92,6 +92,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             .inObjectScope(.container)
         container.register(PowerUpCatalog.self) { _ in PowerUpCatalog() }
             .inObjectScope(.container)
+        container.register(LootBoxCatalog.self) { _ in LootBoxCatalog() }
+            .inObjectScope(.container)
         container.register(RankCatalog.self) { _ in RankCatalog() }
             .inObjectScope(.container)
         container.register(RegionBoundaryProviding.self) { _ in RegionBoundaryService() }
@@ -124,6 +126,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
         container.register(ProfileViewModel.self) { ProfileViewModel.make(resolver: $0) }
         container.register(TitlesViewModel.self) { TitlesViewModel.make(resolver: $0) }
+        container.register(ShopViewModel.self) { ShopViewModel.make(resolver: $0) }
         container.register(PowerUpInventoryViewModel.self) { PowerUpInventoryViewModel.make(resolver: $0) }
         container.register(DebugSettingsViewModel.self) { DebugSettingsViewModel.make(resolver: $0) }
     }

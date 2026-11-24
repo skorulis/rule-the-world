@@ -31,6 +31,11 @@ struct ProfileView: View {
             }
             Section {
                 Button {
+                    coordinator?.push(MainPath.shop)
+                } label: {
+                    Label("Shop", systemImage: "bag")
+                }
+                Button {
                     coordinator?.push(MainPath.titles)
                 } label: {
                     LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())

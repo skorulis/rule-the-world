@@ -33,6 +33,10 @@ final class AuthenticatedService: HTTPService {
         try await execute(request: ConsumePowerUpRequest(powerup: id, latitude: latitude, longitude: longitude))
     }
 
+    func purchaseLootBox(id: Int, count: Int) async throws -> LootBoxPurchaseResponse {
+        try await execute(request: PurchaseLootBoxRequest(box: id, count: count))
+    }
+
     func fetchVisits() async throws -> [HexInfo] {
         try await execute(request: VisitDownloadRequest())
     }
