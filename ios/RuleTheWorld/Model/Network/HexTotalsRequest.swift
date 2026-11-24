@@ -23,7 +23,8 @@ struct HexTotalsRequest: HTTPRequest {
         }
         let decoder = JSONDecoder()
         decoder.userInfo[HexInfo.cellUserInfoKey] = cell
-        let payload = try decoder.decode(HexInfo.self, from: data)
+        var payload = try decoder.decode(HexInfo.self, from: data)
+        payload.lastUpdate = .now
         if let totals = payload.totals {
             guard totals.totalVisits >= 0, totals.rivalScore.isFinite, totals.rivalScore >= 0 else {
                 throw URLError(.cannotParseResponse)

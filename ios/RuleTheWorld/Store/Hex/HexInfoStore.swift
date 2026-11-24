@@ -79,6 +79,7 @@ final class HexInfoStore {
         var merged = remote
         guard let local else { return merged }
         merged.totals = remote.totals ?? local.totals
+        merged.lastUpdate = remote.lastUpdate ?? local.lastUpdate
         switch (remote.userVisit, local.userVisit) {
         case (nil, let localVisit?):
             merged.userVisit = localVisit

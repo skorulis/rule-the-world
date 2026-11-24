@@ -181,6 +181,21 @@ struct HexVisitLogStoreTests {
         #expect(third.id == first.id)
     }
 
+    @Test func deleteUploadedRemovesOnlySyncedRows() async throws {
+        let store = try makeStore()
+        let synced = try await store.record(entry(cell: cellA))
+        _ = try await store.record(entry(cell: cellB))
+        try await store.markUploaded([synced], acceptedIDs: [synced.uploadID])
+
+        try await store.deleteUploaded()
+
+        let remaining = try await store.all()
+        #expect(remaining.map(\.cell) == [cellB])
+        #expect(remaining.first?.uploaded == false)
+        try await store.deleteUploaded()
+        #expect(try await store.all().count == 1)
+    }
+
     @Test func visitCountCountsOneVisitPerCellPerDay() async throws {
         let store = try makeStore()
         _ = try await store.record(entry(cell: cellA))

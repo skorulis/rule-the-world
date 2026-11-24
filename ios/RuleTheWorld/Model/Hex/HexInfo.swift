@@ -6,21 +6,24 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
     var cell: HexCell
     var totals: HexTotals?
     var userVisit: HexVisit?
+    var lastUpdate: Date?
 
-    init(cell: HexCell, totals: HexTotals?, userVisit: HexVisit?) {
+    init(cell: HexCell, totals: HexTotals?, userVisit: HexVisit?, lastUpdate: Date? = nil) {
         self.cell = cell
         self.totals = totals
         self.userVisit = userVisit
+        self.lastUpdate = lastUpdate
     }
 
     private enum CodingKeys: String, CodingKey {
-        case cell, totals, userVisit
+        case cell, totals, userVisit, lastUpdate
     }
 
     nonisolated init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         totals = try container.decodeIfPresent(HexTotals.self, forKey: .totals)
         userVisit = try container.decodeIfPresent(HexVisit.self, forKey: .userVisit)
+        lastUpdate = try container.decodeIfPresent(Date.self, forKey: .lastUpdate)
         if let rawValue = try container.decodeIfPresent(String.self, forKey: .cell) {
             cell = try Self.parseCell(rawValue, forKey: .cell, in: container)
         } else if let nested = try? container.nestedContainer(keyedBy: CodingKeys.self, forKey: .userVisit),
@@ -46,6 +49,7 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
         try container.encode(cell.description, forKey: .cell)
         try container.encodeIfPresent(totals, forKey: .totals)
         try container.encodeIfPresent(userVisit, forKey: .userVisit)
+        try container.encodeIfPresent(lastUpdate, forKey: .lastUpdate)
     }
 
     private nonisolated static func parseCell(

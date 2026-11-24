@@ -13,6 +13,7 @@ final class HexVisitLogListViewModel {
     private let syncService: HexVisitSyncService
 
     var pendingCount: Int { entries.filter { !$0.uploaded }.count }
+    var syncedCount: Int { entries.filter(\.uploaded).count }
     var isSyncing: Bool { syncService.isSyncing }
 
     @Resolvable<Resolver>
@@ -39,6 +40,16 @@ final class HexVisitLogListViewModel {
         do {
             try await syncService.syncPendingVisits()
             entries = try await store.all().reversed()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func clearSynced() async {
+        do {
+            try await store.deleteUploaded()
+            entries = try await store.all().reversed()
+            errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
         }

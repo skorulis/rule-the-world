@@ -57,6 +57,12 @@ final class HexVisitLogStore {
         }
     }
 
+    func deleteUploaded() async throws {
+        try await database.writer.write { db in
+            try HexVisitLog.filter(Column("uploaded") == true).deleteAll(db)
+        }
+    }
+
     func latest() async throws -> HexVisitLog? {
         try await database.writer.read { db in
             try HexVisitLog.order(Column("id").desc).fetchOne(db)

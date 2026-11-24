@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HexVisitLogListView: View {
     @State var model: HexVisitLogListViewModel
+    @State private var confirmClear = false
 
     var body: some View {
         List {
@@ -26,6 +27,13 @@ struct HexVisitLogListView: View {
         }
         .navigationTitle("Visit Log")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Clear", role: .destructive) {
+                    confirmClear = true
+                }
+                .disabled(model.syncedCount == 0)
+                .accessibilityIdentifier("clearVisits")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task { await model.sync() }
@@ -40,6 +48,17 @@ struct HexVisitLogListView: View {
                 .disabled(model.isSyncing || model.pendingCount == 0)
                 .accessibilityIdentifier("syncVisits")
             }
+        }
+        .confirmationDialog(
+            "Clear synced visits?",
+            isPresented: $confirmClear,
+            titleVisibility: .visible
+        ) {
+            Button("Clear \(model.syncedCount) synced visit(s)", role: .destructive) {
+                Task { await model.clearSynced() }
+            }
+        } message: {
+            Text("Pending visits that haven't synced yet are kept.")
         }
         .overlay {
             if model.entries.isEmpty {

@@ -16,6 +16,8 @@ struct VisitDownloadRequest: HTTPRequest {
         }
         let payload = try JSONDecoder().decode(VisitDownloadResponse.self, from: data)
         return try payload.visits.map { info in
+            var info = info
+            info.lastUpdate = .now
             if let totals = info.totals {
                 guard totals.totalVisits >= 0, totals.rivalScore.isFinite, totals.rivalScore >= 0 else {
                     throw URLError(.cannotParseResponse)
