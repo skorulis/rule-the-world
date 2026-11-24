@@ -12,7 +12,6 @@ struct HexMapView: View {
         HexMapViewRepresentable(
             initialRegion: model.initialRegion,
             snapshot: model.snapshot,
-            showGrid: model.showGrid,
             grid: model.grid,
             userStatus: model.userStatus,
             selectedRegion: model.selectedRegion,

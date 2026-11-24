@@ -13,7 +13,6 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         var previousSnapshot = HexOwnershipSnapshot(states: [:])
         var hasReceivedSnapshot = false
         var animationStart: CFTimeInterval = 0
-        var showGrid = true
         var aggregateCache: [Int: [HexCell: HexState]] = [:]
         var visitCache: [Int: Set<HexCell>] = [:]
         var changedCellsCache: [Int: [HexCell: (from: HexState, to: HexState)]] = [:]
@@ -30,9 +29,9 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         displayLink?.invalidate()
     }
 
-    func update(snapshot: HexOwnershipSnapshot, showGrid: Bool) {
+    func update(snapshot: HexOwnershipSnapshot) {
         let (changed, animate) = state.withLock { state -> (Bool, Bool) in
-            guard state.snapshot != snapshot || state.showGrid != showGrid else {
+            guard state.snapshot != snapshot else {
                 return (false, false)
             }
             let animate = state.hasReceivedSnapshot && state.snapshot != snapshot
@@ -44,7 +43,6 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             }
             state.hasReceivedSnapshot = true
             state.snapshot = snapshot
-            state.showGrid = showGrid
             state.aggregateCache = [:]
             state.visitCache = [:]
             state.changedCellsCache = [:]
@@ -97,7 +95,6 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         let progress = min(max(elapsed / Self.flipDuration, 0), 1)
         var todayPath = CGMutablePath()
 
-        var unclaimedPath = CGMutablePath()
         var ownedPaths: [HexState: (fill: CGMutablePath, stroke: CGMutablePath)] = [:]
         var flipping: [(boundary: [CLLocationCoordinate2D], animation: (from: HexState, to: HexState))] = []
         for cell in cells {
@@ -109,9 +106,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             let cellState = states[cell] ?? .unclaimed
             if let animation = changed[cell], progress < 1 {
                 flipping.append((boundary, animation))
-            } else if cellState == .unclaimed {
-                appendPath(to: &unclaimedPath, boundary: boundary)
-            } else {
+            } else if cellState != .unclaimed {
                 let paths = ownedPaths[cellState] ?? (CGMutablePath(), CGMutablePath())
                 var fill = paths.fill
                 var stroke = paths.stroke
@@ -122,12 +117,6 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         }
 
         context.setLineWidth(1 / zoomScale)
-        let showGrid = state.withLock { $0.showGrid }
-        if showGrid {
-            context.addPath(unclaimedPath)
-            context.setStrokeColor(UIColor.gray.withAlphaComponent(0.6).cgColor)
-            context.strokePath()
-        }
         for (cellState, paths) in ownedPaths {
             guard let color = cellState.color else { continue }
             let uiColor = UIColor(color)

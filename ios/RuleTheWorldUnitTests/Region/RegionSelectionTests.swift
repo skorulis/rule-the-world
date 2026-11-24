@@ -112,7 +112,6 @@ struct RegionSelectionTests {
         }
         #expect(model.selectedRegion == nil)
         #expect(!model.isLoadingRegions)
-        #expect(model.showGrid)
         move(model, longitude: 2)
         #expect(!model.isLoadingRegions)
     }
