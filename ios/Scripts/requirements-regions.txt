@@ -2,3 +2,4 @@ shapely==2.0.7
 numpy==2.0.2
 geobuf==2.0.0
 protobuf==5.29.5
+osmium==4.3.2

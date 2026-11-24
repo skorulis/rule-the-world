@@ -1,15 +1,63 @@
 {
-  "source": "NSW Administrative Boundaries Theme - Suburb (FeatureServer layer 2)",
+  "source": "NSW Administrative Boundaries Theme - Suburb (FeatureServer layer 2); OpenStreetMap (all other Australian states/territories)",
   "url": "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Administrative_Boundaries_Theme/FeatureServer/2",
-  "license": "Creative Commons Attribution",
+  "license": "Creative Commons Attribution; Open Data Commons Open Database License (OSM portions)",
   "licenseURL": "https://data.nsw.gov.au/data/dataset/nsw-foundation-spatial-data-framework-administrative-boundaries-suburb",
+  "sources": [
+    {
+      "name": "NSW Administrative Boundaries Theme - Suburb (FeatureServer layer 2)",
+      "url": "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Administrative_Boundaries_Theme/FeatureServer/2",
+      "license": "Creative Commons Attribution",
+      "licenseURL": "https://data.nsw.gov.au/data/dataset/nsw-foundation-spatial-data-framework-administrative-boundaries-suburb",
+      "states": [
+        "New South Wales"
+      ],
+      "idBase": 9000000000000,
+      "idScheme": "idBase + source cadid"
+    },
+    {
+      "name": "OpenStreetMap administrative boundaries via Geofabrik Australia extract",
+      "url": "https://download.geofabrik.de/australia-oceania/australia/australia-261123.osm.pbf",
+      "license": "Open Data Commons Open Database License 1.0",
+      "licenseURL": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "attribution": "\u00a9 OpenStreetMap contributors",
+      "states": [
+        "Australian Capital Territory",
+        "Jervis Bay Territory",
+        "Northern Territory",
+        "Queensland",
+        "South Australia",
+        "Tasmania",
+        "Victoria",
+        "Western Australia"
+      ],
+      "adminLevels": [
+        "9",
+        "10"
+      ],
+      "idBase": 9200000000000,
+      "idScheme": "idBase + OSM relation id",
+      "extract": {
+        "bytes": 977558492,
+        "sha256": "356efea9b44783d96561865a7a3056db79fb4316564324e4a9d90e0e75633a53"
+      }
+    }
+  ],
   "tool": "mapshaper@0.7.101",
   "simplification": "spherical Douglas-Peucker; shared topology; keep-shapes",
-  "generatedAt": "2026-11-22T22:24:16.571685+00:00",
+  "generatedAt": "2026-11-24T23:47:42.493965+00:00",
   "precisionDegrees": 1e-06,
   "idBase": 9000000000000,
   "parents": {
-    "New South Wales": "1159313299"
+    "Australian Capital Territory": "1159313297",
+    "Jervis Bay Territory": "1159311169",
+    "New South Wales": "1159313299",
+    "Northern Territory": "1159315809",
+    "Queensland": "1159315807",
+    "South Australia": "1159313267",
+    "Tasmania": "1159313261",
+    "Victoria": "1159313263",
+    "Western Australia": "1159315805"
   },
   "regressionPoints": [
     {
@@ -71,33 +119,136 @@
       "longitude": 151.278,
       "name": "Dover Heights",
       "id": "9000108029656"
+    },
+    {
+      "latitude": -37.8641,
+      "longitude": 144.9812,
+      "name": "St Kilda",
+      "id": "9200002397474"
+    },
+    {
+      "latitude": -38.3438,
+      "longitude": 144.7395,
+      "name": "Sorrento",
+      "id": "9200002451382"
+    },
+    {
+      "latitude": -38.5233,
+      "longitude": 143.9213,
+      "name": "Lorne",
+      "id": "9200002732599"
+    },
+    {
+      "latitude": -28.1703,
+      "longitude": 153.5305,
+      "name": "Coolangatta",
+      "id": "9200011678057"
+    },
+    {
+      "latitude": -26.4001,
+      "longitude": 153.091,
+      "name": "Noosa Heads",
+      "id": "9200011676220"
+    },
+    {
+      "latitude": -16.9178,
+      "longitude": 145.7757,
+      "name": "Cairns City",
+      "id": "9200011677114"
+    },
+    {
+      "latitude": -34.9787,
+      "longitude": 138.5138,
+      "name": "Glenelg",
+      "id": "9200009096044"
+    },
+    {
+      "latitude": -35.5467,
+      "longitude": 138.6116,
+      "name": "Victor Harbor",
+      "id": "9200007246858"
+    },
+    {
+      "latitude": -31.9992,
+      "longitude": 115.7567,
+      "name": "Cottesloe",
+      "id": "9200011689392"
+    },
+    {
+      "latitude": -32.0526,
+      "longitude": 115.7609,
+      "name": "Fremantle",
+      "id": "9200011689400"
+    },
+    {
+      "latitude": -17.96,
+      "longitude": 122.235,
+      "name": "Broome",
+      "id": "9200011690252"
+    },
+    {
+      "latitude": -42.8824,
+      "longitude": 147.3258,
+      "name": "Hobart",
+      "id": "9200010625465"
+    },
+    {
+      "latitude": -42.9642,
+      "longitude": 147.2881,
+      "name": "Kingston",
+      "id": "9200010625461"
+    },
+    {
+      "latitude": -12.4635,
+      "longitude": 130.8436,
+      "name": "Darwin City",
+      "id": "9200011716543"
+    },
+    {
+      "latitude": -23.6997,
+      "longitude": 133.8814,
+      "name": "Alice Springs",
+      "id": "9200011716659"
+    },
+    {
+      "latitude": -35.2361,
+      "longitude": 149.0678,
+      "name": "Belconnen",
+      "id": "9200006805547"
+    },
+    {
+      "latitude": -35.1565,
+      "longitude": 150.682,
+      "name": "Jervis Bay",
+      "id": "9200011716766"
     }
   ],
-  "regressionPointSource": "Membership verified against unsimplified NSW source geometry",
+  "regressionPointSource": "Membership verified against unsimplified source geometry",
   "levels": {
     "medium": {
       "intervalMeters": 5,
-      "suburbs": 4607,
-      "polygonParts": 4611,
-      "vertices": 1168349,
-      "bytes": 4914280,
-      "sha256": "89c083c243c3ae45265369370542f6764d510c20d31f91aad3f89d18e4f8ad89",
-      "rawVertices": 5568624,
-      "holes": 24,
-      "sourceInvalidFeatures": 1,
-      "outputInvalidFeatures": 1,
-      "maxBoundaryHausdorffMeters": 5.644,
-      "maximumAllowedMeters": 6.5,
-      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres",
+      "suburbs": 15648,
+      "polygonParts": 15813,
+      "vertices": 3627139,
       "format": "geobuf",
       "precisionDegrees": 1e-06,
-      "geojsonBytes": 28552714,
-      "reductionPercent": 82.79
+      "geojsonBytes": 88831352,
+      "bytes": 15215075,
+      "reductionPercent": 82.87,
+      "sha256": "c07ab6f26141eb013f80560da649ba4e1ee0ceaf3816dd61d71dca13645a44c0",
+      "rawVertices": 9448070,
+      "holes": 201,
+      "sourceInvalidFeatures": 1,
+      "outputInvalidFeatures": 0,
+      "maxBoundaryHausdorffMeters": 8.655,
+      "maximumAllowedMeters": 6.5,
+      "maximumAllowedOsmMeters": 12.0,
+      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres"
     }
   },
   "normalizedSource": {
-    "bytes": 223596620,
-    "sha256": "1f2edefd3ac6cca22ce0b5705ccd46111c03ac6f7136b65490be0022ed8cca88",
-    "suburbs": 4607
+    "bytes": 319554041,
+    "sha256": "721926cf93ff0441f7f0bc7b7f42460c3e79adaecfb50cc6242c92d98ad4f2b6",
+    "suburbs": 15648
   }
 }

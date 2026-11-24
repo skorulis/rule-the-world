@@ -7,5 +7,6 @@ node_modules/
 ios/Scripts/__pycache__/
 data/regions/*.geojson
 data/regions/*-download-cache.json
+data/regions/*-download-cache.osm.pbf
 ios/RuleTheWorld/Resource/Regions/*.geojson
 web/data/regions/*.geojson
