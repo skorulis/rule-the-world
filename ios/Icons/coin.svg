@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="rim" x2="0" y2="1"><stop stop-color="#FFECA0"/><stop offset=".5" stop-color="#F2B32D"/><stop offset="1" stop-color="#9A6200"/></linearGradient>
+    <linearGradient id="face" x2="0" y2="1"><stop stop-color="#FFE97E"/><stop offset=".55" stop-color="#F5B41E"/><stop offset="1" stop-color="#C98204"/></linearGradient>
+    <linearGradient id="hex" x2="0" y2="1"><stop stop-color="#E8A200"/><stop offset="1" stop-color="#A86500"/></linearGradient>
+    <radialGradient id="gloss" cx="50%" cy="28%" r="75%"><stop stop-color="#FFF" stop-opacity=".55"/><stop offset=".6" stop-color="#FFF" stop-opacity="0"/></radialGradient>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#2A1C00" flood-opacity=".5"/></filter>
+  </defs>
+
+  <g filter="url(#drop)">
+    <circle cx="128" cy="128" r="108" fill="url(#rim)"/>
+    <circle cx="128" cy="128" r="96" fill="url(#face)"/>
+  </g>
+  <circle cx="128" cy="128" r="82" fill="none" stroke="#9A6200" stroke-opacity=".6" stroke-width="4" stroke-dasharray="10 7"/>
+  <ellipse cx="128" cy="92" rx="78" ry="46" fill="url(#gloss)"/>
+
+  <!-- stamped hexagon -->
+  <g filter="url(#drop)">
+    <polygon points="128,78 171,103 171,153 128,178 85,153 85,103" fill="url(#hex)" stroke="#7A4C00" stroke-width="4" stroke-linejoin="round"/>
+    <polygon points="128,88 163,108 163,148 128,168 93,148 93,108" fill="none" stroke="#FFD970" stroke-width="3" stroke-opacity=".8"/>
+  </g>
+</svg>

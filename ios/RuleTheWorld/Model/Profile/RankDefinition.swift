@@ -10,4 +10,5 @@ nonisolated struct RankDefinition: Decodable, Sendable {
     let minVisits: Int?
     let maxQuantity: Int?
     let maxPercentage: Double?
+    let stipend: Int?
 }

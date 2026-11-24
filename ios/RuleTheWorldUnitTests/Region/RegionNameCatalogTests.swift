@@ -30,6 +30,19 @@ struct RegionNameCatalogTests {
         }
     }
 
+    @Test func bundledDemonymsCoverEveryCountry() throws {
+        let bundle = Bundle(for: HexMapViewModel.self)
+        let url = try #require(bundle.url(forResource: "countries-medium", withExtension: "pbf")
+            ?? bundle.url(forResource: "countries-medium", withExtension: "pbf", subdirectory: "Regions"))
+        let regions = try GeobufRegionDecoder.decode(Data(contentsOf: url))
+        let catalog = RegionNameCatalog(bundle: bundle)
+        #expect(regions.count == 242)
+        for feature in regions {
+            let id = try #require(Int64(feature.id))
+            #expect(catalog.demonym(for: id) != nil)
+        }
+    }
+
     @Test func bundledLookupCoversEveryStateWithItsCanonicalName() throws {
         let bundle = Bundle(for: HexMapViewModel.self)
         let url = try #require(bundle.url(forResource: "states-coarse", withExtension: "pbf")

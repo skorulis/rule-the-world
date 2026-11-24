@@ -18,6 +18,7 @@ final class TitlesViewModel {
         let detail: String?
         let visited: Int?
         let owned: Int?
+        let stipend: Int?
     }
 
     private let service: AuthenticatedService
@@ -47,18 +48,21 @@ final class TitlesViewModel {
                 let id = "\(ranking.type):\(ranking.id)"
                 guard seen.insert(id).inserted else { return nil }
                 let definition = catalog.definition(for: ranking.number, type: ranking.type)
+                let regionName = ranking.type == "global" ? "World" : (regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)")
                 return Item(
                     id: id,
                     number: ranking.number,
                     type: ranking.type,
                     ranks: catalog.definitions(for: ranking.type),
-                    name: definition?.name ?? "Title #\(ranking.number)",
+                    name: definition.map { "\(qualifier(for: ranking, regionName: regionName)) \($0.name)" }
+                        ?? "Title #\(ranking.number)",
                     icon: definition?.icon,
                     rarity: definition?.rarity,
-                    regionName: ranking.type == "global" ? "World" : (regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)"),
+                    regionName: regionName,
                     detail: definition?.description,
                     visited: ranking.visited,
-                    owned: ranking.owned
+                    owned: ranking.owned,
+                    stipend: definition?.stipend
                 )
             }.sorted { left, right in
                 if left.number != right.number { return left.number < right.number }
@@ -70,6 +74,14 @@ final class TitlesViewModel {
         } catch {
             guard !Task.isCancelled else { return }
             message = "Couldn't load your titles. Please try again."
+        }
+    }
+
+    private func qualifier(for ranking: ProfileSummary.Ranking, regionName: String) -> String {
+        switch ranking.type {
+        case "global": "World"
+        case "country": regionNames.demonym(for: ranking.id) ?? regionName
+        default: regionName
         }
     }
 }

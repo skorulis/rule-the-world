@@ -12,10 +12,13 @@ struct TitlesViewModelTests {
             service: AuthenticatedService(tokenStore: tokens, urlSession: session),
             catalog: RankCatalog(data: Data(#"""
                 {"global":[{"number":1,"name":"Emperor","rarity":"mythic","description":"World ruler","icon":"RankEmperor"}],"country":[
-                {"number":1,"name":"King","rarity":"legendary","femaleName":"Queen","description":"Sovereign"},
+                {"number":1,"name":"King","rarity":"legendary","femaleName":"Queen","description":"Sovereign","stipend":100},
                 {"number":15,"name":"Wanderer","rarity":"common","description":"Traveler"}]}
                 """#.utf8)),
-            regionNames: RegionNameCatalog(data: Data(#"{"1":"Zedland","2":"Arcadia","3":"Arcadia"}"#.utf8))
+            regionNames: RegionNameCatalog(
+                data: Data(#"{"1":"Zedland","2":"Arcadia","3":"Arcadia"}"#.utf8),
+                demonymsData: Data(#"{"1":"Zedlandian","2":"Arcadian","3":"Arcadian"}"#.utf8)
+            )
         )
     }
 
@@ -38,11 +41,13 @@ struct TitlesViewModelTests {
             """#)
         await model.load()
         #expect(model.items.map(\.id) == ["country:2", "country:3", "country:1"])
-        #expect(model.items.map(\.name) == ["King", "King", "King"])
+        #expect(model.items.map(\.name) == ["Arcadian King", "Arcadian King", "Zedlandian King"])
         #expect(model.items.map(\.regionName) == ["Arcadia", "Arcadia", "Zedland"])
         #expect(model.items.map(\.visited) == [9, 40, nil])
         #expect(model.items.map(\.owned) == [3, 12, nil])
         #expect(model.items.first?.detail == "Sovereign")
+        #expect(model.items.first?.stipend == 100)
+        #expect(model.items.last?.stipend == nil)
         #expect(model.hasLoaded)
         #expect(!model.isLoading)
         #expect(model.message == nil)
@@ -74,7 +79,7 @@ struct TitlesViewModelTests {
         await model.load()
         #expect(model.items.count == 2)
         let global = model.items.first { $0.id == "global:1" }
-        #expect(global?.name == "Emperor")
+        #expect(global?.name == "World Emperor")
         #expect(global?.regionName == "World")
         #expect(global?.icon == "RankEmperor")
         #expect(global?.rarity == .mythic)

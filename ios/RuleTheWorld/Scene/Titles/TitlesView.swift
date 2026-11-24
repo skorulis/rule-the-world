@@ -25,22 +25,25 @@ struct TitlesView: View {
                         }
                         VStack(alignment: .leading, spacing: 6) {
                             Text(item.name).font(.headline)
-                            Text(item.regionName).font(.subheadline)
-                            if let visited = item.visited, let owned = item.owned {
+                            if item.visited != nil || item.stipend != nil {
                                 HStack(spacing: 6) {
-                                    Image("HexVisited").resizable().frame(width: 20, height: 20)
-                                    Text(visited.formatted())
-                                    Image("HexOwned").resizable().frame(width: 20, height: 20)
-                                        .padding(.leading, 6)
-                                    Text(owned.formatted())
+                                    if let visited = item.visited, let owned = item.owned {
+                                        Image("HexVisited").resizable().frame(width: 20, height: 20)
+                                        Text(visited.formatted())
+                                        Image("HexOwned").resizable().frame(width: 20, height: 20)
+                                            .padding(.leading, 6)
+                                        Text(owned.formatted())
+                                    }
+                                    if let stipend = item.stipend {
+                                        Image("Coin").resizable().frame(width: 20, height: 20)
+                                            .padding(.leading, item.visited == nil ? 0 : 6)
+                                        Text("+\(stipend.formatted())")
+                                    }
                                 }
                                 .font(.subheadline.bold())
                                 .foregroundStyle(.secondary)
                                 .accessibilityElement(children: .ignore)
-                                .accessibilityLabel("\(visited.formatted()) hexes visited, \(owned.formatted()) hexes owned")
-                            }
-                            if let detail = item.detail {
-                                Text(detail).font(.footnote).foregroundStyle(.secondary)
+                                .accessibilityLabel(accessibilityLabel(for: item))
                             }
                         }
                         Spacer(minLength: 0)
@@ -78,5 +81,16 @@ struct TitlesView: View {
         .navigationTitle("Titles")
         .task { await model.load() }
         .refreshable { await model.load() }
+    }
+
+    private func accessibilityLabel(for item: TitlesViewModel.Item) -> String {
+        var parts: [String] = []
+        if let visited = item.visited, let owned = item.owned {
+            parts.append("\(visited.formatted()) hexes visited, \(owned.formatted()) hexes owned")
+        }
+        if let stipend = item.stipend {
+            parts.append("daily stipend of \(stipend.formatted()) coins")
+        }
+        return parts.joined(separator: ", ")
     }
 }
