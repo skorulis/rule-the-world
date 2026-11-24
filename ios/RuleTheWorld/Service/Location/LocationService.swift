@@ -20,6 +20,11 @@ final class LocationService: NSObject {
     private(set) var latestSample: LocationSample?
     private(set) var heading: Double?
     private var standardUpdatesActive = false
+    private var hasStarted = false
+
+    var hasLocationAccess: Bool {
+        authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+    }
 
     override init() {
         var continuation: AsyncStream<LocationSample>.Continuation!
@@ -27,11 +32,16 @@ final class LocationService: NSObject {
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         self.continuation = continuation
+        manager.delegate = self
+    }
+
+    func requestAuthorization() {
+        manager.requestAlwaysAuthorization()
     }
 
     func start() {
-        manager.delegate = self
-        manager.requestAlwaysAuthorization()
+        guard hasLocationAccess, !hasStarted else { return }
+        hasStarted = true
         manager.startMonitoringSignificantLocationChanges()
         manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         manager.distanceFilter = 20
@@ -163,6 +173,9 @@ extension LocationService: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         MainActor.assumeIsolated {
             authorizationStatus = status
+            if hasLocationAccess {
+                start()
+            }
             if status == .authorizedAlways {
                 manager.requestLocation()
                 for region in manager.monitoredRegions where region.identifier == WalkingGeofence.identifier {

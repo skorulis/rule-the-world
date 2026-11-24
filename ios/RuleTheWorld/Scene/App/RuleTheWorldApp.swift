@@ -49,8 +49,12 @@ struct RuleTheWorldApp: App {
                 if ProcessInfo.isRunningTests {
                     Color.clear
                 } else if let authManager, authManager.isSignedIn {
-                    ContentView(model: ContentViewModel.make(resolver: assembler.resolver))
-                        .environment(\.resolver, assembler.resolver)
+                    if let locationService, !locationService.hasLocationAccess {
+                        LocationPermissionView(locationService: locationService)
+                    } else {
+                        ContentView(model: ContentViewModel.make(resolver: assembler.resolver))
+                            .environment(\.resolver, assembler.resolver)
+                    }
                 } else {
                     CoordinatorView(coordinator: signedOutCoordinator)
                         .withRenderers(resolver: assembler.resolver)
