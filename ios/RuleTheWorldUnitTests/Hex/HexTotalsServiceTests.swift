@@ -10,6 +10,7 @@ private final class TotalsRequestBox: @unchecked Sendable {
 @MainActor
 struct HexTotalsServiceTests {
     private let cell = HexCell(rawValue: 0x8A2830828007FFF)
+    private let otherCell = HexCell(rawValue: 0x8A283082876FFFF)
 
     private func tokenStore() -> AuthTokenStore {
         let store = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
@@ -24,59 +25,65 @@ struct HexTotalsServiceTests {
         })
     }
 
-    @Test func fetchesTotalsForTheRequestedCell() async throws {
+    @Test func fetchesTotalsForTheRequestedCells() async throws {
         let box = TotalsRequestBox()
         let service = AuthenticatedService(tokenStore: tokenStore(), urlSession: FakeURLSession { request in
             box.request = request
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             let body = """
-                {"totals":{"totalVisits":105,"rivalScore":30.25},"userVisit":{
-                    "cell":"8a2830828007fff","lastVisit":"2026-11-20T10:00:00.000Z",
-                    "total":42,"score":12.5,"lastScore":0.5}}
+                {"visits":[
+                    {"cell":"8a2830828007fff","totals":{"totalVisits":105,"rivalScore":30.25},"userVisit":{
+                        "cell":"8a2830828007fff","lastVisit":"2026-11-20T10:00:00.000Z",
+                        "total":42,"score":12.5,"lastScore":0.5}},
+                    {"cell":"8a283082876ffff","totals":null,"userVisit":null}
+                ]}
                 """
             return (Data(body.utf8), response)
         })
-        let totals = try await service.totals(for: cell)
+        let totals = try await service.totals(for: [cell, otherCell])
         let request = try #require(box.request)
-        #expect(request.url?.path == "/api/hex-visits/8a2830828007fff")
+        #expect(request.url?.path == "/api/hex-visits/info")
         #expect(request.httpMethod == "GET")
+        #expect(request.url?.query() == "cells=8a2830828007fff,8a283082876ffff")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
-        #expect(totals.totals?.totalVisits == 105)
-        #expect(totals.totals?.rivalScore == 30.25)
-        #expect(totals.cell == cell)
-        #expect(totals.userVisit == HexVisit(
+        #expect(totals.count == 2)
+        #expect(totals[0].totals?.totalVisits == 105)
+        #expect(totals[0].totals?.rivalScore == 30.25)
+        #expect(totals[0].cell == cell)
+        #expect(totals[0].userVisit == HexVisit(
             lastVisit: Date(timeIntervalSince1970: 1_795_168_800),
             score: 12.5, lastScore: 0.5, total: 42
         ))
+        #expect(totals[1] == HexInfo(cell: otherCell, totals: nil, userVisit: nil))
     }
 
     @Test func decodesMissingUserVisit() async throws {
-        let body = "{\"totals\":{\"totalVisits\":7,\"rivalScore\":9},\"userVisit\":null}"
-        let totals = try await service(body: body).totals(for: cell)
-        #expect(totals == HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 9), userVisit: nil))
-    }
-
-    @Test func decodesMissingTotals() async throws {
-        let body = "{\"totals\":null,\"userVisit\":null}"
-        let totals = try await service(body: body).totals(for: cell)
-        #expect(totals == HexInfo(cell: cell, totals: nil, userVisit: nil))
+        let body = """
+            {"visits":[{"cell":"8a2830828007fff","totals":{"totalVisits":7,"rivalScore":9},"userVisit":null}]}
+            """
+        let totals = try await service(body: body).totals(for: [cell])
+        #expect(totals == [HexInfo(cell: cell, totals: HexTotals(totalVisits: 7, rivalScore: 9), userVisit: nil)])
     }
 
     @Test func rejectsFailedRequestsAndMalformedPayloads() async {
         for service in [
             service(status: 401, body: "{}"),
-            service(status: 500, body: "{\"totals\":{\"totalVisits\":1,\"rivalScore\":1},\"userVisit\":null}"),
+            service(status: 500, body: "{\"visits\":[]}"),
             service(body: "not json"),
-            service(body: "{\"totals\":{\"totalVisits\":-1,\"rivalScore\":0},\"userVisit\":null}"),
-            service(body: "{\"totals\":{\"totalVisits\":1,\"rivalScore\":-2},\"userVisit\":null}"),
             service(body: """
-                {"totals":{"totalVisits":1,"rivalScore":0},"userVisit":{
+                {"visits":[{"cell":"8a2830828007fff","totals":{"totalVisits":-1,"rivalScore":0},"userVisit":null}]}
+                """),
+            service(body: """
+                {"visits":[{"cell":"8a2830828007fff","totals":{"totalVisits":1,"rivalScore":-2},"userVisit":null}]}
+                """),
+            service(body: """
+                {"visits":[{"cell":"8a2830828007fff","totals":{"totalVisits":1,"rivalScore":0},"userVisit":{
                     "cell":"not-a-cell","lastVisit":"2026-11-20T10:00:00.000Z",
-                    "total":1,"score":1,"lastScore":0.5}}
+                    "total":1,"score":1,"lastScore":0.5}}]}
                 """),
         ] {
             await #expect(throws: (any Error).self) {
-                _ = try await service.totals(for: cell)
+                _ = try await service.totals(for: [cell])
             }
         }
     }

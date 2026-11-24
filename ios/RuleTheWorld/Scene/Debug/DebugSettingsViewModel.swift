@@ -19,6 +19,8 @@ final class DebugSettingsViewModel {
     private(set) var visitMessage: String?
     private(set) var isAddingPowerUp = false
     private(set) var powerUpMessage: String?
+    private(set) var isAddingMoney = false
+    private(set) var moneyMessage: String?
 
     private let settings = DebugSettings()
     private let locationService: LocationService
@@ -64,6 +66,23 @@ final class DebugSettingsViewModel {
             powerUpMessage = "Granted \(response.powerup.displayName)."
         } catch {
             powerUpMessage = error.localizedDescription
+        }
+    }
+
+    func addMoney() async {
+        guard !isAddingMoney else { return }
+        isAddingMoney = true
+        moneyMessage = nil
+        defer { isAddingMoney = false }
+        do {
+            let response = try await service.addMoney()
+            if let coins = response.coins {
+                moneyMessage = "Added \(response.added) coins. Balance: \(coins)."
+            } else {
+                moneyMessage = "Added \(response.added) coins."
+            }
+        } catch {
+            moneyMessage = error.localizedDescription
         }
     }
 }

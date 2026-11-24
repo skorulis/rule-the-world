@@ -21,6 +21,10 @@ final class AuthenticatedService: HTTPService {
         try await execute(request: AddPowerUpRequest())
     }
 
+    func addMoney() async throws -> AddMoneyResponse {
+        try await execute(request: AddMoneyRequest())
+    }
+
     func claimDailyReward() async throws -> AddPowerUpResponse {
         try await execute(request: DailyRewardRequest())
     }

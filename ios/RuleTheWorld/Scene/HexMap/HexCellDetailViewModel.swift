@@ -37,7 +37,9 @@ final class HexCellDetailViewModel {
         isLoadingTotals = true
         defer { isLoadingTotals = false }
         do {
-            info = try await store.save(totalsProvider.totals(for: cell))
+            for remote in try await totalsProvider.totals(for: [cell]) where remote.cell == cell {
+                info = try await store.save(remote)
+            }
         } catch {
             Logger().error("Hex totals lookup failed: \(error)")
         }

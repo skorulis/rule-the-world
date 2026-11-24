@@ -34,6 +34,15 @@ struct DebugSettingsView: View {
                     Text(powerUpMessage)
                 }
             }
+            Section("Money") {
+                Button(model.isAddingMoney ? "Adding money…" : "Add 1,000 Coins") {
+                    Task { await model.addMoney() }
+                }
+                .disabled(model.isAddingMoney)
+                if let moneyMessage = model.moneyMessage {
+                    Text(moneyMessage)
+                }
+            }
         }
         .navigationTitle("Debug Settings")
         .alert("Restart Required", isPresented: $model.showRestartAlert) {
