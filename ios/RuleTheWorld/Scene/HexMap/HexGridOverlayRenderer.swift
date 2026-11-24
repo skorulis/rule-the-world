@@ -2,6 +2,45 @@ import MapKit
 import SwiftUI
 import os
 
+private struct QuantizedMapPoint: Hashable, Comparable {
+    let xCoord: Int64
+    let yCoord: Int64
+
+    init(_ point: MKMapPoint) {
+        xCoord = Int64((point.x * 4).rounded())
+        yCoord = Int64((point.y * 4).rounded())
+    }
+
+    static func < (lhs: QuantizedMapPoint, rhs: QuantizedMapPoint) -> Bool {
+        lhs.xCoord != rhs.xCoord ? lhs.xCoord < rhs.xCoord : lhs.yCoord < rhs.yCoord
+    }
+}
+
+private struct HexEdgeKey: Hashable {
+    let start: QuantizedMapPoint
+    let end: QuantizedMapPoint
+
+    init(_ pointA: MKMapPoint, _ pointB: MKMapPoint) {
+        let first = QuantizedMapPoint(pointA)
+        let second = QuantizedMapPoint(pointB)
+        (start, end) = first < second ? (first, second) : (second, first)
+    }
+}
+
+private struct HexCellEdge {
+    let key: HexEdgeKey
+    let start: CGPoint
+    let end: CGPoint
+}
+
+private struct CollectedGeometry {
+    var todayPath = CGMutablePath()
+    var fillPaths: [HexState: CGMutablePath] = [:]
+    var cellEdges: [(state: HexState, edges: [HexCellEdge])] = []
+    var edgeStates: [HexEdgeKey: [HexState: Int]] = [:]
+    var flipping: [(boundary: [CLLocationCoordinate2D], animation: (from: HexState, to: HexState))] = []
+}
+
 final class HexGridOverlayRenderer: MKOverlayRenderer {
     private static let flipDuration: CFTimeInterval = 0.5
 
@@ -93,47 +132,102 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         let changed = changedCells(at: resolution)
         let elapsed = state.withLock { CACurrentMediaTime() - $0.animationStart }
         let progress = min(max(elapsed / Self.flipDuration, 0), 1)
-        var todayPath = CGMutablePath()
+        let geometry = collect(cells: cells, states: states, visits: visits, changed: changed, progress: progress)
 
-        var ownedPaths: [HexState: (fill: CGMutablePath, stroke: CGMutablePath)] = [:]
-        var flipping: [(boundary: [CLLocationCoordinate2D], animation: (from: HexState, to: HexState))] = []
+        context.setLineWidth(1 / zoomScale)
+        for (cellState, path) in geometry.fillPaths {
+            guard let color = cellState.color else { continue }
+            context.addPath(path)
+            context.setFillColor(UIColor(color).withAlphaComponent(0.45).cgColor)
+            context.fillPath()
+        }
+        context.setLineWidth(2 / zoomScale)
+        context.setLineJoin(.round)
+        context.setLineCap(.round)
+        let boundaryPaths = territoryBoundaryPaths(cellEdges: geometry.cellEdges, edgeStates: geometry.edgeStates)
+        for (cellState, path) in boundaryPaths {
+            guard let color = cellState.color else { continue }
+            context.addPath(path)
+            context.setStrokeColor(UIColor(color).cgColor)
+            context.strokePath()
+        }
+        context.addPath(geometry.todayPath)
+        context.setStrokeColor(UIColor.systemGreen.cgColor)
+        context.setLineWidth(3 / zoomScale)
+        context.strokePath()
+        for item in geometry.flipping {
+            drawFlip(
+                boundary: item.boundary, animation: item.animation,
+                progress: progress, zoomScale: zoomScale, in: context
+            )
+        }
+    }
+
+    private func collect(
+        cells: [HexCell],
+        states: [HexCell: HexState],
+        visits: Set<HexCell>,
+        changed: [HexCell: (from: HexState, to: HexState)],
+        progress: Double
+    ) -> CollectedGeometry {
+        var geometry = CollectedGeometry()
         for cell in cells {
             let boundary = grid.boundary(of: cell)
             guard !boundary.isEmpty else { continue }
             if visits.contains(cell) {
-                appendPath(to: &todayPath, boundary: boundary)
+                appendPath(to: &geometry.todayPath, boundary: boundary)
             }
             let cellState = states[cell] ?? .unclaimed
             if let animation = changed[cell], progress < 1 {
-                flipping.append((boundary, animation))
+                geometry.flipping.append((boundary, animation))
             } else if cellState != .unclaimed {
-                let paths = ownedPaths[cellState] ?? (CGMutablePath(), CGMutablePath())
-                var fill = paths.fill
-                var stroke = paths.stroke
-                appendPath(to: &fill, boundary: boundary)
-                appendPath(to: &stroke, boundary: boundary)
-                ownedPaths[cellState] = (fill, stroke)
+                var path = geometry.fillPaths[cellState] ?? CGMutablePath()
+                appendPath(to: &path, boundary: boundary)
+                geometry.fillPaths[cellState] = path
+                let edges = cellEdges(boundary: boundary, state: cellState, edgeStates: &geometry.edgeStates)
+                geometry.cellEdges.append((cellState, edges))
             }
         }
+        return geometry
+    }
 
-        context.setLineWidth(1 / zoomScale)
-        for (cellState, paths) in ownedPaths {
-            guard let color = cellState.color else { continue }
-            let uiColor = UIColor(color)
-            context.addPath(paths.fill)
-            context.setFillColor(uiColor.withAlphaComponent(0.45).cgColor)
-            context.fillPath()
-            context.addPath(paths.stroke)
-            context.setStrokeColor(uiColor.cgColor)
-            context.strokePath()
+    private func cellEdges(
+        boundary: [CLLocationCoordinate2D],
+        state cellState: HexState,
+        edgeStates: inout [HexEdgeKey: [HexState: Int]]
+    ) -> [HexCellEdge] {
+        boundary.indices.map { index in
+            let next = index == boundary.index(before: boundary.endIndex)
+                ? boundary.startIndex
+                : boundary.index(after: index)
+            let pointA = MKMapPoint(boundary[index])
+            let pointB = MKMapPoint(boundary[next])
+            let key = HexEdgeKey(pointA, pointB)
+            edgeStates[key, default: [:]][cellState, default: 0] += 1
+            return HexCellEdge(key: key, start: point(for: pointA), end: point(for: pointB))
         }
-        context.addPath(todayPath)
-        context.setStrokeColor(UIColor.systemGreen.cgColor)
-        context.setLineWidth(3 / zoomScale)
-        context.strokePath()
-        for item in flipping {
-            drawFlip(boundary: item.boundary, animation: item.animation, progress: progress, zoomScale: zoomScale, in: context)
+    }
+
+    private func territoryBoundaryPaths(
+        cellEdges: [(state: HexState, edges: [HexCellEdge])],
+        edgeStates: [HexEdgeKey: [HexState: Int]]
+    ) -> [HexState: CGMutablePath] {
+        var paths: [HexState: CGMutablePath] = [:]
+        for (state, edges) in cellEdges {
+            for edge in edges where isTerritoryBoundary(edge: edge, in: edgeStates) {
+                let strokeState = edgeStates[edge.key]?.keys.max() ?? state
+                let path = paths[strokeState] ?? CGMutablePath()
+                path.move(to: edge.start)
+                path.addLine(to: edge.end)
+                paths[strokeState] = path
+            }
         }
+        return paths
+    }
+
+    private func isTerritoryBoundary(edge: HexCellEdge, in edgeStates: [HexEdgeKey: [HexState: Int]]) -> Bool {
+        guard let neighbours = edgeStates[edge.key] else { return false }
+        return neighbours.count > 1 || neighbours.values.reduce(0, +) == 1
     }
 
     private func changedCells(at resolution: Int) -> [HexCell: (from: HexState, to: HexState)] {
