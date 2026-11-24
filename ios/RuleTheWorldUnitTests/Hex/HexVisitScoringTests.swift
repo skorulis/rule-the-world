@@ -10,8 +10,8 @@ struct HexVisitScoringTests {
     }
     private let noon = Date(timeIntervalSince1970: TimeInterval(1_700_000_000 - 1_700_000_000 % 86_400 + 43_200))
 
-    private func visit(lastVisit: Date, score: Double, lastScore: Double) -> HexVisit {
-        HexVisit(lastVisit: lastVisit, score: score, lastScore: lastScore)
+    private func visit(lastVisit: Date, score: Double, lastScore: Double, total: Int = 0) -> HexVisit {
+        HexVisit(lastVisit: lastVisit, score: score, lastScore: lastScore, total: total)
     }
 
     @Test func partialVisitSameDayAddsOnlyTheDifference() {
@@ -43,16 +43,16 @@ struct HexVisitScoringTests {
         #expect(abs(updated.lastScore - 1) < 0.000_001)
     }
 
-    @Test func totalCountsEveryVisitRegardlessOfScoreOrDay() {
+    @Test func totalCountsAtMostOneVisitPerDay() {
         let initial = visit(lastVisit: .distantPast, score: 0, lastScore: 0)
         let first = initial.recordingVisit(score: 0.8, at: noon)
         let lower = first.recordingVisit(score: 0.2, at: noon.addingTimeInterval(60))
         let zero = lower.recordingVisit(score: 0, at: noon.addingTimeInterval(120))
         let nextDay = zero.recordingVisit(score: 0.5, at: noon.addingTimeInterval(86_400))
         #expect(first.total == 1)
-        #expect(lower.total == 2)
-        #expect(zero.total == 3)
-        #expect(nextDay.total == 4)
+        #expect(lower.total == 1)
+        #expect(zero.total == 1)
+        #expect(nextDay.total == 2)
         #expect(abs(nextDay.score - 1.3) < 0.000_001)
     }
 
@@ -68,7 +68,7 @@ struct HexVisitScoringTests {
         let formatter = ISO8601DateFormatter()
         let before = try #require(formatter.date(from: "2026-11-20T23:59:59-08:00"))
         let after = try #require(formatter.date(from: "2026-11-21T00:00:01-08:00"))
-        let existing = visit(lastVisit: before, score: 1, lastScore: 1)
+        let existing = visit(lastVisit: before, score: 1, lastScore: 1, total: 1)
         let updated = existing.recordingVisit(score: 1, at: after)
         #expect(updated.score == 1)
         #expect(updated.total == 1)

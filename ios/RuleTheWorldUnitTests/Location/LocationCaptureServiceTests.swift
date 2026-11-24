@@ -136,7 +136,7 @@ struct LocationCaptureServiceTests {
         #expect(logs.count == 1)
         #expect(logs.first?.score == 1)
         #expect(logs.first?.speed == 1.0)
-        #expect(logs.first?.count == 2)
+        #expect(logs.first?.count == 1)
     }
 
     @Test func captureRestartMergesUploadedBackgroundVisit() async throws {
@@ -157,7 +157,7 @@ struct LocationCaptureServiceTests {
         #expect(logs.count == 1)
         #expect(logs.first?.id == first.id)
         #expect(logs.first?.uploadID == first.uploadID)
-        #expect(logs.first?.count == 2)
+        #expect(logs.first?.count == 1)
         #expect(logs.first?.uploaded == false)
         #expect(logs.first?.locationType == .background)
     }
@@ -168,6 +168,22 @@ struct LocationCaptureServiceTests {
         await service.handle(sample(speed: nil, latitude: -33.95, longitude: 151.19))
         let logs = try await service.logStore.all()
         #expect(logs.count == 2)
+    }
+
+    @Test func returningToCellSameDayDoesNotAddVisitScoreOrLogRow() async throws {
+        let service = try makeService()
+        let cellSample = sample(speed: 1.0, latitude: -33.89, longitude: 151.19)
+        let cell = cellOf(cellSample)
+        await service.handle(cellSample)
+        await service.handle(sample(speed: 1.0, latitude: -33.95, longitude: 151.19))
+        await service.handle(cellSample)
+        let visit = try #require(try await service.store.visit(for: cell))
+        #expect(visit.total == 1)
+        #expect(visit.score == 1)
+        let logs = try await service.logStore.all()
+        #expect(logs.count == 2)
+        #expect(logs.map(\.count) == [1, 1])
+        #expect(try await service.logStore.visitCount(for: cell) == 1)
     }
 
     @Test func randomNearbyVisitsUpdateLogAndHexScores() async throws {
@@ -196,8 +212,9 @@ struct LocationCaptureServiceTests {
     @Test func repeatedRandomNearbyVisitsAddFiveLogEntriesEachTime() async throws {
         let service = try makeService()
         let origin = sample(speed: 1)
-        try await service.addRandomNearbyVisits(near: origin.coordinate)
-        try await service.addRandomNearbyVisits(near: origin.coordinate)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        try await service.addRandomNearbyVisits(near: origin.coordinate, now: now)
+        try await service.addRandomNearbyVisits(near: origin.coordinate, now: now.addingTimeInterval(86_400))
         #expect(try await service.logStore.all().count == 10)
     }
 

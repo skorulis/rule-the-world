@@ -40,8 +40,8 @@ struct DebugSettingsTests {
         #expect(NetworkEndpoint.production.makeSession() is URLSession)
     }
 
-    @Test func fallsBackToLocalForInvalidValue() {
+    @Test func fallsBackToDefaultForInvalidValue() {
         defaults.set("bogus", forKey: DebugSettings.endpointKey)
-        #expect(settings.endpoint == .local)
+        #expect(settings.endpoint == DebugSettings.defaultEndpoint)
     }
 }

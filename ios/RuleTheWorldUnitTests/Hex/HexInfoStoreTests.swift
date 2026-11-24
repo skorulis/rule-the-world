@@ -27,10 +27,27 @@ struct HexInfoStoreTests {
         _ = try await store.recordVisit(cell, at: Date(timeIntervalSince1970: 1_700_000_000))
         let date = Date(timeIntervalSince1970: 1_700_000_100)
         let visit = try await store.recordVisit(cell, at: date)
-        #expect(visit.total == 2)
+        #expect(visit.total == 1)
         #expect(visit.score == 1)
         #expect(visit.lastScore == 1)
         #expect(visit.lastVisit == date)
+    }
+
+    @MainActor
+    @Test func returningToCellSameDayDoesNotAddVisitOrScore() async throws {
+        let store = try makeStore()
+        let cellA = HexCell(rawValue: 0x8A283082876FFFF)
+        let cellB = HexCell(rawValue: 0x8A283082872FFFF)
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        _ = try await store.recordVisit(cellA, score: 0.5, at: start)
+        _ = try await store.recordVisit(cellB, at: start.addingTimeInterval(60))
+        let visit = try await store.recordVisit(cellA, score: 1, at: start.addingTimeInterval(120))
+        #expect(visit.total == 1)
+        #expect(visit.score == 1)
+        #expect(visit.lastScore == 1)
+        let sameScore = try await store.recordVisit(cellA, score: 0.25, at: start.addingTimeInterval(180))
+        #expect(sameScore.total == 1)
+        #expect(sameScore.score == 1)
     }
 
     @MainActor

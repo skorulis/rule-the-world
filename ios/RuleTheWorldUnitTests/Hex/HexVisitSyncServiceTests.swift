@@ -48,9 +48,13 @@ private final class VisitUploadSession {
 
 @MainActor
 struct HexVisitSyncServiceTests {
-    private func entry(cell: UInt64 = 0x8A283082876FFFF, score: Double = 0.5) -> HexVisitLog {
+    private func entry(
+        cell: UInt64 = 0x8A283082876FFFF,
+        score: Double = 0.5,
+        timestamp: Date = Date(timeIntervalSince1970: 1_700_000_000)
+    ) -> HexVisitLog {
         HexVisitLog(
-            timestamp: Date(timeIntervalSince1970: 1_700_000_000), cell: HexCell(rawValue: cell),
+            timestamp: timestamp, cell: HexCell(rawValue: cell),
             latitude: -33.89, longitude: 151.19, speed: 2, score: score
         )
     }
@@ -127,7 +131,7 @@ struct HexVisitSyncServiceTests {
         try await sync.syncPendingVisits()
         let updated = try #require(try await infos.info(for: visit.cell))
         #expect(updated.userVisit?.score == 1)
-        #expect(updated.userVisit?.total == 2)
+        #expect(updated.userVisit?.total == 1)
         #expect(updated.totals?.rivalScore == 1)
         #expect(infos.snapshot.states[visit.cell] == .contested)
         #expect(try await store.pending().count == 1)
@@ -150,7 +154,10 @@ struct HexVisitSyncServiceTests {
     @Test func chunksOutstandingVisitsAtServerLimit() async throws {
         let store = HexVisitLogStore(database: try AppDatabase.inMemory())
         for index in 0..<501 {
-            _ = try await store.record(entry(cell: index.isMultiple(of: 2) ? 0x8A283082876FFFF : 0x8A283082872FFFF))
+            _ = try await store.record(entry(
+                cell: index.isMultiple(of: 2) ? 0x8A283082876FFFF : 0x8A283082872FFFF,
+                timestamp: Date(timeIntervalSince1970: 1_700_000_000 + Double(index) * 86_400)
+            ))
         }
         let uploader = VisitUploadSession()
         let sync = HexVisitSyncService(store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()), uploader: uploader.service, tokenStore: tokenStore())

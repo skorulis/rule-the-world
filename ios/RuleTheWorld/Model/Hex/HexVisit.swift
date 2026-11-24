@@ -57,13 +57,14 @@ struct HexVisit: Hashable, Codable, Sendable {
         calendar: Calendar = HexVisit.scoringCalendar
     ) -> HexVisit {
         let clamped = min(max(visitScore, 0), Self.maxDailyScore)
-        let scoredToday = calendar.isDate(lastVisit, inSameDayAs: date) ? lastScore : 0
+        let sameDay = calendar.isDate(lastVisit, inSameDayAs: date)
+        let scoredToday = sameDay ? lastScore : 0
         let gain = max(clamped - scoredToday, 0)
         return HexVisit(
             lastVisit: date,
             score: score + gain,
             lastScore: scoredToday + gain,
-            total: total + 1
+            total: total + (sameDay ? 0 : 1)
         )
     }
 }

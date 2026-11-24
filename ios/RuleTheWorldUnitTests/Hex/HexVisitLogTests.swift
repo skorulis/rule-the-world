@@ -96,9 +96,9 @@ struct HexVisitLogTests {
         #expect(fast.merging(slow).locationType == .background)
     }
 
-    @Test func mergeIncrementsCount() {
-        #expect(entry(score: 0.5, count: 3).merging(entry(score: 1)).count == 4)
-        #expect(entry(score: 1).merging(entry(score: 0.5)).count == 2)
+    @Test func mergeKeepsMaxCount() {
+        #expect(entry(score: 0.5, count: 3).merging(entry(score: 1)).count == 3)
+        #expect(entry(score: 1).merging(entry(score: 0.5)).count == 1)
     }
 
     @Test func mergePreservesReceiverId() {

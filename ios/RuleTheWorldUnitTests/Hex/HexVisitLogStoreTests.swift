@@ -57,13 +57,13 @@ struct HexVisitLogStoreTests {
         #expect(all.first?.score == 1)
     }
 
-    @Test func sameCellMergesIncrementCount() async throws {
+    @Test func sameCellMergesKeepCountAtOne() async throws {
         let store = try makeStore()
         _ = try await store.record(entry(cell: cellA, score: 0.5))
         let second = try await store.record(entry(cell: cellA, score: 1))
-        #expect(second.count == 2)
+        #expect(second.count == 1)
         let third = try await store.record(entry(cell: cellA, score: 0.75))
-        #expect(third.count == 3)
+        #expect(third.count == 1)
         #expect(try await store.all().count == 1)
     }
 
@@ -84,11 +84,28 @@ struct HexVisitLogStoreTests {
         #expect(all.map(\.cell) == [cellA, cellB])
     }
 
-    @Test func alternatingCellsAppendRows() async throws {
+    @Test func returningToCellMergesIntoSameDayRow() async throws {
         let store = try makeStore()
-        _ = try await store.record(entry(cell: cellA))
+        let first = try await store.record(entry(cell: cellA))
         _ = try await store.record(entry(cell: cellB))
-        _ = try await store.record(entry(cell: cellA))
+        let third = try await store.record(entry(cell: cellA, score: 0.5))
+        #expect(third.id == first.id)
+        #expect(third.count == 1)
+        #expect(third.score == 1)
+        let all = try await store.all()
+        #expect(all.count == 2)
+        #expect(all.map(\.cell) == [cellA, cellB])
+    }
+
+    @Test func returningToCellOnLaterDayAppendsNewRow() async throws {
+        let store = try makeStore()
+        let first = try await store.record(entry(cell: cellA))
+        _ = try await store.record(entry(cell: cellB))
+        let third = try await store.record(entry(
+            cell: cellA,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000 + 86_400)
+        ))
+        #expect(third.id != first.id)
         let all = try await store.all()
         #expect(all.count == 3)
         #expect(all.map(\.cell) == [cellA, cellB, cellA])
@@ -112,7 +129,7 @@ struct HexVisitLogStoreTests {
         let changed = try await store.record(entry(cell: cellA, score: 1))
         try await store.markUploaded([snapshot], acceptedIDs: [snapshot.uploadID])
         #expect(changed.uploadID == snapshot.uploadID)
-        #expect(try await store.pending().first?.count == 2)
+        #expect(try await store.pending().first?.count == 1)
         try await store.markUploaded([changed], acceptedIDs: [changed.uploadID])
         #expect(try await store.pending().isEmpty)
     }
@@ -126,7 +143,7 @@ struct HexVisitLogStoreTests {
         let second = try await reopened.record(entry(cell: cellA))
         #expect(second.id == first.id)
         #expect(second.uploadID == first.uploadID)
-        #expect(second.count == 2)
+        #expect(second.count == 1)
         #expect(second.score == 1)
         #expect(!second.uploaded)
         #expect(try await reopened.all().count == 1)
@@ -138,7 +155,7 @@ struct HexVisitLogStoreTests {
         let third = try await reopened.record(entry(cell: cellA))
         #expect(third.id == first.id)
         #expect(third.uploadID == first.uploadID)
-        #expect(third.count == 3)
+        #expect(third.count == 1)
         #expect(try await reopened.all().count == 1)
         #expect(try await reopened.pending() == [third])
     }
@@ -161,16 +178,20 @@ struct HexVisitLogStoreTests {
         let after = try #require(first.id)
         let through = try #require(second.id)
         #expect(try await store.pending(after: after, through: through).map(\.id) == [second.id])
-        #expect(third.id != second.id)
+        #expect(third.id == first.id)
     }
 
-    @Test func visitCountSumsCountsForCellOnly() async throws {
+    @Test func visitCountCountsOneVisitPerCellPerDay() async throws {
         let store = try makeStore()
         _ = try await store.record(entry(cell: cellA))
         _ = try await store.record(entry(cell: cellA))
         _ = try await store.record(entry(cell: cellB))
         _ = try await store.record(entry(cell: cellA))
-        #expect(try await store.visitCount(for: cellA) == 3)
+        _ = try await store.record(entry(
+            cell: cellA,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000 + 86_400)
+        ))
+        #expect(try await store.visitCount(for: cellA) == 2)
         #expect(try await store.visitCount(for: cellB) == 1)
         #expect(try await store.visitCount(for: HexCell(rawValue: 1)) == 0)
     }

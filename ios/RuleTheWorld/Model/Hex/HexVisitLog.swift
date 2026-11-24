@@ -86,7 +86,7 @@ struct HexVisitLog: Hashable, Codable, Sendable {
             speed: mergedSpeed,
             score: max(score, other.score),
             locationType: winner.locationType,
-            count: max(count, other.count) + 1,
+            count: max(count, other.count),
             uploadID: uploadID
         )
     }

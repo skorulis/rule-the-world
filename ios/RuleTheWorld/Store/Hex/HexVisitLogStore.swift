@@ -11,8 +11,11 @@ final class HexVisitLogStore {
 
     func record(_ entry: HexVisitLog) async throws -> HexVisitLog {
         try await database.writer.write { db in
-            let last = try HexVisitLog.order(Column("id").desc).fetchOne(db)
-            if let last, last.cell == entry.cell,
+            let last = try HexVisitLog
+                .filter(Column("hexId") == entry.cell)
+                .order(Column("id").desc)
+                .fetchOne(db)
+            if let last,
                HexVisit.scoringCalendar.isDate(last.timestamp, inSameDayAs: entry.timestamp) {
                 var merged = last.merging(entry)
                 try merged.update(db)

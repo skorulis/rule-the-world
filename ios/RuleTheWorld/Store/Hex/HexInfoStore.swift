@@ -21,10 +21,12 @@ final class HexInfoStore {
         let visit = try await database.writer.write { db in
             var info = try HexInfo.fetchOne(db, key: cell)
                 ?? HexInfo(cell: cell, totals: nil, userVisit: nil)
-            let visit = (info.userVisit ?? HexVisit(lastVisit: .distantPast, score: 0, lastScore: 0))
-                .recordingVisit(score: score, at: date)
+            let previous = info.userVisit ?? HexVisit(lastVisit: .distantPast, score: 0, lastScore: 0)
+            let visit = previous.recordingVisit(score: score, at: date)
             info.userVisit = visit
-            info.totals?.totalVisits += 1
+            if visit.total > previous.total {
+                info.totals?.totalVisits += 1
+            }
             try info.save(db)
             return visit
         }

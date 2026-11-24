@@ -42,10 +42,18 @@ struct DebugSettings {
         self.defaults = defaults
     }
 
+    static var defaultEndpoint: NetworkEndpoint {
+        #if targetEnvironment(simulator)
+        .local
+        #else
+        .production
+        #endif
+    }
+
     var endpoint: NetworkEndpoint {
         get {
             defaults.string(forKey: Self.endpointKey)
-                .flatMap { NetworkEndpoint(rawValue: $0) } ?? .local
+                .flatMap { NetworkEndpoint(rawValue: $0) } ?? Self.defaultEndpoint
         }
         nonmutating set {
             defaults.set(newValue.rawValue, forKey: Self.endpointKey)
