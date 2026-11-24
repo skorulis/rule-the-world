@@ -15,8 +15,8 @@ struct HexMapView: View {
             grid: model.grid,
             userStatus: model.userStatus,
             selectedRegion: model.selectedRegion,
-            onCameraChange: { zoomScale, center, visibleWidthMeters in
-                model.cameraChanged(zoomScale: zoomScale, center: center, visibleWidthMeters: visibleWidthMeters)
+            onCameraChange: { zoomScale, region, visibleWidthMeters in
+                model.cameraChanged(zoomScale: zoomScale, region: region, visibleWidthMeters: visibleWidthMeters)
             },
             onTap: { coordinate in
                 model.tapped(coordinate: coordinate)

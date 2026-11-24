@@ -60,6 +60,17 @@ final class HexInfoStore {
         }
     }
 
+    func staleCells(in cells: [HexCell], asOf date: Date = .now) async throws -> [HexCell] {
+        let threshold = date.addingTimeInterval(-HexInfoRefreshPolicy.staleInterval)
+        return try await database.writer.read { db in
+            let fresh = Set(
+                try HexInfo.fetchAll(db, keys: cells)
+                    .compactMap { info in (info.lastUpdate ?? .distantPast) >= threshold ? info.cell : nil }
+            )
+            return cells.filter { !fresh.contains($0) }
+        }
+    }
+
     func visit(for cell: HexCell) async throws -> HexVisit? {
         try await info(for: cell)?.userVisit
     }

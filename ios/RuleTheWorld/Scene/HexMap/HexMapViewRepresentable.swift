@@ -7,7 +7,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let grid: HexGridService
     let userStatus: UserMapStatus?
     let selectedRegion: MapRegionSelection?
-    let onCameraChange: (MKZoomScale, CLLocationCoordinate2D, Double) -> Void
+    let onCameraChange: (MKZoomScale, MKCoordinateRegion, Double) -> Void
     let onTap: (CLLocationCoordinate2D) -> Void
 
     func makeUIView(context: Context) -> MKMapView {
@@ -41,7 +41,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        var onCameraChange: ((MKZoomScale, CLLocationCoordinate2D, Double) -> Void)?
+        var onCameraChange: ((MKZoomScale, MKCoordinateRegion, Double) -> Void)?
         var onTap: ((CLLocationCoordinate2D) -> Void)?
 
         private(set) var renderer: HexGridOverlayRenderer?
@@ -153,7 +153,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             let zoomScale = mapView.bounds.width / width
             let center = mapView.centerCoordinate
             let visibleWidthMeters = width * MKMetersPerMapPointAtLatitude(center.latitude)
-            onCameraChange?(zoomScale, center, visibleWidthMeters)
+            onCameraChange?(zoomScale, MKCoordinateRegion(mapView.visibleMapRect), visibleWidthMeters)
         }
     }
 }

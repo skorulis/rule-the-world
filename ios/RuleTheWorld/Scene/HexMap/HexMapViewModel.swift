@@ -27,6 +27,9 @@ final class HexMapViewModel {
     @ObservationIgnored private var pendingCamera: RegionCameraRequest?
     @ObservationIgnored private var cameraRevision = 0
     @ObservationIgnored private var regionLoadFailed = false
+    @ObservationIgnored private var fetchTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingFetch: MKCoordinateRegion?
+    @ObservationIgnored private var fetchCooldownUntil: Date?
 
     private struct RegionCameraRequest {
         let latitude: Double
@@ -80,11 +83,13 @@ final class HexMapViewModel {
         UserMapStatus.make(sample: locationService.latestSample, heading: locationService.heading)
     }
 
-    func cameraChanged(zoomScale: MKZoomScale, center: CLLocationCoordinate2D, visibleWidthMeters: Double) {
+    func cameraChanged(zoomScale: MKZoomScale, region: MKCoordinateRegion, visibleWidthMeters: Double) {
+        let center = region.center
         let resolution = HexZoomPolicy.resolution(forZoomScale: zoomScale, latitude: center.latitude)
         if resolution != displayedResolution {
             displayedResolution = resolution
         }
+        updatePendingFetch(region: region, resolution: resolution)
         cameraRevision += 1
         regionLevel = RegionOverlayPolicy.level(visibleWidthMeters: visibleWidthMeters, previous: regionLevel)
         guard let regionLevel, !regionLoadFailed else {
@@ -100,6 +105,45 @@ final class HexMapViewModel {
         }
     }
 
+    private func updatePendingFetch(region: MKCoordinateRegion, resolution: Int?) {
+        guard resolution == HexGridService.baseResolution,
+              fetchCooldownUntil.map({ Date.now >= $0 }) ?? true else {
+            pendingFetch = nil
+            return
+        }
+        pendingFetch = region
+        guard fetchTask == nil else { return }
+        fetchTask = Task { [weak self] in
+            await self?.updateVisibleHexes()
+        }
+    }
+
+    private func updateVisibleHexes() async {
+        defer { fetchTask = nil }
+        while let region = pendingFetch {
+            pendingFetch = nil
+            let cells = Array(
+                grid.cells(in: region, resolution: HexGridService.baseResolution)
+                    .prefix(HexInfoRefreshPolicy.maxCellsPerRequest)
+            )
+            do {
+                let stale = try await store.staleCells(in: cells)
+                guard !Task.isCancelled else { return }
+                if !stale.isEmpty {
+                    let infos = try await totalsProvider.totals(for: stale)
+                    guard !Task.isCancelled else { return }
+                    try await store.restore(infos)
+                }
+                fetchCooldownUntil = nil
+                try await Task.sleep(for: .milliseconds(300))
+            } catch {
+                guard !Task.isCancelled else { return }
+                Logger().error("Hex info fetch failed: \(error)")
+                fetchCooldownUntil = Date.now.addingTimeInterval(HexInfoRefreshPolicy.failureCooldown)
+            }
+        }
+    }
+
     func cancelRegionSelection() {
         cameraRevision += 1
         selectionTask?.cancel()
@@ -110,6 +154,9 @@ final class HexMapViewModel {
             selectedRegion = nil
         }
         regionLevel = nil
+        fetchTask?.cancel()
+        fetchTask = nil
+        pendingFetch = nil
     }
 
     private func updateRegionSelection() async {

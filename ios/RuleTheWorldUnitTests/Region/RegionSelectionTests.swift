@@ -18,7 +18,10 @@ struct RegionSelectionTests {
     private func move(_ model: HexMapViewModel, longitude: Double, width: Double = 2_000_000) {
         model.cameraChanged(
             zoomScale: 0.0001,
-            center: CLLocationCoordinate2D(latitude: 0, longitude: longitude),
+            region: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 0, longitude: longitude),
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            ),
             visibleWidthMeters: width
         )
     }
