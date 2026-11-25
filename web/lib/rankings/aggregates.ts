@@ -2,7 +2,7 @@ import { sql, type SQL } from "drizzle-orm";
 import { hexDetails, hexVisit } from "@/db/schema";
 import type { db } from "@/lib/db";
 
-export type RankingRegionType = "global" | "country" | "suburb";
+export type RankingRegionType = "global" | "country" | "state" | "suburb";
 
 export type RegionAggregate = {
   user_id: string;
@@ -35,6 +35,7 @@ export function regionAggregates(userId?: string): SQL {
     cross join lateral (values
       ('global', 1::bigint),
       ('country', ${hexDetails.regionCountry}),
+      ('state', ${hexDetails.regionState}),
       ('suburb', ${hexDetails.regionSuburb})
     ) as regions(type, id)
     where regions.id is not null

@@ -380,6 +380,117 @@
       "stipend": 2
     }
   ],
+  "state": [
+    {
+      "number": 1,
+      "name": "Lord Paramount",
+      "rarity": "legendary",
+      "description": "The supreme feudal lord holding ultimate authority over a state.",
+      "icon": "RankLordParamount",
+      "minOwnership": 200,
+      "minVisits": 15,
+      "maxQuantity": 1,
+      "stipend": 50
+    },
+    {
+      "number": 2,
+      "name": "High Lord",
+      "rarity": "epic",
+      "femaleName": "High Lady",
+      "description": "A great lord ranking just beneath the lord paramount of a state.",
+      "icon": "RankHighLord",
+      "minOwnership": 150,
+      "minVisits": 12,
+      "maxQuantity": 3,
+      "stipend": 40
+    },
+    {
+      "number": 3,
+      "name": "Lord",
+      "rarity": "epic",
+      "femaleName": "Lady",
+      "description": "A noble holding dominion over a domain within the state.",
+      "icon": "RankLord",
+      "minOwnership": 120,
+      "minVisits": 10,
+      "maxQuantity": 5,
+      "stipend": 32
+    },
+    {
+      "number": 4,
+      "name": "Earl",
+      "rarity": "rare",
+      "femaleName": "Countess",
+      "description": "A high noble charged with governing a great territory of the state.",
+      "icon": "RankEarl",
+      "minOwnership": 100,
+      "minVisits": 8,
+      "maxPercentage": 2,
+      "stipend": 28
+    },
+    {
+      "number": 5,
+      "name": "Thane",
+      "rarity": "rare",
+      "description": "A lord who holds land directly from the crown in exchange for service.",
+      "icon": "RankThane",
+      "minOwnership": 75,
+      "minVisits": 7,
+      "maxPercentage": 5,
+      "stipend": 22
+    },
+    {
+      "number": 6,
+      "name": "Castellan",
+      "rarity": "rare",
+      "description": "The keeper of a castle and the lands entrusted to its defense.",
+      "icon": "RankCastellan",
+      "minOwnership": 50,
+      "minVisits": 5,
+      "maxPercentage": 10,
+      "stipend": 18
+    },
+    {
+      "number": 7,
+      "name": "Warden",
+      "rarity": "common",
+      "description": "A sworn guardian responsible for keeping watch over part of the state.",
+      "icon": "RankWarden",
+      "minOwnership": 30,
+      "minVisits": 4,
+      "stipend": 14
+    },
+    {
+      "number": 8,
+      "name": "Sheriff",
+      "rarity": "common",
+      "description": "The crown's officer charged with keeping order across the shire.",
+      "icon": "RankSheriff",
+      "minOwnership": 15,
+      "minVisits": 3,
+      "stipend": 10
+    },
+    {
+      "number": 9,
+      "name": "Freeholder",
+      "rarity": "common",
+      "description": "An owner of a freehold estate with an established stake in the state.",
+      "icon": "RankFreeholder",
+      "minOwnership": 5,
+      "minVisits": 2,
+      "stipend": 6
+    },
+    {
+      "number": 10,
+      "name": "Tenant",
+      "rarity": "common",
+      "description": "An occupant holding land within the state.",
+      "icon": "RankTenant",
+      "minOwnership": 0,
+      "minVisits": 1,
+      "stipend": 2
+    }
+  ],
   "suburb": [
     {
       "number": 1,

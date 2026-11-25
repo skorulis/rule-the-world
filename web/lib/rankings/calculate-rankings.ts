@@ -3,7 +3,7 @@ import { playerRanking } from "@/db/schema";
 import { db } from "@/lib/db";
 import { loadRegionAggregates } from "./aggregates";
 import { allocateRanks, type RegionPlayer } from "./allocate";
-import { countryRanks, globalRanks, suburbRanks } from "./ranks";
+import { countryRanks, globalRanks, stateRanks, suburbRanks } from "./ranks";
 
 export interface RankingsSummary {
   regions: number;
@@ -20,7 +20,7 @@ export async function calculateRankings(): Promise<RankingsSummary> {
 
     const rows = await loadRegionAggregates(tx);
 
-    const regions = new Map<string, { id: number; type: "global" | "country" | "suburb"; players: RegionPlayer[] }>();
+    const regions = new Map<string, { id: number; type: "global" | "country" | "state" | "suburb"; players: RegionPlayer[] }>();
     for (const row of rows) {
       const id = Number(row.region);
       if (!Number.isSafeInteger(id) || id <= 0) continue;
@@ -33,14 +33,14 @@ export async function calculateRankings(): Promise<RankingsSummary> {
     const rankings: {
       user_id: string;
       region_id: number;
-      region_type: "global" | "country" | "suburb";
+      region_type: "global" | "country" | "state" | "suburb";
       visit_count: number;
       owned_count: number;
       rank_number: number;
     }[] = [];
     let assignments = 0;
-    const priority = { global: 0, country: 1, suburb: 2 };
-    const definitions = { global: globalRanks, country: countryRanks, suburb: suburbRanks };
+    const priority = { global: 0, country: 1, state: 2, suburb: 3 };
+    const definitions = { global: globalRanks, country: countryRanks, state: stateRanks, suburb: suburbRanks };
     const ordered = [...regions.values()].sort((a, b) =>
       priority[a.type] - priority[b.type] || a.id - b.id);
     for (const { id, type, players } of ordered) {

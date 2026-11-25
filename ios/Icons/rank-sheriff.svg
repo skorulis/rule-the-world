@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x2="0" y2="1"><stop stop-color="#D9EEE5"/><stop offset=".55" stop-color="#80B7A0"/><stop offset="1" stop-color="#477A69"/></linearGradient>
+    <linearGradient id="edge" x2="0" y2="1"><stop stop-color="#D9EEE5"/><stop offset="1" stop-color="#477A69"/></linearGradient>
+    <radialGradient id="gloss" cx="50%" cy="30%" r="75%"><stop stop-color="#FFF" stop-opacity=".45"/><stop offset=".6" stop-color="#FFF" stop-opacity="0"/></radialGradient>
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#101820" flood-opacity=".5"/></filter>
+  </defs>
+  <g filter="url(#drop)"><rect x="24" y="24" width="208" height="208" rx="52" fill="url(#edge)"/><rect x="34" y="34" width="188" height="188" rx="44" fill="url(#tile)"/></g>
+  <rect x="48" y="48" width="160" height="160" rx="36" fill="none" stroke="#477A69" stroke-opacity=".55" stroke-width="3"/>
+  <path d="M34 120V78a44 44 0 0 1 44-44h100a44 44 0 0 1 44 44v42z" fill="url(#gloss)"/>
+  <g fill="none" stroke="#FFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" filter="url(#drop)"><path d="M128 78l14 31 34 4-25 23 7 34-30-17-30 17 7-34-25-23 34-4z"/><circle cx="128" cy="128" r="10"/></g>
+</svg>

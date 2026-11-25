@@ -3,11 +3,12 @@ import type { RegionRanking } from "@/db/auth-schema";
 import { playerRanking } from "@/db/schema";
 import type { db } from "@/lib/db";
 import { loadRegionAggregates, type RankingRegionType } from "./aggregates";
-import { countryRanks, globalRanks, suburbRanks, type RankDefinition } from "./ranks";
+import { countryRanks, globalRanks, stateRanks, suburbRanks, type RankDefinition } from "./ranks";
 
 const definitions: Record<RankingRegionType, RankDefinition[]> = {
   global: globalRanks,
   country: countryRanks,
+  state: stateRanks,
   suburb: suburbRanks,
 };
 
