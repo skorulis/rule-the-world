@@ -12,6 +12,7 @@ final class HexMapViewModel {
     let initialRegion: MKCoordinateRegion
     var displayedResolution: Int?
     var selectedCell: HexCell?
+    var regionDetail: MapRegionBoundary?
     var mapMode: HexMapMode = .territory
 
     private(set) var selectedRegion: MapRegionSelection?
@@ -23,6 +24,8 @@ final class HexMapViewModel {
     private let locationService: LocationService
     private let boundaries: any RegionBoundaryProviding
     private let totalsProvider: any HexTotalsProviding
+    private let leadersProvider: any RegionLeadersProviding
+    private let rankCatalog: RankCatalog
     private let regionNames: RegionNameCatalog
     private var regionLevel: RegionOverlayPolicy.Level?
     @ObservationIgnored private var selectionTask: Task<Void, Never>?
@@ -48,6 +51,8 @@ final class HexMapViewModel {
         locationService: LocationService,
         boundaries: RegionBoundaryProviding,
         totalsProvider: HexTotalsProviding,
+        leadersProvider: RegionLeadersProviding,
+        rankCatalog: RankCatalog,
         regionNames: RegionNameCatalog = RegionNameCatalog()
     ) {
         self.grid = grid
@@ -56,6 +61,8 @@ final class HexMapViewModel {
         self.locationService = locationService
         self.boundaries = boundaries
         self.totalsProvider = totalsProvider
+        self.leadersProvider = leadersProvider
+        self.rankCatalog = rankCatalog
         self.regionNames = regionNames
         self.initialRegion = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
@@ -192,6 +199,10 @@ final class HexMapViewModel {
     func tapped(coordinate: CLLocationCoordinate2D) {
         guard displayedResolution == HexGridService.baseResolution else { return }
         selectedCell = grid.cell(containing: coordinate, resolution: HexGridService.baseResolution)
+    }
+
+    func makeRegionDetailViewModel(for region: MapRegionBoundary) -> RegionDetailViewModel {
+        RegionDetailViewModel(region: region, leadersProvider: leadersProvider, catalog: rankCatalog)
     }
 
     func makeCellDetailViewModel(for cell: HexCell) -> HexCellDetailViewModel {

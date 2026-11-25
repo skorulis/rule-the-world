@@ -25,7 +25,8 @@ struct HexViewportFetchTests {
         return HexMapViewModel(
             grid: grid, store: HexInfoStore(database: database),
             logStore: HexVisitLogStore(database: database),
-            locationService: LocationService(), boundaries: NilRegionProvider(), totalsProvider: provider
+            locationService: LocationService(), boundaries: NilRegionProvider(), totalsProvider: provider,
+            leadersProvider: EmptyLeadersProvider(), rankCatalog: RankCatalog()
         )
     }
 
@@ -60,7 +61,8 @@ struct HexViewportFetchTests {
         let model = HexMapViewModel(
             grid: grid, store: store,
             logStore: HexVisitLogStore(database: database),
-            locationService: LocationService(), boundaries: NilRegionProvider(), totalsProvider: provider
+            locationService: LocationService(), boundaries: NilRegionProvider(), totalsProvider: provider,
+            leadersProvider: EmptyLeadersProvider(), rankCatalog: RankCatalog()
         )
         defer { model.cancelRegionSelection() }
         let region = region()
@@ -95,6 +97,10 @@ struct HexViewportFetchTests {
         #expect(Set(second.cells) == Set(grid.cells(in: region(longitude: 151.21), resolution: HexGridService.baseResolution)))
         second.completion.resume(returning: infos(for: second.cells))
     }
+}
+
+private struct EmptyLeadersProvider: RegionLeadersProviding {
+    func regionLeaders(type: RegionType, id: Int64) async throws -> [RegionLeader] { [] }
 }
 
 private struct NilRegionProvider: RegionBoundaryProviding {

@@ -11,7 +11,8 @@ struct RegionSelectionTests {
         return HexMapViewModel(
             grid: HexGridService(), store: HexInfoStore(database: database),
             logStore: HexVisitLogStore(database: database),
-            locationService: LocationService(), boundaries: provider, totalsProvider: EmptyTotalsProvider()
+            locationService: LocationService(), boundaries: provider, totalsProvider: EmptyTotalsProvider(),
+            leadersProvider: EmptyLeadersProvider(), rankCatalog: RankCatalog()
         )
     }
 
@@ -136,6 +137,10 @@ struct RegionSelectionTests {
         #expect(model.selectedRegion?.boundary.id == "latest")
         #expect(model.selectedRegion?.level == .coarse)
     }
+}
+
+private struct EmptyLeadersProvider: RegionLeadersProviding {
+    func regionLeaders(type: RegionType, id: Int64) async throws -> [RegionLeader] { [] }
 }
 
 private struct EmptyTotalsProvider: HexTotalsProviding {

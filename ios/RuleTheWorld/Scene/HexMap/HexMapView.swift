@@ -26,12 +26,19 @@ struct HexMapView: View {
         .ignoresSafeArea()
         .overlay(alignment: .topLeading) {
             if let region = model.selectedRegion {
-                Text(region.boundary.name)
-                    .font(.headline)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: .capsule)
-                    .padding()
+                Button {
+                    model.regionDetail = region.boundary
+                } label: {
+                    Text(region.boundary.name)
+                        .font(.headline)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .background(.ultraThinMaterial, in: .capsule)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Region details")
+                .accessibilityValue(region.boundary.name)
+                .padding()
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -76,6 +83,16 @@ struct HexMapView: View {
         .onDisappear { model.cancelRegionSelection() }
         .sheet(item: $model.selectedCell) { cell in
             HexCellDetailView(model: model.makeCellDetailViewModel(for: cell))
+        }
+        .sheet(item: $model.regionDetail) { region in
+            NavigationStack {
+                RegionDetailView(model: model.makeRegionDetailViewModel(for: region))
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { model.regionDetail = nil }
+                        }
+                    }
+            }
         }
     }
 }

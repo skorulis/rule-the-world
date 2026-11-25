@@ -59,6 +59,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         .inObjectScope(.container)
         container.register(HexTotalsProviding.self) { $0.authenticatedService() }
         .inObjectScope(.container)
+        container.register(RegionLeadersProviding.self) { $0.authenticatedService() }
+        .inObjectScope(.container)
         container.register(ProfileService.self) {
             ProfileService(service: $0.authenticatedService(), store: $0.profileSummaryStore())
         }
