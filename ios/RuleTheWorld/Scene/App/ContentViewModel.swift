@@ -8,7 +8,6 @@ import Observation
 @MainActor
 final class ContentViewModel {
     let hexMapCoordinator = Coordinator(root: MainPath.hexMap)
-    let visitLogCoordinator = Coordinator(root: MainPath.visitLog)
     let profileCoordinator = Coordinator(root: MainPath.profile)
 
     @Resolvable<Resolver>

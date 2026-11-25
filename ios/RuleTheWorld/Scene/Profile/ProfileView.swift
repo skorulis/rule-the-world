@@ -41,6 +41,13 @@ struct ProfileView: View {
                     LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())
                 }
             }
+            Section("Debug") {
+                Button {
+                    coordinator?.push(MainPath.visitLog)
+                } label: {
+                    Label("Visit Log", systemImage: "list.bullet")
+                }
+            }
             Section {
                 Button("Log out", role: .destructive) {
                     showSignOutConfirmation = true

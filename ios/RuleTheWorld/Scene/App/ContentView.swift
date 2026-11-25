@@ -13,10 +13,6 @@ struct ContentView: View {
                 CoordinatorView(coordinator: model.hexMapCoordinator)
                     .withRenderers(resolver: resolver!)
             }
-            Tab("Visits", systemImage: "list.bullet") {
-                CoordinatorView(coordinator: model.visitLogCoordinator)
-                    .withRenderers(resolver: resolver!)
-            }
             Tab("Profile", systemImage: "person.crop.circle") {
                 CoordinatorView(coordinator: model.profileCoordinator)
                     .withRenderers(resolver: resolver!)
