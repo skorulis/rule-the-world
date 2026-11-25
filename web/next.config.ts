@@ -7,12 +7,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/hex-visits/batch": [
       "./data/regions/countries-medium.pbf", "./data/regions/states-medium.pbf",
-      "./data/regions/suburbs-medium.pbf", "../data/regions/suburbs-medium.pbf",
+      "./data/regions/suburbs-index.json", "../data/regions/suburbs-index.json",
+      "./data/regions/suburbs/*.pbf", "../data/regions/suburbs/*.pbf",
       "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
     "/api/debug/hex_details": [
       "./data/regions/countries-medium.pbf", "./data/regions/states-medium.pbf",
-      "./data/regions/suburbs-medium.pbf", "../data/regions/suburbs-medium.pbf",
+      "./data/regions/suburbs-index.json", "../data/regions/suburbs-index.json",
+      "./data/regions/suburbs/*.pbf", "../data/regions/suburbs/*.pbf",
       "../data/regions/countries-medium.pbf", "../data/regions/states-medium.pbf",
     ],
     "/api/me": ["./data/powerups.json", "../data/powerups.json"],

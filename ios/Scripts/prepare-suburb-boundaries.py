@@ -11,8 +11,12 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import geobuf
+import h3
+
 from region_pipeline import (
-    OUTPUT, coverage_names, load_regions, publish_dataset, regroup, validate_file, validate_resources, write_level,
+    OUTPUT, coverage_names, load_regions, load_shards, publish_dataset, regroup, validate_resources,
+    validate_shards, write_level, write_shards,
 )
 import osm_suburbs
 
@@ -322,7 +326,8 @@ def prepare(cache: Path | None = None, osm_extract: Path = OSM_EXTRACT):
             stats = write_level(simplified, "suburbs", level, interval, "suburbs", output=directory)
             decoded = load_regions("suburbs", level, output=directory)
             quality = geometry_quality(collection, decoded)
-            metadata["levels"][level] = {**stats, **quality}
+            shards = write_shards(decoded, "suburbs", output=directory)
+            metadata["levels"][level] = {**stats, **quality, "shards": shards}
             print(level, metadata["levels"][level], flush=True)
         publish_dataset("suburbs", metadata, directory)
         update_names(decoded)
@@ -334,22 +339,32 @@ def validate():
     assert set(metadata["parents"].values()) <= states
     countries = {feature["properties"]["id"] for feature in load_regions("countries")["features"]}
     validate_resources("suburbs", metadata)
+    index = json.loads((OUTPUT / "suburbs-index.json").read_text())
     for level in LEVELS:
         assert metadata["levels"][level]["intervalMeters"] == LEVELS[level]
         assert metadata["levels"][level]["maxBoundaryHausdorffMeters"] <= OSM_MAX_DEVIATION_METERS
-        ids, parts, vertices = validate_file("suburbs", level, metadata["levels"][level], "suburbs")
-        print(f"Validated {level}: {len(ids)} suburbs, {parts} parts, {vertices} vertices")
+        assert metadata["levels"][level]["shards"]["resolution"] == index["shardResolution"]
+        ids, parts, vertices = validate_shards("suburbs", index, metadata["levels"][level], "suburbs")
+        print(f"Validated {level}: {len(ids)} suburbs across {index['cells']} shards, {parts} parts, {vertices} vertices")
         assert not ids & states and not ids & countries, "suburb ids must not collide"
         assert all(int(identity) >= metadata["idBase"] for identity in ids)
-        for feature in load_regions("suburbs", level)["features"]:
+        collection = load_shards("suburbs")
+        for feature in collection["features"]:
             assert feature["properties"]["parent"] in states
         if level == "medium":
-            collection = load_regions("suburbs", level)
             for latitude, longitude in [(-33.898, 151.179), (-33.868, 151.209), (-32.927, 151.776)]:
                 print(f"  Coverage at {latitude}, {longitude}: {coverage_names(collection, latitude, longitude)}")
             for point in REGRESSION_POINTS + OSM_REGRESSION_POINTS:
-                assert coverage_names(collection, point["latitude"], point["longitude"]) == [point["name"]], point
-            print(f"  Verified {len(REGRESSION_POINTS) + len(OSM_REGRESSION_POINTS)} source-derived coastal regression points")
+                cell = h3.latlng_to_cell(point["latitude"], point["longitude"], index["shardResolution"])
+                candidates = {index["homes"][identity] for identity in index["coverage"].get(cell, [])}
+                features = [
+                    feature
+                    for home in candidates
+                    for feature in geobuf.decode((OUTPUT / "suburbs" / f"{home}.pbf").read_bytes())["features"]
+                    if feature["properties"]["id"] in index["coverage"][cell]
+                ]
+                assert coverage_names({"type": "FeatureCollection", "features": features}, point["latitude"], point["longitude"]) == [point["name"]], point
+            print(f"  Verified {len(REGRESSION_POINTS) + len(OSM_REGRESSION_POINTS)} source-derived coastal regression points via shard lookup")
 
 
 if __name__ == "__main__":

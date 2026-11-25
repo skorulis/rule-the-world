@@ -71,8 +71,8 @@ describe("suburbIdForPoint", () => {
   const NSW = stateIdForPoint(AUSTRALIA, -33.8, 151.2);
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const hasSuburbData = [
-    path.resolve(moduleDir, "../../data/regions/suburbs-medium.pbf"),
-    path.resolve(process.cwd(), "data/regions/suburbs-medium.pbf"),
+    path.resolve(moduleDir, "../../data/regions/suburbs-index.json"),
+    path.resolve(process.cwd(), "data/regions/suburbs-index.json"),
   ].some(existsSync);
 
   it("returns 'none' for the 'none' region", () => {

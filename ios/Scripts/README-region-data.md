@@ -2,7 +2,8 @@
 
 How canonical `data/regions/*-{medium,coarse}.pbf` datasets are produced and how
 to add a new state or country. Everything here is generated — never hand-edit
-the `.pbf`, `*-source.json`, or `region-names.json` outputs.
+the `.pbf`, `*-source.json`, `*-index.json`, `suburbs/`, or `region-names.json`
+outputs.
 
 ## Pipeline
 
@@ -13,8 +14,19 @@ source (FeatureServer / .osm.pbf)
   -> mapshaper Douglas-Peucker simplify (keep-shapes, shared topology)
   -> repair invalid simplified rings (shapely make_valid, rounded to 1e-6)
   -> geobuf encode (region_pipeline.write_level)
+  -> suburbs only: shard by H3 cell (region_pipeline.write_shards)
   -> publish_dataset: atomic write to data/regions, sync iOS bundle + web symlink
 ```
+
+Suburbs are shipped as `data/regions/suburbs/<h3cell>.pbf` shards rather than a
+single collection. Each feature is stored once in the shard of the H3 cell
+(`SHARD_RESOLUTION = 4`) containing its centroid; `suburbs-index.json` records
+the shard list, `homes` (feature id -> shard cell), and `coverage` (cell ->
+feature ids whose geometry intersects it). A point lookup resolves
+`latlng_to_cell(point)` -> `coverage` ids -> their `homes` shards. The same
+layout will later serve CDN downloads; consumers go through a shard-store
+abstraction (`SuburbShardProviding` on iOS, `boundaryPath` on web) instead of
+assuming bundled files.
 
 Scripts (run from repo root, env per `ios/Scripts/requirements-regions.txt`):
 

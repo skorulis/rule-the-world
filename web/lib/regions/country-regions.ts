@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { decode } from "geobuf";
+import { latLngToCell } from "h3-js";
 import Pbf from "pbf";
 import { noRegion } from "@/db/schema";
 
@@ -175,16 +176,69 @@ function childrenByParent(fileName: string, optional = false): Map<bigint, Regio
 }
 
 let statesByParent: Map<bigint, Region[]> | undefined;
-let suburbsByParent: Map<bigint, Region[]> | undefined;
 
 function states(parent: bigint): Region[] {
   statesByParent ??= childrenByParent("states-medium.pbf");
   return statesByParent.get(parent) ?? [];
 }
 
-function suburbs(parent: bigint): Region[] {
-  suburbsByParent ??= childrenByParent("suburbs-medium.pbf", true);
-  return suburbsByParent.get(parent) ?? [];
+type SuburbIndex = {
+  shardResolution: number;
+  shards: Record<string, { features: number; bytes: number; sha256: string }>;
+  homes: Record<string, string>;
+  coverage: Record<string, string[]>;
+};
+
+let suburbsIndex: SuburbIndex | null | undefined;
+
+function suburbIndex(): SuburbIndex | undefined {
+  if (suburbsIndex === undefined) {
+    let parsed: SuburbIndex;
+    try {
+      parsed = JSON.parse(new TextDecoder().decode(readFileSync(boundaryPath("suburbs-index.json"))));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        suburbsIndex = null;
+        return undefined;
+      }
+      throw error;
+    }
+    if (typeof parsed?.shardResolution !== "number" || !parsed.shards || !parsed.homes || !parsed.coverage) {
+      throw new Error("Invalid suburb shard index");
+    }
+    suburbsIndex = parsed;
+  }
+  return suburbsIndex ?? undefined;
+}
+
+const suburbShardRegions = new Map<string, Region[]>();
+
+function suburbShard(cell: string): Region[] {
+  let regions = suburbShardRegions.get(cell);
+  if (!regions) {
+    regions = parseRegions(decodeCollection(readFileSync(boundaryPath(`suburbs/${cell}.pbf`))));
+    suburbShardRegions.set(cell, regions);
+  }
+  return regions;
+}
+
+function suburbCandidates(latitude: number, longitude: number): Region[] {
+  const index = suburbIndex();
+  const wrapped = (((longitude + 180) % 360) + 360) % 360 - 180;
+  if (!index || !Number.isFinite(latitude) || !Number.isFinite(wrapped) || Math.abs(latitude) > 90) {
+    return [];
+  }
+  const covered = index.coverage[latLngToCell(latitude, wrapped, index.shardResolution)];
+  if (!covered?.length) return [];
+  const wanted = new Set(covered);
+  const candidates: Region[] = [];
+  const homes = new Set(covered.map((id) => index.homes[id]).filter((home): home is string => home !== undefined));
+  for (const home of homes) {
+    for (const region of suburbShard(home)) {
+      if (wanted.has(region.id.toString())) candidates.push(region);
+    }
+  }
+  return candidates.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 function regionContains(region: Region, latitude: number, longitude: number): boolean {
@@ -209,34 +263,36 @@ export function stateIdForPoint(parent: bigint, latitude: number, longitude: num
 
 export function suburbIdForPoint(parent: bigint, latitude: number, longitude: number): bigint {
   if (parent === noRegion) return noRegion;
-  return suburbs(parent).find((region) => regionContains(region, latitude, longitude))?.id ?? noRegion;
+  return suburbCandidates(latitude, longitude)
+    .find((region) => region.parent === parent && regionContains(region, latitude, longitude))?.id ?? noRegion;
 }
 
 export type RegionHierarchy = { country: bigint; state: bigint; suburb: bigint };
 
-let suburbHierarchies: { region: Region; hierarchy: RegionHierarchy }[] | undefined;
+let statesById: Map<bigint, Region> | undefined;
+let countriesById: Map<bigint, Region> | undefined;
 
-function detailedSuburbs() {
-  if (!suburbHierarchies) {
-    const countries = new Map(catalog("countries-medium.pbf").map((region) => [region.id, region]));
-    const stateRegions = new Map(catalog("states-medium.pbf").map((region) => [region.id, region]));
-    suburbsByParent ??= childrenByParent("suburbs-medium.pbf", true);
-    const regions = [...suburbsByParent.values()].flat().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-    suburbHierarchies = regions.map((region) => {
-      const state = region.parent === undefined ? undefined : stateRegions.get(region.parent);
-      const country = state?.parent === undefined ? undefined : countries.get(state.parent);
-      if (region.kind !== "suburb" || state?.kind !== "state" || country?.kind !== "country") {
-        throw new Error("Invalid suburb parent hierarchy");
-      }
-      return { region, hierarchy: { country: country.id, state: state.id, suburb: region.id } };
-    });
-  }
-  return suburbHierarchies;
+function statesByIdMap(): Map<bigint, Region> {
+  statesById ??= new Map(catalog("states-medium.pbf").map((region) => [region.id, region]));
+  return statesById;
+}
+
+function countriesByIdMap(): Map<bigint, Region> {
+  countriesById ??= new Map(catalog("countries-medium.pbf").map((region) => [region.id, region]));
+  return countriesById;
 }
 
 export function hierarchyForPoint(latitude: number, longitude: number): RegionHierarchy {
-  const detailed = detailedSuburbs().find(({ region }) => regionContains(region, latitude, longitude));
-  if (detailed) return detailed.hierarchy;
+  const region = suburbCandidates(latitude, longitude)
+    .find((candidate) => regionContains(candidate, latitude, longitude));
+  if (region) {
+    const state = region.parent === undefined ? undefined : statesByIdMap().get(region.parent);
+    const country = state?.parent === undefined ? undefined : countriesByIdMap().get(state.parent);
+    if (region.kind !== "suburb" || state?.kind !== "state" || country?.kind !== "country") {
+      throw new Error("Invalid suburb parent hierarchy");
+    }
+    return { country: country.id, state: state.id, suburb: region.id };
+  }
   const country = regionIdForPoint(latitude, longitude);
   const state = stateIdForPoint(country, latitude, longitude);
   return { country, state, suburb: noRegion };

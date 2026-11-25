@@ -243,7 +243,14 @@
       "maxBoundaryHausdorffMeters": 8.655,
       "maximumAllowedMeters": 6.5,
       "maximumAllowedOsmMeters": 12.0,
-      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres"
+      "measurement": "discrete symmetric boundary Hausdorff distance in per-feature local equirectangular metres",
+      "shards": {
+        "resolution": 4,
+        "cells": 1770,
+        "bytes": 15270152,
+        "maxShardBytes": 173209,
+        "indexBytes": 1346894
+      }
     }
   },
   "normalizedSource": {

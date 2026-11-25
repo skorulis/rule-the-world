@@ -7,12 +7,16 @@ import tempfile
 import urllib.request
 
 import geobuf
+import h3
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "data/regions"
 REVISION = "9380cca83db5f9aef52d5e762765100745f84b27"
 TOOL = "mapshaper@0.7.101"
 LEVELS = {"medium": 3000, "coarse": 15000}
+SHARD_RESOLUTION = 4
+SHARD_BUFFER_DEGREES = 0.5
+MAX_SHARD_BYTES = 1_500_000
 
 
 def download(directory: Path, source: str, stem: str):
@@ -132,6 +136,127 @@ def load_regions(stem: str, level: str = "medium", output: Path = OUTPUT):
     return geobuf.decode((output / f"{stem}-{level}.pbf").read_bytes())
 
 
+def feature_bounds(feature: dict):
+    points = [point for polygon in feature["geometry"]["coordinates"] for ring in polygon for point in ring]
+    return (
+        min(point[0] for point in points), min(point[1] for point in points),
+        max(point[0] for point in points), max(point[1] for point in points),
+    )
+
+
+def write_shards(collection: dict, stem: str, resolution: int = SHARD_RESOLUTION, output: Path = OUTPUT):
+    """Split a FeatureCollection into per-H3-cell shard files plus a JSON index.
+
+    Each feature is stored once in its "home" shard (the cell containing its
+    centroid). The index records `homes` (feature id -> home cell) and
+    `coverage` (cell -> ids whose geometry intersects that cell, i.e. the ids a
+    point lookup inside the cell must consider). A cell containing a point of a
+    feature always intersects it, so `coverage[latlng_to_cell(point)]` lists
+    every feature that can contain the point; readers fetch the distinct home
+    shards for those ids and point-in-polygon test them.
+    Candidate coverage cells come from a center-containment polyfill of each
+    bounding box expanded by SHARD_BUFFER_DEGREES (well beyond one cell radius),
+    filtered by cell-bounds then exact geometry intersection.
+    """
+    from shapely.geometry import Polygon, shape
+
+    homes = {}
+    coverage = {}
+    grouped = {}
+    for feature in collection["features"]:
+        identity = feature["properties"]["id"]
+        min_lon, min_lat, max_lon, max_lat = feature_bounds(feature)
+        geometry = shape(feature["geometry"])
+        centroid = geometry.centroid
+        homes[identity] = h3.latlng_to_cell(centroid.y, centroid.x, resolution)
+        grouped.setdefault(homes[identity], []).append(feature)
+        bounds = h3.LatLngPoly([
+            (max(min_lat - SHARD_BUFFER_DEGREES, -90), max(min_lon - SHARD_BUFFER_DEGREES, -180)),
+            (max(min_lat - SHARD_BUFFER_DEGREES, -90), min(max_lon + SHARD_BUFFER_DEGREES, 180)),
+            (min(max_lat + SHARD_BUFFER_DEGREES, 90), min(max_lon + SHARD_BUFFER_DEGREES, 180)),
+            (min(max_lat + SHARD_BUFFER_DEGREES, 90), max(min_lon - SHARD_BUFFER_DEGREES, -180)),
+        ])
+        for cell in h3.polygon_to_cells(bounds, resolution):
+            vertices = h3.cell_to_boundary(cell)
+            latitudes = [vertex[0] for vertex in vertices]
+            longitudes = [vertex[1] for vertex in vertices]
+            if (max(latitudes) < min_lat or min(latitudes) > max_lat
+                    or max(longitudes) < min_lon or min(longitudes) > max_lon):
+                continue
+            if not Polygon([(vertex[1], vertex[0]) for vertex in vertices]).intersects(geometry):
+                continue
+            coverage.setdefault(cell, []).append(identity)
+    directory = output / stem
+    directory.mkdir(parents=True, exist_ok=True)
+    for stale in directory.glob("*.pbf"):
+        stale.unlink()
+    shards = {}
+    total = 0
+    for cell in sorted(grouped):
+        features = sorted(grouped[cell], key=lambda feature: feature["properties"]["id"])
+        data = encode_collection({"type": "FeatureCollection", "features": features})
+        (directory / f"{cell}.pbf").write_bytes(data)
+        total += len(data)
+        shards[cell] = {
+            "features": len(features), "bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(),
+        }
+    index = {
+        "shardResolution": resolution, stem: len(collection["features"]),
+        "cells": len(shards), "bytes": total, "shards": shards,
+        "homes": homes,
+        "coverage": {cell: sorted(ids) for cell, ids in sorted(coverage.items())},
+    }
+    (output / f"{stem}-index.json").write_bytes(json.dumps(index, separators=(",", ":")).encode())
+    biggest = max(shards.values(), key=lambda shard: shard["bytes"])
+    assert biggest["bytes"] <= MAX_SHARD_BYTES, f"shard exceeds {MAX_SHARD_BYTES} bytes: {biggest}"
+    return {
+        "resolution": resolution, "cells": len(shards), "bytes": total,
+        "maxShardBytes": biggest["bytes"], "indexBytes": (output / f"{stem}-index.json").stat().st_size,
+    }
+
+
+def load_shards(stem: str, output: Path = OUTPUT):
+    merged = {}
+    for shard in sorted((output / stem).glob("*.pbf")):
+        for feature in geobuf.decode(shard.read_bytes())["features"]:
+            identity = feature["properties"]["id"]
+            assert identity not in merged or merged[identity] == feature
+            merged[identity] = feature
+    return {"type": "FeatureCollection", "features": [merged[key] for key in sorted(merged)]}
+
+
+def validate_shards(stem: str, index: dict, expected: dict, regions_key: str, output: Path = OUTPUT):
+    assert index["shardResolution"] >= 1 and isinstance(index["shards"], dict)
+    ids = set()
+    parts = 0
+    vertices = 0
+    total = 0
+    membership = {}
+    for cell, entry in index["shards"].items():
+        data = (output / stem / f"{cell}.pbf").read_bytes()
+        assert len(data) == entry["bytes"] and hashlib.sha256(data).hexdigest() == entry["sha256"]
+        collection = geobuf.decode(data)
+        assert len(collection["features"]) == entry["features"]
+        for feature in collection["features"]:
+            identity = feature["properties"]["id"]
+            assert identity not in ids, f"feature {identity} stored in multiple shards"
+            ids.add(identity)
+            membership[identity] = cell
+            for polygon in feature["geometry"]["coordinates"]:
+                parts += 1
+                vertices += sum(len(ring) for ring in polygon)
+        total += len(data)
+    assert total == index["bytes"] and len(index["shards"]) == index["cells"]
+    assert len(ids) == expected[regions_key] == index[stem]
+    assert parts == expected["polygonParts"] and vertices == expected["vertices"]
+    assert membership == index["homes"], "index homes do not match shard contents"
+    for cell, covered in index["coverage"].items():
+        for identity in covered:
+            assert identity in membership, f"coverage lists unknown feature {identity}"
+    return ids, parts, vertices
+
+
 def atomic_write(target: Path, data: bytes):
     with tempfile.NamedTemporaryFile(dir=target.parent, delete=False) as temporary:
         temporary.write(data)
@@ -141,21 +266,38 @@ def atomic_write(target: Path, data: bytes):
 
 
 def publish_dataset(stem: str, metadata: dict, staging: Path):
-    levels = [validate_file(stem, level, expected, stem, output=staging) for level, expected in metadata["levels"].items()]
-    assert levels and all((ids, parts) == levels[0][:2] for ids, parts, _ in levels), "region IDs or parts differ between levels"
+    sharded = (staging / stem).is_dir()
+    if not sharded:
+        levels = [validate_file(stem, level, expected, stem, output=staging) for level, expected in metadata["levels"].items()]
+        assert levels and all((ids, parts) == levels[0][:2] for ids, parts, _ in levels), "region IDs or parts differ between levels"
     if stem != "countries":
         parent_stem = "countries" if stem == "states" else "states"
         parents = {feature["properties"]["id"] for feature in load_regions(parent_stem)["features"]}
         ancestors = {feature["properties"]["id"] for feature in load_regions("countries")["features"]}
-        for level in metadata["levels"]:
-            collection = load_regions(stem, level, output=staging)
+        collections = [load_shards(stem, output=staging)] if sharded else [
+            load_regions(stem, level, output=staging) for level in metadata["levels"]
+        ]
+        for collection in collections:
             for feature in collection["features"]:
                 properties = feature["properties"]
                 assert properties["parent"] in parents and properties["id"] not in parents | ancestors
                 assert properties["kind"] == ("state" if stem == "states" else "suburb")
     for level in metadata["levels"]:
         filename = f"{stem}-{level}.pbf"
+        if sharded:
+            (OUTPUT / filename).unlink(missing_ok=True)
+            continue
         atomic_write(OUTPUT / filename, (staging / filename).read_bytes())
+    if sharded:
+        target = OUTPUT / stem
+        target.mkdir(exist_ok=True)
+        current = {shard.name for shard in (staging / stem).glob("*.pbf")}
+        for stale in target.glob("*.pbf"):
+            if stale.name not in current:
+                stale.unlink()
+        for shard in sorted((staging / stem).glob("*.pbf")):
+            atomic_write(target / shard.name, shard.read_bytes())
+        atomic_write(OUTPUT / f"{stem}-index.json", (staging / f"{stem}-index.json").read_bytes())
     atomic_write(OUTPUT / f"{stem}-source.json", (json.dumps(metadata, indent=2) + "\n").encode())
     synchronize(stem, metadata)
 
@@ -163,7 +305,7 @@ def publish_dataset(stem: str, metadata: dict, staging: Path):
 def synchronize(stem: str, metadata: dict):
     bundle = ROOT / "ios/RuleTheWorld/Resource/Regions"
     web = ROOT / "web/data/regions"
-    bundled_levels = {"countries": {"medium", "coarse"}, "states": {"coarse"}, "suburbs": {"medium"}}
+    bundled_levels = {"countries": {"medium", "coarse"}, "states": {"coarse"}, "suburbs": set()}
     filenames = [f"{stem}-{level}.pbf" for level in metadata["levels"] if level in bundled_levels[stem]]
     filenames.append(f"{stem}-source.json")
     for filename in filenames:
@@ -171,7 +313,29 @@ def synchronize(stem: str, metadata: dict):
         target = bundle / filename
         if source.resolve() != target.resolve():
             atomic_write(target, source.read_bytes())
-    if "medium" in metadata["levels"]:
+    sharded = (OUTPUT / stem).is_dir()
+    if sharded:
+        target_dir = bundle / stem
+        target_dir.mkdir(exist_ok=True)
+        current = {shard.name for shard in (OUTPUT / stem).glob("*.pbf")}
+        for stale in target_dir.glob("*.pbf"):
+            if stale.name not in current:
+                stale.unlink()
+        for shard in sorted((OUTPUT / stem).glob("*.pbf")):
+            target = target_dir / shard.name
+            if not target.exists() or target.read_bytes() != shard.read_bytes():
+                atomic_write(target, shard.read_bytes())
+        atomic_write(bundle / f"{stem}-index.json", (OUTPUT / f"{stem}-index.json").read_bytes())
+        for level in metadata["levels"]:
+            (bundle / f"{stem}-{level}.pbf").unlink(missing_ok=True)
+            (web / f"{stem}-{level}.pbf").unlink(missing_ok=True)
+        for name, relative in ((stem, f"../../../data/regions/{stem}"), (f"{stem}-index.json", f"../../../data/regions/{stem}-index.json")):
+            target = web / name
+            if not target.is_symlink():
+                assert not target.exists(), f"refusing to replace {target}"
+                target.symlink_to(relative)
+            assert target.resolve() == (OUTPUT / name).resolve(), f"stale web resource: {target}"
+    elif "medium" in metadata["levels"]:
         target = web / f"{stem}-medium.pbf"
         relative = f"../../../data/regions/{target.name}"
         if not target.is_symlink():
@@ -182,12 +346,24 @@ def synchronize(stem: str, metadata: dict):
 
 def validate_resources(stem: str, metadata: dict):
     bundle = ROOT / "ios/RuleTheWorld/Resource/Regions"
+    web = ROOT / "web/data/regions"
+    sharded = (OUTPUT / stem).is_dir()
     for level in metadata["levels"]:
         filename = f"{stem}-{level}.pbf"
+        if sharded:
+            assert not (bundle / filename).exists() and not (web / filename).exists()
+            continue
         if stem == "countries" or (stem == "states" and level == "coarse") or stem == "suburbs":
             assert (OUTPUT / filename).read_bytes() == (bundle / filename).read_bytes(), f"stale iOS resource: {filename}"
         if level == "medium":
-            assert (OUTPUT / filename).read_bytes() == (ROOT / "web/data/regions" / filename).read_bytes()
+            assert (OUTPUT / filename).read_bytes() == (web / filename).read_bytes()
+    if sharded:
+        for shard in sorted((OUTPUT / stem).glob("*.pbf")):
+            assert shard.read_bytes() == (bundle / stem / shard.name).read_bytes(), f"stale iOS shard: {shard.name}"
+            assert shard.read_bytes() == (web / stem / shard.name).read_bytes(), f"stale web shard: {shard.name}"
+        index = (OUTPUT / f"{stem}-index.json").read_bytes()
+        assert index == (bundle / f"{stem}-index.json").read_bytes(), f"stale iOS resource: {stem}-index.json"
+        assert index == (web / f"{stem}-index.json").read_bytes(), f"stale web resource: {stem}-index.json"
     filename = f"{stem}-source.json"
     assert (OUTPUT / filename).read_bytes() == (bundle / filename).read_bytes()
 
