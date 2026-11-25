@@ -14,4 +14,13 @@ enum HexMapMode: String, CaseIterable, Identifiable {
             return "Exploration"
         }
     }
+
+    var imageName: String {
+        switch self {
+        case .territory:
+            return "HexOwned"
+        case .exploration:
+            return "HexVisited"
+        }
+    }
 }

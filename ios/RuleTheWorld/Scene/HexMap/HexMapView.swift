@@ -73,13 +73,29 @@ struct HexMapView: View {
             }
             .padding()
         }
-        .overlay(alignment: .bottom) {
-            Picker("Map mode", selection: $model.mapMode) {
+        .overlay(alignment: .bottomTrailing) {
+            HStack(spacing: 4) {
                 ForEach(HexMapMode.allCases) { mode in
-                    Text(mode.title).tag(mode)
+                    Button {
+                        model.mapMode = mode
+                    } label: {
+                        Image(mode.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                model.mapMode == mode ? Color.accentColor : Color.clear,
+                                in: .circle
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(mode.title)
+                    .accessibilityAddTraits(model.mapMode == mode ? .isSelected : [])
                 }
             }
-            .pickerStyle(.segmented)
+            .padding(4)
+            .background(.ultraThinMaterial, in: .capsule)
             .padding()
         }
         .animation(.default, value: model.selectedRegion)
