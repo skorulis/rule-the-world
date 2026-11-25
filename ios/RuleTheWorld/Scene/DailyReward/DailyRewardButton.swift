@@ -3,6 +3,11 @@ import SwiftUI
 struct DailyRewardButton: View {
     @Bindable var model: DailyRewardViewModel
     var onClaimed: (AddPowerUpResponse) -> Void = { _ in }
+    @State private var reveal: RewardRevealPhase?
+
+    /// Minimum time the "opening" animation plays so it reads as a reveal
+    /// even when the server responds instantly.
+    private static let minimumOpening: Duration = .seconds(0.9)
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -13,14 +18,23 @@ struct DailyRewardButton: View {
                 }
             }
         }
-        .alert(
-            "Common Daily Box",
-            isPresented: Binding(get: { model.reward != nil }, set: { if !$0 { model.reward = nil } }),
-            presenting: model.reward
-        ) { _ in
-            Button("OK", role: .cancel) {}
-        } message: { reward in
-            Text("You got \(reward.displayName)\n\(reward.formattedDescription)")
+        .fullScreenCover(
+            isPresented: Binding(get: { reveal != nil }, set: { if !$0 { reveal = nil } })
+        ) {
+            RewardRevealView(
+                phase: reveal ?? .opening,
+                accent: model.reward?.rarity.color ?? .gray,
+                boxSymbol: "gift.fill",
+                onDone: {
+                    reveal = nil
+                    model.reward = nil
+                },
+                card: {
+                    if let reward = model.reward {
+                        rewardCard(reward)
+                    }
+                }
+            )
         }
     }
 
@@ -31,11 +45,7 @@ struct DailyRewardButton: View {
                 .foregroundStyle(.secondary)
         } else if model.isAvailable(at: date) {
             Button {
-                Task {
-                    if let response = await model.claim() {
-                        onClaimed(response)
-                    }
-                }
+                open()
             } label: {
                 Label("Open Common Daily Box", systemImage: "gift.fill")
             }
@@ -50,6 +60,36 @@ struct DailyRewardButton: View {
         } else {
             Label("Daily box unavailable", systemImage: "gift")
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func open() {
+        reveal = .opening
+        Task {
+            let started = Date.now
+            guard let response = await model.claim() else {
+                reveal = nil
+                return
+            }
+            onClaimed(response)
+            let remaining = Self.minimumOpening - .seconds(started.distance(to: .now))
+            if remaining > .zero {
+                try? await Task.sleep(for: remaining)
+            }
+            withAnimation { reveal = .revealed }
+        }
+    }
+
+    private func rewardCard(_ reward: PowerUpDefinition) -> some View {
+        VStack(spacing: 14) {
+            PowerUpIcon(type: reward.type, rarity: reward.rarity, size: 96)
+            Text(reward.displayName)
+                .font(.title2.bold())
+                .foregroundStyle(reward.rarity.color)
+            Text(reward.formattedDescription)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
     }
 }

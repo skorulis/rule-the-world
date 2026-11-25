@@ -22,12 +22,12 @@ final class LocationCaptureService {
         grid: HexGridService,
         store: HexInfoStore,
         logStore: HexVisitLogStore,
-        haptics: any CaptureHaptics = UICaptureHaptics()
+        haptics: (any CaptureHaptics)? = nil
     ) {
         self.grid = grid
         self.store = store
         self.logStore = logStore
-        self.haptics = haptics
+        self.haptics = haptics ?? UICaptureHaptics()
     }
 
     func start(samples: AsyncStream<LocationSample>) {

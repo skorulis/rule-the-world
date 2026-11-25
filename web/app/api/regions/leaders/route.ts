@@ -21,8 +21,9 @@ export async function GET(request: Request) {
       return jsonError("Invalid region", 400);
     }
 
-    const rows = await db.execute<{ rank: number; name: string }>(sql`
-      select ${playerRanking.rankNumber} as rank, ${user.name} as name
+    const rows = await db.execute<{ rank: number; name: string; owned: number }>(sql`
+      select ${playerRanking.rankNumber} as rank, ${user.name} as name,
+        ${playerRanking.ownedCount} as owned
       from ${playerRanking}
       join ${user} on ${user.id} = ${playerRanking.userId}
       where ${playerRanking.regionType} = ${type}
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
     `);
 
     return NextResponse.json(
-      { leaders: rows.map((row) => ({ rank: Number(row.rank), name: row.name })) },
+      { leaders: rows.map((row) => ({ rank: Number(row.rank), name: row.name, owned: Number(row.owned) })) },
       { headers: { "cache-control": "private, no-store" } },
     );
   } catch (error) {

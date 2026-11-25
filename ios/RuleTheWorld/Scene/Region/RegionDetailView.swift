@@ -19,12 +19,7 @@ struct RegionDetailView: View {
                 }
             } else if let leaders = model.leaders, !leaders.isEmpty {
                 List(Array(leaders.enumerated()), id: \.offset) { _, leader in
-                    LabeledContent {
-                        Text(model.rankName(for: leader))
-                            .foregroundStyle(.secondary)
-                    } label: {
-                        Text(leader.name)
-                    }
+                    leaderRow(leader)
                 }
             } else {
                 ContentUnavailableView(
@@ -36,6 +31,29 @@ struct RegionDetailView: View {
         }
         .navigationTitle(model.region.name)
         .task { await model.load() }
+    }
+
+    private func leaderRow(_ leader: RegionLeader) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            let definition = model.rankDefinition(for: leader)
+            if let icon = definition?.icon {
+                RankIcon(name: icon, rarity: definition?.rarity)
+                    .padding(.top, 2)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(leader.name).font(.headline)
+                Text(model.rankName(for: leader))
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Label {
+                Text(leader.owned.formatted())
+            } icon: {
+                Image("HexOwned").resizable().frame(width: 14, height: 14)
+            }
+            .foregroundStyle(.secondary)
+            .padding(.top, 2)
+        }
     }
 }
 

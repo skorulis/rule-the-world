@@ -23,8 +23,12 @@ final class RegionDetailViewModel {
         self.catalog = catalog
     }
 
+    func rankDefinition(for leader: RegionLeader) -> RankDefinition? {
+        catalog.definition(for: leader.rank, type: region.kind.name)
+    }
+
     func rankName(for leader: RegionLeader) -> String {
-        catalog.definition(for: leader.rank, type: region.kind.name)?.name ?? "Rank #\(leader.rank)"
+        rankDefinition(for: leader)?.name ?? "Rank #\(leader.rank)"
     }
 
     func load() async {

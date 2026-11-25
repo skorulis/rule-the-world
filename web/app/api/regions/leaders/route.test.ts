@@ -42,17 +42,17 @@ describe("GET /api/regions/leaders", () => {
 
   it("returns the names of the top-ranked users", async () => {
     vi.mocked(db.execute).mockResolvedValueOnce([
-      { rank: 1, name: "Alice" },
-      { rank: 2, name: "Bob" },
-      { rank: 3, name: "Carol" },
+      { rank: 1, name: "Alice", owned: 12 },
+      { rank: 2, name: "Bob", owned: 7 },
+      { rank: 3, name: "Carol", owned: 3 },
     ] as never);
     const response = await GET(request());
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({ leaders: [
-      { rank: 1, name: "Alice" },
-      { rank: 2, name: "Bob" },
-      { rank: 3, name: "Carol" },
+      { rank: 1, name: "Alice", owned: 12 },
+      { rank: 2, name: "Bob", owned: 7 },
+      { rank: 3, name: "Carol", owned: 3 },
     ] });
   });
 

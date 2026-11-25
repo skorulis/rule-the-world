@@ -15,8 +15,8 @@ struct RegionDetailViewModelTests {
 
     @Test func loadsLeadersForRankedRegionTypes() async {
         let provider = StubLeadersProvider(leaders: [
-            RegionLeader(rank: 1, name: "Alice"),
-            RegionLeader(rank: 3, name: "Bob"),
+            RegionLeader(rank: 1, name: "Alice", owned: 0),
+            RegionLeader(rank: 3, name: "Bob", owned: 0),
         ])
         let model = RegionDetailViewModel(region: country, leadersProvider: provider, catalog: catalog)
         await model.load()
@@ -24,12 +24,12 @@ struct RegionDetailViewModelTests {
         #expect(model.message == nil)
         #expect(!model.isLoading)
         #expect(provider.requests == [.init(type: .country, id: 7)])
-        #expect(model.rankName(for: RegionLeader(rank: 1, name: "Alice")) == "King")
-        #expect(model.rankName(for: RegionLeader(rank: 2, name: "Eve")) == "Rank #2")
+        #expect(model.rankName(for: RegionLeader(rank: 1, name: "Alice", owned: 0)) == "King")
+        #expect(model.rankName(for: RegionLeader(rank: 2, name: "Eve", owned: 0)) == "Rank #2")
     }
 
     @Test func loadsLeadersForStateRegions() async {
-        let provider = StubLeadersProvider(leaders: [RegionLeader(rank: 1, name: "Alice")])
+        let provider = StubLeadersProvider(leaders: [RegionLeader(rank: 1, name: "Alice", owned: 0)])
         let model = RegionDetailViewModel(region: state, leadersProvider: provider, catalog: catalog)
         await model.load()
         #expect(model.leaders?.map(\.name) == ["Alice"])
@@ -53,7 +53,7 @@ struct RegionDetailViewModelTests {
         #expect(model.leaders == nil)
         #expect(model.message != nil)
         provider.error = nil
-        provider.leaders = [RegionLeader(rank: 1, name: "Carol")]
+        provider.leaders = [RegionLeader(rank: 1, name: "Carol", owned: 0)]
         await model.load()
         #expect(model.leaders?.map(\.name) == ["Carol"])
         #expect(model.message == nil)
