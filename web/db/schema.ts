@@ -17,6 +17,22 @@ export const hexVisit = pgTable("hex_visit", {
   check("hex_visit_last_score_range", sql`${table.lastScore} BETWEEN 0 AND 1`),
 ]);
 
+export const playerRanking = pgTable("player_ranking", {
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  regionId: bigint("region_id", { mode: "number" }).notNull(),
+  regionType: text("region_type").$type<"global" | "country" | "state" | "suburb">().notNull(),
+  visitCount: integer("visit_count").notNull(),
+  ownedCount: integer("owned_count").notNull(),
+  rankNumber: integer("rank_number").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.regionType, table.regionId] }),
+  check("player_ranking_region_id_positive", sql`${table.regionId} > 0`),
+  check("player_ranking_region_type_valid", sql`${table.regionType} IN ('global', 'country', 'state', 'suburb')`),
+  check("player_ranking_visit_count_nonnegative", sql`${table.visitCount} >= 0`),
+  check("player_ranking_owned_count_nonnegative", sql`${table.ownedCount} >= 0`),
+  check("player_ranking_rank_number_positive", sql`${table.rankNumber} > 0`),
+]);
+
 export const noRegion = BigInt(0);
 
 export const regionType = { none: 0, country: 1, state: 2, suburb: 3 } as const;

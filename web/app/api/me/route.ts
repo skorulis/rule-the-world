@@ -6,6 +6,7 @@ import { requireSession, serverError } from "@/lib/api/route-helpers";
 import { db } from "@/lib/db";
 import { dailyRewardAvailableAt } from "@/lib/powerups/daily-reward";
 import { dailyStipend } from "@/lib/stipend";
+import { rankingsForUser } from "@/lib/rankings/query";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
       coins: number | null;
       stipend_day: string | null;
     }>(sql`
-      select ${user.powerups} as powerups, ${user.rankings} as rankings,
+      select ${user.powerups} as powerups, ${rankingsForUser()} as rankings,
         ${user.dailyRewardDay}::text as daily_reward_day,
         ${user.coins} as coins, ${user.stipendDay}::text as stipend_day
       from ${user} where ${user.id} = ${session.user.id}

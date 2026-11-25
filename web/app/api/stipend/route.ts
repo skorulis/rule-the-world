@@ -5,6 +5,7 @@ import { jsonError, requireSession, serverError } from "@/lib/api/route-helpers"
 import { db } from "@/lib/db";
 import { utcDay } from "@/lib/powerups/daily-reward";
 import { dailyStipend } from "@/lib/stipend";
+import { rankingsForUser } from "@/lib/rankings/query";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
       rankings: RegionRanking[] | null;
       stipend_day: string | null;
     }>(sql`
-      select ${user.rankings} as rankings, ${user.stipendDay}::text as stipend_day
+      select ${rankingsForUser()} as rankings, ${user.stipendDay}::text as stipend_day
       from ${user} where ${user.id} = ${session.user.id}
     `);
     const today = utcDay(new Date());

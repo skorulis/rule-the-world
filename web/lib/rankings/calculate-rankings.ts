@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
-import { type RegionRanking, user } from "@/db/auth-schema";
-import { hexDetails, hexVisit } from "@/db/schema";
+import { hexDetails, hexVisit, playerRanking } from "@/db/schema";
 import { db } from "@/lib/db";
 import { allocateRanks, type RegionPlayer } from "./allocate";
 import { countryRanks, globalRanks, suburbRanks } from "./ranks";
@@ -58,7 +57,14 @@ export async function calculateRankings(): Promise<RankingsSummary> {
       regions.set(key, region);
     }
 
-    const rankings = new Map<string, RegionRanking[]>();
+    const rankings: {
+      user_id: string;
+      region_id: number;
+      region_type: "global" | "country" | "suburb";
+      visit_count: number;
+      owned_count: number;
+      rank_number: number;
+    }[] = [];
     let assignments = 0;
     const priority = { global: 0, country: 1, suburb: 2 };
     const definitions = { global: globalRanks, country: countryRanks, suburb: suburbRanks };
@@ -68,19 +74,20 @@ export async function calculateRankings(): Promise<RankingsSummary> {
       const byId = new Map(players.map((player) => [player.userId, player]));
       for (const [userId, number] of allocateRanks(players, definitions[type])) {
         const player = byId.get(userId);
-        rankings.set(userId, [...rankings.get(userId) ?? [],
-          { id, type, number, visited: player?.visited ?? 0, owned: player?.owned ?? 0 }]);
+        rankings.push({ user_id: userId, region_id: id, region_type: type,
+          rank_number: number, visit_count: player?.visited ?? 0, owned_count: player?.owned ?? 0 });
         assignments += 1;
       }
     }
 
-    await tx.execute(sql`update ${user} set "rankings" = '[]'::jsonb where ${user.rankings} <> '[]'::jsonb`);
-    if (rankings.size) {
-      const payload = JSON.stringify([...rankings].map(([userId, value]) => ({ user_id: userId, rankings: value })));
+    await tx.execute(sql`delete from ${playerRanking}`);
+    if (rankings.length) {
       await tx.execute(sql`
-        update ${user} set "rankings" = payload.rankings
-        from jsonb_to_recordset(${payload}::jsonb) as payload(user_id text, rankings jsonb)
-        where ${user.id} = payload.user_id
+        insert into ${playerRanking} (user_id, region_id, region_type, visit_count, owned_count, rank_number)
+        select user_id, region_id, region_type, visit_count, owned_count, rank_number
+        from jsonb_to_recordset(${JSON.stringify(rankings)}::jsonb) as payload(
+          user_id text, region_id bigint, region_type text, visit_count integer, owned_count integer, rank_number integer
+        )
       `);
     }
 

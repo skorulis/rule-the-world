@@ -21,7 +21,6 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   powerups: jsonb("powerups").$type<Record<string, number>>().default({}).notNull(),
-  rankings: jsonb("rankings").$type<RegionRanking[]>().default([]).notNull(),
   dailyRewardDay: date("daily_reward_day", { mode: "string" }),
   coins: integer("coins").default(0).notNull(),
   totalEarnings: integer("total_earnings").default(0).notNull(),

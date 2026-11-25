@@ -6,6 +6,8 @@ vi.mock("@/lib/db", () => ({ db: { execute: vi.fn() } }));
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { RegionRanking } from "@/db/auth-schema";
+import { dailyStipend } from "@/lib/stipend";
 import { GET } from "./route";
 
 const user = { id: "u1", name: "Alex", email: "a@b.c", createdAt: new Date("2026-01-02T03:04:05.000Z") };
@@ -41,6 +43,9 @@ describe("GET /api/me", () => {
       powerups: {},
       rankings: [],
       dailyRewardAvailableAt: expect.any(String),
+      coins: 0,
+      stipend: 10,
+      stipendAvailableAt: expect.any(String),
       regions: [
         { id: 1234, kind: "country", visited: 10, owned: 5 },
         { id: 2345, kind: "country", visited: 4, owned: 0 },
@@ -79,10 +84,36 @@ describe("GET /api/me", () => {
     expect(body.rankings).toEqual([{ id: 1159320379, type: "country", number: 15, visited: 6, owned: 2 }]);
     const statement = vi.mocked(db.execute).mock.calls[1][0];
     if (typeof statement === "string") throw new Error("Expected parameterized SQL");
-    expect(new PgDialect().sqlToQuery(statement.getSQL()).sql).toContain('"user"."rankings" as rankings');
+    const query = new PgDialect().sqlToQuery(statement.getSQL());
+    expect(query.sql).toContain('from "player_ranking"');
+    expect(query.sql).toContain('where "player_ranking"."user_id" = "user"."id"');
+    expect(query.sql).not.toContain('"user"."rankings"');
+    expect(query.params).toEqual(["u1"]);
   });
 
-  it("treats a missing rankings column value as no rankings", async () => {
+  it("preserves ranking array order, counts, and title stipend", async () => {
+    const rankings = [
+      { id: 1, type: "global", number: 1, visited: 12000, owned: 11000 },
+      { id: 1, type: "country", number: 1, visited: 6000, owned: 5500 },
+      { id: 1, type: "suburb", number: 1, visited: 20, owned: 20 },
+    ];
+    vi.mocked(db.execute).mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([{ rankings }] as never);
+    const body = await (await GET(request())).json();
+    expect(body.rankings).toEqual(rankings);
+    expect(body.stipend).toBe(dailyStipend(rankings as RegionRanking[]));
+    expect(body.stipend).toBeGreaterThan(10);
+  });
+
+  it("returns an empty array when the player has no ranking rows", async () => {
+    vi.mocked(db.execute).mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([{ rankings: [] }] as never);
+    const body = await (await GET(request())).json();
+    expect(body.rankings).toEqual([]);
+    expect(body.stipend).toBe(10);
+  });
+
+  it("treats a missing rankings result as no rankings", async () => {
     vi.mocked(db.execute)
       .mockResolvedValueOnce([] as never)
       .mockResolvedValueOnce([{ powerups: {}, rankings: null }] as never);
@@ -152,7 +183,7 @@ describe("GET /api/me", () => {
     expect(query.sql).toContain('select max(rival.score)');
     expect(query.sql).toContain('rival.cell = "hex_visit"."cell" and rival.user_id <>');
     expect(query.sql).toContain('join "hex_details"');
-    expect(query.sql).toContain('count(*) filter (where owned)');
+    expect(query.sql).toContain('count(*) filter (where owned and visited)');
     expect(query.sql).toContain('cross join lateral (values');
     expect(query.sql).toContain('("hex_details"."region_country", 1)');
     expect(query.sql).toContain('("hex_details"."region_state", 2)');

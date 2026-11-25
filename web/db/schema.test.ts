@@ -1,7 +1,33 @@
 import { getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
-import { hexDetails, hexVisit, hexVisitDay } from "./schema";
+import { hexDetails, hexVisit, hexVisitDay, playerRanking } from "./schema";
+import { user } from "./auth-schema";
+
+describe("player ranking schema", () => {
+  it("stores the six ranking fields in typed, non-null columns", () => {
+    expect(getTableName(playerRanking)).toBe("player_ranking");
+    const columns = getTableConfig(playerRanking).columns;
+    expect(columns.map((column) => [column.name, column.getSQLType(), column.notNull])).toEqual([
+      ["user_id", "text", true], ["region_id", "bigint", true], ["region_type", "text", true],
+      ["visit_count", "integer", true], ["owned_count", "integer", true], ["rank_number", "integer", true],
+    ]);
+    expect(playerRanking.regionId.mapFromDriverValue("1159320379")).toBe(1159320379);
+  });
+
+  it("keys a player's ranking by type and region and cascades player deletion", () => {
+    const config = getTableConfig(playerRanking);
+    expect(config.primaryKeys[0].columns.map((column) => column.name)).toEqual(["user_id", "region_type", "region_id"]);
+    expect(config.foreignKeys[0].onDelete).toBe("cascade");
+    expect(config.foreignKeys[0].reference().foreignTable).toBe(user);
+    expect(config.uniqueConstraints).toHaveLength(0);
+    expect(config.checks.map(({ name }) => name)).toEqual([
+      "player_ranking_region_id_positive", "player_ranking_region_type_valid",
+      "player_ranking_visit_count_nonnegative", "player_ranking_owned_count_nonnegative",
+      "player_ranking_rank_number_positive",
+    ]);
+  });
+});
 
 describe("visit score schema", () => {
   it("keys aggregates by user/cell and daily summaries by user/cell/day", () => {
