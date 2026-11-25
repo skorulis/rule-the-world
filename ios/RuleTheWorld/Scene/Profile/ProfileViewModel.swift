@@ -6,16 +6,8 @@ import Observation
 @Observable
 @MainActor
 final class ProfileViewModel {
-    struct Region: Identifiable {
-        let id: Int64
-        let name: String
-        let visited: Int
-        let owned: Int
-    }
-
     private let authManager: AuthManager
     private let service: AuthenticatedService
-    private let regionNames: RegionNameCatalog
     private let profileService: ProfileService
     let dailyReward: DailyRewardViewModel
     let stipend: StipendViewModel
@@ -24,16 +16,14 @@ final class ProfileViewModel {
     private(set) var coins: Int?
     private(set) var powerUpCount: Int?
     private(set) var titleCount: Int?
-    private(set) var regions: [Region] = []
 
     @Resolvable<Resolver>
     init(
         authManager: AuthManager, service: AuthenticatedService,
-        regionNames: RegionNameCatalog, profileService: ProfileService
+        profileService: ProfileService
     ) {
         self.authManager = authManager
         self.service = service
-        self.regionNames = regionNames
         self.profileService = profileService
         self.dailyReward = DailyRewardViewModel(service: service, profileService: profileService)
         self.stipend = StipendViewModel(service: service, profileService: profileService)
@@ -55,14 +45,6 @@ final class ProfileViewModel {
         dailyReward.update(availableAt: summary.dailyRewardAvailableAt)
         stipend.update(availableAt: summary.stipendAvailableAt, amount: summary.stipend)
         coins = summary.coins
-        var seen: Set<Int64> = []
-        regions = summary.regions.compactMap { region -> Region? in
-            guard let name = regionNames.name(for: region.id), seen.insert(region.id).inserted else { return nil }
-            return Region(id: region.id, name: name, visited: region.visited, owned: region.owned)
-        }.sorted {
-            let comparison = $0.name.localizedStandardCompare($1.name)
-            return comparison == .orderedSame ? $0.id < $1.id : comparison == .orderedAscending
-        }
     }
 
     func applyInventory(_ powerups: [String: Int]) {

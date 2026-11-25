@@ -41,17 +41,6 @@ struct ProfileView: View {
                     LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())
                 }
             }
-            if !model.regions.isEmpty {
-                Section("Regions") {
-                    ForEach(model.regions) { region in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(region.name).font(.headline)
-                            LabeledContent("Hexes visited", value: region.visited.formatted())
-                            LabeledContent("Hexes owned", value: region.owned.formatted())
-                        }
-                    }
-                }
-            }
             Section {
                 Button("Log out", role: .destructive) {
                     showSignOutConfirmation = true

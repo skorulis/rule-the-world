@@ -390,7 +390,7 @@
       "minOwnership": 20,
       "minVisits": 5,
       "maxQuantity": 1,
-      "stipend": 40
+      "stipend": 20
     },
     {
       "number": 2,
@@ -401,7 +401,7 @@
       "minOwnership": 15,
       "minVisits": 4,
       "maxQuantity": 1,
-      "stipend": 30
+      "stipend": 15
     },
     {
       "number": 3,
@@ -412,7 +412,7 @@
       "minOwnership": 10,
       "minVisits": 3,
       "maxQuantity": 3,
-      "stipend": 20
+      "stipend": 9
     },
     {
       "number": 4,
@@ -422,7 +422,7 @@
       "icon": "RankSteward",
       "minOwnership": 5,
       "minVisits": 2,
-      "stipend": 12
+      "stipend": 4
     },
     {
       "number": 5,
@@ -432,7 +432,7 @@
       "icon": "RankLocal",
       "minOwnership": 2,
       "minVisits": 1,
-      "stipend": 6
+      "stipend": 1
     },
     {
       "number": 6,
