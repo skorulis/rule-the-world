@@ -36,6 +36,19 @@ struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     }
 
     nonisolated func aggregated(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {
+        Self.aggregate(states: states, at: resolution, grid: grid)
+    }
+
+    nonisolated func aggregatedPersonal(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {
+        Self.aggregate(
+            states: states.filter { $0.value != .rivalOwned },
+            at: resolution, grid: grid
+        )
+    }
+
+    private nonisolated static func aggregate(
+        states: [HexCell: HexState], at resolution: Int, grid: HexGridService
+    ) -> [HexCell: HexState] {
         if resolution == HexGridService.baseResolution {
             return states
         }

@@ -12,6 +12,7 @@ final class HexMapViewModel {
     let initialRegion: MKCoordinateRegion
     var displayedResolution: Int?
     var selectedCell: HexCell?
+    var mapMode: HexMapMode = .territory
 
     private(set) var selectedRegion: MapRegionSelection?
     private(set) var isLoadingRegions = false

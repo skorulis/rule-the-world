@@ -12,6 +12,7 @@ struct HexMapView: View {
         HexMapViewRepresentable(
             initialRegion: model.initialRegion,
             snapshot: model.snapshot,
+            mode: model.mapMode,
             grid: model.grid,
             userStatus: model.userStatus,
             selectedRegion: model.selectedRegion,
@@ -51,6 +52,17 @@ struct HexMapView: View {
             .accessibilityLabel("Power-ups")
             .accessibilityValue(powerUpInventory.totalCount.formatted())
             .padding()
+        }
+        .safeAreaInset(edge: .bottom) {
+            Picker("Map mode", selection: $model.mapMode) {
+                ForEach(HexMapMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial)
         }
         .animation(.default, value: model.selectedRegion)
         .task(id: scenePhase) {

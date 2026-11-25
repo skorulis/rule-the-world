@@ -4,6 +4,7 @@ import SwiftUI
 struct HexMapViewRepresentable: UIViewRepresentable {
     let initialRegion: MKCoordinateRegion
     let snapshot: HexOwnershipSnapshot
+    let mode: HexMapMode
     let grid: HexGridService
     let userStatus: UserMapStatus?
     let selectedRegion: MapRegionSelection?
@@ -25,7 +26,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onCameraChange = onCameraChange
         context.coordinator.onTap = onTap
-        context.coordinator.renderer?.update(snapshot: snapshot)
+        context.coordinator.renderer?.update(snapshot: snapshot, mode: mode)
         context.coordinator.apply(status: userStatus, to: mapView)
         context.coordinator.apply(region: selectedRegion, to: mapView)
     }

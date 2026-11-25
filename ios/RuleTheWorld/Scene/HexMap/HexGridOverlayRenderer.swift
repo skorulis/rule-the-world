@@ -50,6 +50,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
 
     private struct State {
         var snapshot = HexOwnershipSnapshot(states: [:])
+        var mode: HexMapMode = .territory
         var previousSnapshot = HexOwnershipSnapshot(states: [:])
         var hasReceivedSnapshot = false
         var animationStart: CFTimeInterval = 0
@@ -69,12 +70,15 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         displayLink?.invalidate()
     }
 
-    func update(snapshot: HexOwnershipSnapshot) {
+    func update(snapshot: HexOwnershipSnapshot, mode: HexMapMode) {
         let (changed, animate) = state.withLock { state -> (Bool, Bool) in
-            guard state.snapshot != snapshot else {
+            let modeChanged = state.mode != mode
+            state.mode = mode
+            guard state.snapshot != snapshot || modeChanged else {
                 return (false, false)
             }
-            let animate = state.hasReceivedSnapshot && state.snapshot != snapshot
+            let animate = !modeChanged && mode == .territory
+                && state.hasReceivedSnapshot && state.snapshot != snapshot
             if animate {
                 state.previousSnapshot = state.snapshot
                 state.animationStart = CACurrentMediaTime()
@@ -129,11 +133,16 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         let region = MKCoordinateRegion(paddedRect)
 
         let cells = grid.cells(in: region, resolution: resolution)
-        let (states, visits) = aggregated(at: resolution)
-        let changed = changedCells(at: resolution)
+        let mode = state.withLock { $0.mode }
+        let exploring = mode == .exploration
+        let (states, visits) = aggregated(at: resolution, exploring: exploring)
+        let changed = exploring ? [:] : changedCells(at: resolution)
         let elapsed = state.withLock { CACurrentMediaTime() - $0.animationStart }
         let progress = min(max(elapsed / Self.flipDuration, 0), 1)
-        let geometry = collect(cells: cells, states: states, visits: visits, changed: changed, progress: progress)
+        let geometry = collect(
+            cells: cells, states: states, visits: visits, changed: changed,
+            progress: progress, exploring: exploring
+        )
 
         context.setLineWidth(1 / zoomScale)
         for (cellState, path) in geometry.fillPaths {
@@ -177,7 +186,8 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         states: [HexCell: HexState],
         visits: Set<HexCell>,
         changed: [HexCell: (from: HexState, to: HexState)],
-        progress: Double
+        progress: Double,
+        exploring: Bool
     ) -> CollectedGeometry {
         var geometry = CollectedGeometry()
         for cell in cells {
@@ -189,6 +199,12 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             let cellState = states[cell] ?? .unclaimed
             if let animation = changed[cell], progress < 1 {
                 geometry.flipping.append((boundary, animation))
+            } else if exploring {
+                guard cellState != .unclaimed else { continue }
+                let fillState = cellState == .contested ? .owned : cellState
+                var path = geometry.fillPaths[fillState] ?? CGMutablePath()
+                appendPath(to: &path, boundary: boundary)
+                geometry.fillPaths[fillState] = path
             } else if cellState != .unclaimed {
                 let edges = cellEdges(boundary: boundary, state: cellState, edgeStates: &geometry.edgeStates)
                 if cellState == .contested {
@@ -327,12 +343,14 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         }
     }
 
-    private func aggregated(at resolution: Int) -> ([HexCell: HexState], Set<HexCell>) {
+    private func aggregated(at resolution: Int, exploring: Bool) -> ([HexCell: HexState], Set<HexCell>) {
         state.withLock { state in
             if let cached = state.aggregateCache[resolution], let visits = state.visitCache[resolution] {
                 return (cached, visits)
             }
-            let result = state.snapshot.aggregated(at: resolution, grid: grid)
+            let result = exploring
+                ? state.snapshot.aggregatedPersonal(at: resolution, grid: grid)
+                : state.snapshot.aggregated(at: resolution, grid: grid)
             let visits = state.snapshot.aggregatedVisits(at: resolution, grid: grid)
             state.aggregateCache[resolution] = result
             state.visitCache[resolution] = visits
