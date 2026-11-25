@@ -42,34 +42,45 @@ struct HexMapView: View {
             }
         }
         .overlay(alignment: .topTrailing) {
-            Button {
-                coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
-            } label: {
-                HStack {
-                    Image(systemName: "sparkles")
-                    Text(powerUpInventory.totalCount.formatted())
-                        .monospacedDigit()
+            HStack {
+                Button {
+                    coordinator?.push(MainPath.profile)
+                } label: {
+                    Image(systemName: "person.crop.circle")
+                        .font(.headline)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .background(.ultraThinMaterial, in: .capsule)
                 }
-                .font(.headline)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 44)
-                .background(.ultraThinMaterial, in: .capsule)
+                .buttonStyle(.plain)
+                .accessibilityLabel("Profile")
+                Button {
+                    coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
+                } label: {
+                    HStack {
+                        Image(systemName: "sparkles")
+                        Text(powerUpInventory.totalCount.formatted())
+                            .monospacedDigit()
+                    }
+                    .font(.headline)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
+                    .background(.ultraThinMaterial, in: .capsule)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Power-ups")
+                .accessibilityValue(powerUpInventory.totalCount.formatted())
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Power-ups")
-            .accessibilityValue(powerUpInventory.totalCount.formatted())
             .padding()
         }
-        .safeAreaInset(edge: .bottom) {
+        .overlay(alignment: .bottom) {
             Picker("Map mode", selection: $model.mapMode) {
                 ForEach(HexMapMode.allCases) { mode in
                     Text(mode.title).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .padding()
         }
         .animation(.default, value: model.selectedRegion)
         .task(id: scenePhase) {
