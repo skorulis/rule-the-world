@@ -27,8 +27,8 @@ export async function GET(request: Request) {
       join ${user} on ${user.id} = ${playerRanking.userId}
       where ${playerRanking.regionType} = ${type}
         and ${playerRanking.regionId} = ${id}
-        and ${playerRanking.rankNumber} <= 3
-      order by ${playerRanking.rankNumber}, ${user.name}
+      order by ${playerRanking.rankNumber}, ${playerRanking.userId}
+      limit 20
     `);
 
     return NextResponse.json(

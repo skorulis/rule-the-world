@@ -30,7 +30,7 @@ final class RegionDetailViewModel {
     func load() async {
         guard !isLoading else { return }
         defer { isLoading = false }
-        guard region.kind != .none && region.kind != .state,
+        guard region.kind != .none,
               let id = Int64(region.id), id > 0,
               let leadersProvider else {
             leaders = []

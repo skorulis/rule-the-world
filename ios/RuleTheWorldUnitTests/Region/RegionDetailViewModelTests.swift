@@ -28,13 +28,13 @@ struct RegionDetailViewModelTests {
         #expect(model.rankName(for: RegionLeader(rank: 2, name: "Eve")) == "Rank #2")
     }
 
-    @Test func skipsFetchForStateRegions() async {
+    @Test func loadsLeadersForStateRegions() async {
         let provider = StubLeadersProvider(leaders: [RegionLeader(rank: 1, name: "Alice")])
         let model = RegionDetailViewModel(region: state, leadersProvider: provider, catalog: catalog)
         await model.load()
-        #expect(model.leaders == [])
+        #expect(model.leaders?.map(\.name) == ["Alice"])
         #expect(model.message == nil)
-        #expect(provider.requests.isEmpty)
+        #expect(provider.requests == [.init(type: .state, id: 5)])
     }
 
     @Test func skipsFetchForUnparseableRegionIds() async {

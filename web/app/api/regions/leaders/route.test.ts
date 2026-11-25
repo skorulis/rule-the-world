@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: vi.fn() } } }));
 vi.mock("@/lib/db", () => ({ db: { execute: vi.fn() } }));
 
+import type { SQLWrapper } from "drizzle-orm";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { GET } from "./route";
@@ -38,7 +40,7 @@ describe("GET /api/regions/leaders", () => {
     expect(db.execute).not.toHaveBeenCalled();
   });
 
-  it("returns the names of users holding the top three ranks", async () => {
+  it("returns the names of the top-ranked users", async () => {
     vi.mocked(db.execute).mockResolvedValueOnce([
       { rank: 1, name: "Alice" },
       { rank: 2, name: "Bob" },
@@ -52,6 +54,14 @@ describe("GET /api/regions/leaders", () => {
       { rank: 2, name: "Bob" },
       { rank: 3, name: "Carol" },
     ] });
+  });
+
+  it("orders by rank then user id and caps at twenty leaders", async () => {
+    await GET(request());
+    const [statement] = vi.mocked(db.execute).mock.calls[0];
+    const { sql } = new PgDialect().sqlToQuery((statement as SQLWrapper).getSQL());
+    expect(sql).toContain('order by "player_ranking"."rank_number", "player_ranking"."user_id"');
+    expect(sql).toContain("limit 20");
   });
 
   it("returns an empty collection when nobody holds a top rank", async () => {
