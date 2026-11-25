@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       visits: cells.map((cell) => ({
         cell: cell.toString(16),
-        ...infos.get(cell) ?? { totals: null, userVisit: null },
+        ...infos.get(cell) ?? { totals: null, regions: null, userVisit: null },
       })),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {

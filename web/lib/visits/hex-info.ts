@@ -1,9 +1,10 @@
 import { and, eq, inArray, sql, sum } from "drizzle-orm";
-import { hexVisit } from "@/db/schema";
+import { hexDetails, hexVisit } from "@/db/schema";
 import { db } from "@/lib/db";
 
 export type HexInfoResult = {
   totals: { totalVisits: number; rivalScore: number } | null;
+  regions: { country: number | null; state: number | null; suburb: number | null } | null;
   userVisit: {
     cell: string;
     total: number;
@@ -20,7 +21,7 @@ export async function getHexInfo(
   executor: Pick<typeof db, "select"> = db,
 ): Promise<HexInfoResult> {
   const infos = await getHexInfos(userId, [cell], executor);
-  return infos.get(cell) ?? { totals: null, userVisit: null };
+  return infos.get(cell) ?? { totals: null, regions: null, userVisit: null };
 }
 
 /** Shared projection for many hexes at once, matching GET /api/hex-visits/info. */
@@ -29,7 +30,7 @@ export async function getHexInfos(
   cells: bigint[],
   executor: Pick<typeof db, "select"> = db,
 ): Promise<Map<bigint, HexInfoResult>> {
-  const [totalRows, visitRows] = await Promise.all([
+  const [totalRows, visitRows, detailRows] = await Promise.all([
     executor.select({
       cell: hexVisit.cell,
       totalVisits: sum(hexVisit.total),
@@ -45,13 +46,16 @@ export async function getHexInfos(
       lastScore: hexVisit.lastScore,
     }).from(hexVisit)
       .where(and(inArray(hexVisit.cell, cells), eq(hexVisit.userId, userId))),
+    executor.select().from(hexDetails).where(inArray(hexDetails.cell, cells)),
   ]);
 
   const totals = new Map(totalRows.map((row) => [row.cell, row]));
   const visits = new Map(visitRows.map((row) => [row.cell, row]));
+  const details = new Map(detailRows.map((row) => [row.cell, row]));
   return new Map(cells.map((cell) => {
     const total = totals.get(cell);
     const visit = visits.get(cell);
+    const detail = details.get(cell);
     return [cell, {
       totals: total?.totalVisits == null
         ? null
@@ -59,6 +63,13 @@ export async function getHexInfos(
             totalVisits: Number(total.totalVisits),
             rivalScore: Number(total.rivalScore ?? 0),
           },
+      regions: detail
+        ? {
+            country: detail.regionCountry === null ? null : Number(detail.regionCountry),
+            state: detail.regionState === null ? null : Number(detail.regionState),
+            suburb: detail.regionSuburb === null ? null : Number(detail.regionSuburb),
+          }
+        : null,
       userVisit: visit
         ? {
             ...visit,

@@ -22,6 +22,7 @@ const request = (body: unknown = { powerup: definition.id, location: { latitude:
 
 const visit = {
   totals: { totalVisits: 3, rivalScore: 0 },
+  regions: null,
   userVisit: {
     cell: "8a2830828767fff",
     total: 2,

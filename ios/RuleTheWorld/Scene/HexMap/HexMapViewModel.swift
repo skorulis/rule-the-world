@@ -22,6 +22,7 @@ final class HexMapViewModel {
     private let locationService: LocationService
     private let boundaries: any RegionBoundaryProviding
     private let totalsProvider: any HexTotalsProviding
+    private let regionNames: RegionNameCatalog
     private var regionLevel: RegionOverlayPolicy.Level?
     @ObservationIgnored private var selectionTask: Task<Void, Never>?
     @ObservationIgnored private var pendingCamera: RegionCameraRequest?
@@ -45,7 +46,8 @@ final class HexMapViewModel {
         logStore: HexVisitLogStore,
         locationService: LocationService,
         boundaries: RegionBoundaryProviding,
-        totalsProvider: HexTotalsProviding
+        totalsProvider: HexTotalsProviding,
+        regionNames: RegionNameCatalog = RegionNameCatalog()
     ) {
         self.grid = grid
         self.store = store
@@ -53,6 +55,7 @@ final class HexMapViewModel {
         self.locationService = locationService
         self.boundaries = boundaries
         self.totalsProvider = totalsProvider
+        self.regionNames = regionNames
         self.initialRegion = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: -33.89, longitude: 151.19),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -191,6 +194,9 @@ final class HexMapViewModel {
     }
 
     func makeCellDetailViewModel(for cell: HexCell) -> HexCellDetailViewModel {
-        HexCellDetailViewModel(cell: cell, store: store, logStore: logStore, totalsProvider: totalsProvider)
+        HexCellDetailViewModel(
+            cell: cell, store: store, logStore: logStore,
+            totalsProvider: totalsProvider, regionNames: regionNames
+        )
     }
 }

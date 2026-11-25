@@ -5,23 +5,29 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
 
     var cell: HexCell
     var totals: HexTotals?
+    var regions: HexRegions?
     var userVisit: HexVisit?
     var lastUpdate: Date?
 
-    init(cell: HexCell, totals: HexTotals?, userVisit: HexVisit?, lastUpdate: Date? = nil) {
+    init(
+        cell: HexCell, totals: HexTotals?, regions: HexRegions? = nil,
+        userVisit: HexVisit?, lastUpdate: Date? = nil
+    ) {
         self.cell = cell
         self.totals = totals
+        self.regions = regions
         self.userVisit = userVisit
         self.lastUpdate = lastUpdate
     }
 
     private enum CodingKeys: String, CodingKey {
-        case cell, totals, userVisit, lastUpdate
+        case cell, totals, regions, userVisit, lastUpdate
     }
 
     nonisolated init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         totals = try container.decodeIfPresent(HexTotals.self, forKey: .totals)
+        regions = try container.decodeIfPresent(HexRegions.self, forKey: .regions)
         userVisit = try container.decodeIfPresent(HexVisit.self, forKey: .userVisit)
         lastUpdate = try container.decodeIfPresent(Date.self, forKey: .lastUpdate)
         if let rawValue = try container.decodeIfPresent(String.self, forKey: .cell) {
@@ -48,6 +54,7 @@ nonisolated struct HexInfo: Codable, Hashable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(cell.description, forKey: .cell)
         try container.encodeIfPresent(totals, forKey: .totals)
+        try container.encodeIfPresent(regions, forKey: .regions)
         try container.encodeIfPresent(userVisit, forKey: .userVisit)
         try container.encodeIfPresent(lastUpdate, forKey: .lastUpdate)
     }

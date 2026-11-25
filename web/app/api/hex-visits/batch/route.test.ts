@@ -29,7 +29,7 @@ describe("POST /api/hex-visits/batch", () => {
     const userVisit = { cell: visit.cell, lastVisit: visit.timestamp, total: 1, score: 0.5, lastScore: 0.5 };
     const result = {
       acceptedIds: ["123"], visits: [userVisit],
-      hexInfos: [{ cell: visit.cell, totals: { totalVisits: 4, rivalScore: 1 }, userVisit }],
+      hexInfos: [{ cell: visit.cell, totals: { totalVisits: 4, rivalScore: 1 }, regions: null, userVisit }],
     };
     vi.mocked(ingestVisits).mockResolvedValueOnce(result);
     const response = await POST(request({ userId: "someone-else", visits: [visit] }));

@@ -14,7 +14,7 @@ import { powerUpDefinition } from "./powerups";
 
 const cell = BigInt("0x8a2830828767fff");
 const attack = powerUpDefinition(6)!;
-const changed = { totals: { totalVisits: 1, rivalScore: 4 }, userVisit: null };
+const changed = { totals: { totalVisits: 1, rivalScore: 4 }, regions: null, userVisit: null };
 
 function transaction(
   visits: { cell: bigint; score: string; total?: number }[],

@@ -5,7 +5,7 @@ struct HexCellDetailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Hexagon")
+            Text(model.locationName ?? "Hexagon")
                 .font(.headline)
             LabeledContent("Visits", value: "\(model.visitCount)")
             if let visit = model.visit {
@@ -19,9 +19,8 @@ struct HexCellDetailView: View {
             }
             if model.isLoadingTotals {
                 ProgressView()
-            } else if let totals = model.info?.totals {
-                LabeledContent("Total visits", value: "\(totals.totalVisits)")
-                if totals.rivalScore > 0 {
+            } else {
+                if let totals = model.info?.totals, totals.rivalScore > 0 {
                     LabeledContent("Rival score", value: totals.rivalScore.formatted())
                 }
             }

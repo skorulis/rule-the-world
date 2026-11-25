@@ -54,7 +54,7 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(getHexInfo).mockResolvedValue({ totals: { totalVisits: 1, rivalScore: 0 }, userVisit: null });
+  vi.mocked(getHexInfo).mockResolvedValue({ totals: { totalVisits: 1, rivalScore: 0 }, regions: null, userVisit: null });
   vi.mocked(regionIdForPoint).mockReturnValue(BigInt(42));
   vi.mocked(stateIdForPoint).mockReturnValue(BigInt(0));
   vi.mocked(suburbIdForPoint).mockReturnValue(BigInt(0));
@@ -223,6 +223,7 @@ describe("visit ingestion SQL contract", () => {
     const mock = harness("0.5", "0.5", timestamp, [{ id: "1", cell: cellId, count: 1 }]);
     const info = {
       totals: { totalVisits: 8, rivalScore: 2 },
+      regions: null,
       userVisit: { cell, total: 1, lastVisit: timestamp, score: 0.5, lastScore: 0.5 },
     };
     vi.mocked(getHexInfo).mockImplementation(async (_userId, _cell, executor) => {
