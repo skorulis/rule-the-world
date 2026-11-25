@@ -30,12 +30,8 @@ enum HexState: String, Codable, CaseIterable, Comparable {
             return .cyan
         case .explored:
             return .mint
-        case .visited:
+        case .visited, .owned, .contested:
             return .blue
-        case .owned:
-            return Color(red: 0.8, green: 0.6, blue: 0)
-        case .contested:
-            return .purple
         }
     }
 

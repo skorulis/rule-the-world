@@ -36,6 +36,7 @@ private struct HexCellEdge {
 private struct CollectedGeometry {
     var todayPath = CGMutablePath()
     var fillPaths: [HexState: CGMutablePath] = [:]
+    var contested: [(path: CGPath, edges: [HexCellEdge])] = []
     var cellEdges: [(state: HexState, edges: [HexCellEdge])] = []
     var edgeStates: [HexEdgeKey: [HexState: Int]] = [:]
     var flipping: [(boundary: [CLLocationCoordinate2D], animation: (from: HexState, to: HexState))] = []
@@ -146,10 +147,18 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         context.setLineCap(.round)
         let boundaryPaths = territoryBoundaryPaths(cellEdges: geometry.cellEdges, edgeStates: geometry.edgeStates)
         for (cellState, path) in boundaryPaths {
-            guard let color = cellState.color else { continue }
+            guard cellState != .contested, let color = cellState.color else { continue }
             context.addPath(path)
             context.setStrokeColor(UIColor(color).cgColor)
             context.strokePath()
+        }
+        for item in geometry.contested {
+            let outline = CGMutablePath()
+            for edge in item.edges where isTerritoryBoundary(edge: edge, in: geometry.edgeStates) {
+                outline.move(to: edge.start)
+                outline.addLine(to: edge.end)
+            }
+            drawContested(path: item.path, outline: outline, zoomScale: zoomScale, in: context)
         }
         context.addPath(geometry.todayPath)
         context.setStrokeColor(UIColor.systemGreen.cgColor)
@@ -181,10 +190,16 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             if let animation = changed[cell], progress < 1 {
                 geometry.flipping.append((boundary, animation))
             } else if cellState != .unclaimed {
-                var path = geometry.fillPaths[cellState] ?? CGMutablePath()
-                appendPath(to: &path, boundary: boundary)
-                geometry.fillPaths[cellState] = path
                 let edges = cellEdges(boundary: boundary, state: cellState, edgeStates: &geometry.edgeStates)
+                if cellState == .contested {
+                    var path = CGMutablePath()
+                    appendPath(to: &path, boundary: boundary)
+                    geometry.contested.append((path, edges))
+                } else {
+                    var path = geometry.fillPaths[cellState] ?? CGMutablePath()
+                    appendPath(to: &path, boundary: boundary)
+                    geometry.fillPaths[cellState] = path
+                }
                 geometry.cellEdges.append((cellState, edges))
             }
         }
@@ -276,13 +291,40 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         context.translateBy(x: -center.x, y: -center.y)
         var path = CGMutablePath()
         appendPath(to: &path, boundary: boundary)
-        context.addPath(path)
-        let uiColor = shown.color.map(UIColor.init) ?? .gray
-        context.setFillColor(uiColor.withAlphaComponent(shown == .unclaimed ? 0 : 0.45).cgColor)
-        context.setStrokeColor(uiColor.cgColor)
-        context.setLineWidth(1 / zoomScale)
-        context.drawPath(using: .fillStroke)
+        if shown == .contested {
+            drawContested(path: path, outline: path, zoomScale: zoomScale, in: context)
+        } else {
+            context.addPath(path)
+            let uiColor = shown.color.map(UIColor.init) ?? .gray
+            context.setFillColor(uiColor.withAlphaComponent(shown == .unclaimed ? 0 : 0.45).cgColor)
+            context.setStrokeColor(uiColor.cgColor)
+            context.setLineWidth(1 / zoomScale)
+            context.drawPath(using: .fillStroke)
+        }
         context.restoreGState()
+    }
+
+    private func drawContested(path: CGPath, outline: CGPath, zoomScale: MKZoomScale, in context: CGContext) {
+        let bounds = path.boundingBoxOfPath
+        let padded = bounds.insetBy(dx: -2 / zoomScale, dy: -2 / zoomScale)
+        let halves: [(UIColor, CGRect)] = [
+            (UIColor(Color.red), CGRect(x: padded.minX, y: padded.minY,
+                                       width: bounds.midX - padded.minX, height: padded.height)),
+            (UIColor(Color.blue), CGRect(x: bounds.midX, y: padded.minY,
+                                        width: padded.maxX - bounds.midX, height: padded.height))
+        ]
+        for (color, clip) in halves {
+            context.saveGState()
+            context.clip(to: clip)
+            context.addPath(path)
+            context.setFillColor(color.withAlphaComponent(0.45).cgColor)
+            context.fillPath()
+            context.addPath(outline)
+            context.setStrokeColor(color.cgColor)
+            context.setLineWidth(2 / zoomScale)
+            context.strokePath()
+            context.restoreGState()
+        }
     }
 
     private func aggregated(at resolution: Int) -> ([HexCell: HexState], Set<HexCell>) {

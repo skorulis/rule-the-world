@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import SwiftUI
 import Testing
 @testable import RuleTheWorld
 
@@ -61,6 +62,15 @@ struct HexOwnershipSnapshotTests {
         #expect(snapshot.aggregatedVisits(at: HexGridService.baseResolution, grid: grid) == snapshot.visitedToday)
         #expect(snapshot.aggregatedVisits(at: 7, grid: grid) == [parent])
         #expect(snapshot.aggregated(at: 7, grid: grid)[parent] == .owned)
+    }
+
+    @Test func ownershipAndVisitColors() {
+        #expect(HexState.owned.color == Color.blue)
+        #expect(HexState.visited.color == Color.blue)
+        #expect(HexState.rivalOwned.color == Color.red)
+        #expect(HexState.partialVisit.color == Color.cyan)
+        #expect(HexState.explored.color == Color.mint)
+        #expect(HexState.unclaimed.color == nil)
     }
 
     @Test func stateForScore() {
