@@ -3,6 +3,8 @@ import { jsonError, requireSession, serverError } from "@/lib/api/route-helpers"
 import { ingestVisits } from "@/lib/visits/ingest-visits";
 import { parseVisitBatch, readVisitBody, VisitBatchError } from "@/lib/visits/visit-batch";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   try {
     const session = await requireSession(request);

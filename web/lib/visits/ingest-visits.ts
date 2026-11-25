@@ -5,10 +5,18 @@ import { db } from "@/lib/db";
 import { syncPlayerRankings } from "@/lib/rankings/sync-player-rankings";
 import { calculateHexDetails } from "@/lib/regions/hex-details";
 import type { VisitBatch } from "./visit-batch";
-import { getHexInfo } from "./hex-info";
+import { getHexInfos } from "./hex-info";
 
 export async function ingestVisits(userId: string, batch: VisitBatch) {
-  return db.transaction(async (tx) => {
+  const started = Date.now();
+  const timings: Record<string, number> = {};
+  let lapStart = started;
+  const lap = (name: string) => {
+    const now = Date.now();
+    timings[name] = now - lapStart;
+    lapStart = now;
+  };
+  const result = await db.transaction(async (tx) => {
     const locked = await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for("update");
     if (!locked.length) throw new Error("Visit owner no longer exists");
 
@@ -27,6 +35,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
     if (rows.length) {
       await tx.insert(hexDetails).values(rows).onConflictDoNothing();
     }
+    lap("insertVisitsAndDetails");
     const previous = await tx.select().from(hexVisitDay).where(and(
       eq(hexVisitDay.userId, userId),
       or(...batch.days.map(({ cell, day }) => and(eq(hexVisitDay.cell, cell), eq(hexVisitDay.day, day)))),
@@ -39,6 +48,7 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
       set: { score: sql`greatest(${hexVisitDay.score}, excluded.score)` },
     }).returning();
 
+    lap("upsertVisitDays");
     const uploaded = await tx.select().from(hexVisitUpload).where(and(
       eq(hexVisitUpload.userId, userId), inArray(hexVisitUpload.id, batch.acceptedIds),
     ));
@@ -76,11 +86,22 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
         lastScore: Number(visit.lastScore),
       });
     }
+    lap("updateVisitsAndUploads");
     const rankings = await syncPlayerRankings(userId, tx);
-    const hexInfos = await Promise.all(cells.map(async (cell) => ({
+    lap("syncPlayerRankings");
+    const hexInfoMap = await getHexInfos(userId, cells, tx);
+    const hexInfos = cells.map((cell) => ({
       cell: cell.toString(16),
-      ...await getHexInfo(userId, cell, tx),
-    })));
+      ...(hexInfoMap.get(cell) ?? { totals: null, regions: null, userVisit: null }),
+    }));
     return { acceptedIds: batch.acceptedIds, visits, hexInfos, rankings };
   });
+  lap("hexInfos");
+  console.info("ingestVisits completed", {
+    cells: batch.cells.length,
+    days: batch.days.length,
+    durationMs: Date.now() - started,
+    ...timings,
+  });
+  return result;
 }

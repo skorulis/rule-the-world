@@ -7,7 +7,11 @@ final class AuthenticatedService: HTTPService {
     init(
         tokenStore: AuthTokenStore,
         baseURL: String? = "http://localhost:3001",
-        urlSession: URLSessionProtocol = URLSession(configuration: .default)
+        urlSession: URLSessionProtocol = URLSession(configuration: {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 240
+            return config
+        }())
     ) {
         self.tokenStore = tokenStore
         super.init(baseURL: baseURL, logger: .init(level: .full), urlSession: urlSession)
