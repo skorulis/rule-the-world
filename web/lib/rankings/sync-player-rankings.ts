@@ -26,8 +26,10 @@ function bestUnlimitedRank(type: RankingRegionType, visited: number, owned: numb
  */
 export async function syncPlayerRankings(
   userId: string,
-  executor: Pick<typeof db, "execute">,
+  executor: Parameters<Parameters<typeof db.transaction>[0]>[0],
 ): Promise<RegionRanking[]> {
+  await executor.execute(sql`select pg_advisory_xact_lock_shared(hashtext('calculate_rankings'))`);
+
   const aggregates = await loadRegionAggregates(executor, userId);
   const existing = await executor.execute<{
       region_id: string;

@@ -34,7 +34,7 @@ describe("calculateRankings", () => {
     expect(summary).toMatchObject({ regions: 2, players: 3, assignments: 3 });
 
     const [lock, aggregate, reset, write] = queries();
-    expect(lock.sql).toContain("pg_advisory_xact_lock");
+    expect(lock.sql).toBe("select pg_advisory_xact_lock(hashtext('calculate_rankings'))");
     expect(aggregate.sql).toContain('rank() over (partition by "hex_visit"."cell"');
     expect(aggregate.sql).toContain("('country', \"hex_details\".\"region_country\")");
     expect(aggregate.sql).toContain("('suburb', \"hex_details\".\"region_suburb\")");

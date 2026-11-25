@@ -19,20 +19,35 @@ beforeEach(() => {
 });
 
 describe("syncPlayerRankings", () => {
+  it("waits for the recalculation lock before reading or writing rankings", async () => {
+    let release!: () => void;
+    execute.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+
+    const pending = syncPlayerRankings("u1", executor);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(queries()[0].sql).toBe("select pg_advisory_xact_lock_shared(hashtext('calculate_rankings'))");
+
+    release();
+    await expect(pending).resolves.toEqual([]);
+    expect(execute).toHaveBeenCalledTimes(3);
+  });
+
   it("scopes the shared aggregation and existing-row lookup to the player", async () => {
     await syncPlayerRankings("u1", executor);
-    const [aggregate, existing] = queries();
+    const [lock, aggregate, existing] = queries();
+    expect(lock.sql).toBe("select pg_advisory_xact_lock_shared(hashtext('calculate_rankings'))");
     expect(aggregate.sql).toContain('rank() over (partition by "hex_visit"."cell"');
     expect(aggregate.sql).toContain("and cells.user_id =");
     expect(aggregate.params).toContain("u1");
     expect(existing.sql).toContain('from "player_ranking"');
     expect(existing.sql).toContain('"player_ranking"."user_id" = ');
     expect(existing.params).toEqual(["u1"]);
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(3);
   });
 
   it("inserts the best qualifying unlimited rank for new regions", async () => {
     execute
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([aggregate("global", "1", 5, 30), aggregate("country", "42", 2, 5)])
       .mockResolvedValueOnce([]);
     const changed = await syncPlayerRankings("u1", executor);
@@ -40,7 +55,7 @@ describe("syncPlayerRankings", () => {
       { id: 1, type: "global", number: 18, visited: 5, owned: 30 },
       { id: 42, type: "country", number: 13, visited: 2, owned: 5 },
     ]);
-    const upsert = queries()[2];
+    const upsert = queries()[3];
     expect(upsert.sql).toContain('insert into "player_ranking"');
     expect(upsert.sql).toContain("jsonb_to_recordset");
     expect(upsert.sql).toContain("on conflict (user_id, region_type, region_id) do update");
@@ -52,6 +67,7 @@ describe("syncPlayerRankings", () => {
 
   it("upgrades an existing row to a better unlimited rank with fresh counts", async () => {
     execute
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([aggregate("global", "1", 5, 30)])
       .mockResolvedValueOnce([ranking("global", "1", 20, 4, 30)]);
     expect(await syncPlayerRankings("u1", executor)).toEqual([
@@ -61,27 +77,30 @@ describe("syncPlayerRankings", () => {
 
   it("keeps a better limited rank while still refreshing counts", async () => {
     execute
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([aggregate("suburb", "7", 10, 25)])
       .mockResolvedValueOnce([ranking("suburb", "7", 1, 9, 20)]);
     expect(await syncPlayerRankings("u1", executor)).toEqual([
       { id: 7, type: "suburb", number: 1, visited: 10, owned: 25 },
     ]);
-    expect(JSON.parse(queries()[2].params[0] as string)[0].rank_number).toBe(1);
+    expect(JSON.parse(queries()[3].params[0] as string)[0].rank_number).toBe(1);
   });
 
   it("writes nothing when counts and rank are already current", async () => {
     execute
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([aggregate("global", "1", 5, 30)])
       .mockResolvedValueOnce([ranking("global", "1", 18, 5, 30)]);
     expect(await syncPlayerRankings("u1", executor)).toEqual([]);
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(3);
   });
 
   it("skips regions without visits or valid ids", async () => {
     execute
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([aggregate("global", "1", 0, 0), aggregate("country", "0", 3, 3)])
       .mockResolvedValueOnce([]);
     expect(await syncPlayerRankings("u1", executor)).toEqual([]);
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(3);
   });
 });
