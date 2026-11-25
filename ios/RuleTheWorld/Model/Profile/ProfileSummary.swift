@@ -1,17 +1,17 @@
 import Foundation
 
-nonisolated struct ProfileSummary: Decodable, Sendable {
+nonisolated struct ProfileSummary: Codable, Sendable {
     let visited: Int?
     let owned: Int?
     let regions: [Region]
-    let rankings: [Ranking]
+    var rankings: [Ranking]
     let powerups: [Int: Int]
     let dailyRewardAvailableAt: Date?
     let coins: Int?
     let stipend: Int?
     let stipendAvailableAt: Date?
 
-    struct Ranking: Decodable, Sendable {
+    struct Ranking: Codable, Sendable {
         let id: Int64
         let type: String
         let number: Int
@@ -19,7 +19,7 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
         let owned: Int?
     }
 
-    struct Region: Decodable, Sendable {
+    struct Region: Codable, Sendable {
         let id: Int64
         let kind: String?
         let visited: Int
@@ -54,6 +54,23 @@ nonisolated struct ProfileSummary: Decodable, Sendable {
         stipend = (try? container.decode(Int.self, forKey: .stipend)).flatMap { $0 >= 0 ? $0 : nil }
         stipendAvailableAt = (try? container.decode(String.self, forKey: .stipendAvailableAt))
             .flatMap(Self.parseDate)
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(visited, forKey: .visited)
+        try container.encodeIfPresent(owned, forKey: .owned)
+        try container.encode(regions, forKey: .regions)
+        try container.encode(rankings, forKey: .rankings)
+        try container.encode(powerups, forKey: .powerups)
+        try container.encodeIfPresent(dailyRewardAvailableAt.map(Self.formatDate), forKey: .dailyRewardAvailableAt)
+        try container.encodeIfPresent(coins, forKey: .coins)
+        try container.encodeIfPresent(stipend, forKey: .stipend)
+        try container.encodeIfPresent(stipendAvailableAt.map(Self.formatDate), forKey: .stipendAvailableAt)
+    }
+
+    private static func formatDate(_ date: Date) -> String {
+        date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
     }
 
     private static func parseDate(_ value: String) -> Date? {

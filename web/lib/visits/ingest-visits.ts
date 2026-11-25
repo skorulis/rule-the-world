@@ -2,6 +2,7 @@ import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { user } from "@/db/auth-schema";
 import { hexDetails, hexVisit, hexVisitDay, hexVisitUpload } from "@/db/schema";
 import { db } from "@/lib/db";
+import { syncPlayerRankings } from "@/lib/rankings/sync-player-rankings";
 import { calculateHexDetails } from "@/lib/regions/hex-details";
 import type { VisitBatch } from "./visit-batch";
 import { getHexInfo } from "./hex-info";
@@ -75,10 +76,11 @@ export async function ingestVisits(userId: string, batch: VisitBatch) {
         lastScore: Number(visit.lastScore),
       });
     }
+    const rankings = await syncPlayerRankings(userId, tx);
     const hexInfos = await Promise.all(cells.map(async (cell) => ({
       cell: cell.toString(16),
       ...await getHexInfo(userId, cell, tx),
     })));
-    return { acceptedIds: batch.acceptedIds, visits, hexInfos };
+    return { acceptedIds: batch.acceptedIds, visits, hexInfos, rankings };
   });
 }

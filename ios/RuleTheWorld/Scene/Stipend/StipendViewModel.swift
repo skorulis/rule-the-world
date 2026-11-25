@@ -8,6 +8,7 @@ import Observation
 @MainActor
 final class StipendViewModel {
     private let service: AuthenticatedService
+    private let profileService: ProfileService
     private let now: () -> Date
     private(set) var availableAt: Date?
     private(set) var amount: Int?
@@ -15,8 +16,9 @@ final class StipendViewModel {
     private(set) var errorMessage: String?
     var collected: Int?
 
-    init(service: AuthenticatedService, now: @escaping () -> Date = { Date() }) {
+    init(service: AuthenticatedService, profileService: ProfileService, now: @escaping () -> Date = { Date() }) {
         self.service = service
+        self.profileService = profileService
         self.now = now
     }
 
@@ -49,7 +51,7 @@ final class StipendViewModel {
         } catch {
             // The server rejects repeat collections with a status ASKCore surfaces as a generic
             // error, so resync from the profile to tell "already collected" from a real failure.
-            if let summary = try? await service.fetchProfile(),
+            if let summary = try? await profileService.fetchProfile(),
                let serverAvailableAt = summary.stipendAvailableAt,
                serverAvailableAt > now() {
                 availableAt = serverAvailableAt

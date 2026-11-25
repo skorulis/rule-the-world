@@ -9,6 +9,7 @@ final class HexVisitSyncService {
     private let hexInfoStore: HexInfoStore
     private let uploader: AuthenticatedService
     private let tokenStore: AuthTokenStore
+    private let profileStore: ProfileSummaryStore?
     private let waitForNextCheck: () async throws -> Void
     private(set) var isSyncing = false
 
@@ -17,12 +18,14 @@ final class HexVisitSyncService {
         hexInfoStore: HexInfoStore,
         uploader: AuthenticatedService,
         tokenStore: AuthTokenStore,
+        profileStore: ProfileSummaryStore? = nil,
         waitForNextCheck: @escaping () async throws -> Void = { try await Task.sleep(for: .seconds(600)) }
     ) {
         self.store = store
         self.hexInfoStore = hexInfoStore
         self.uploader = uploader
         self.tokenStore = tokenStore
+        self.profileStore = profileStore
         self.waitForNextCheck = waitForNextCheck
     }
 
@@ -58,6 +61,7 @@ final class HexVisitSyncService {
             let response = try await uploader.upload(entries)
             try Task.checkCancellation()
             guard tokenStore.token == token else { return }
+            profileStore?.update(rankings: response.rankings)
             try await hexInfoStore.restore(response.hexInfos)
             try Task.checkCancellation()
             guard tokenStore.token == token else { return }

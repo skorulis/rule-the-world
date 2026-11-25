@@ -9,18 +9,21 @@ final class AuthManager {
     private let tokenStore: AuthTokenStore
     private let database: AppDatabase
     private let visitStore: HexInfoStore
+    private let profileStore: ProfileSummaryStore?
     private(set) var isSignedIn: Bool
 
     init(
         service: AuthService, authenticatedService: AuthenticatedService,
         tokenStore: AuthTokenStore, database: AppDatabase,
-        visitStore: HexInfoStore? = nil
+        visitStore: HexInfoStore? = nil,
+        profileStore: ProfileSummaryStore? = nil
     ) {
         self.service = service
         self.authenticatedService = authenticatedService
         self.tokenStore = tokenStore
         self.database = database
         self.visitStore = visitStore ?? HexInfoStore(database: database)
+        self.profileStore = profileStore
         self.isSignedIn = tokenStore.token != nil
     }
 
@@ -55,6 +58,7 @@ final class AuthManager {
     func signOut() {
         try? database.erase()
         tokenStore.clear()
+        profileStore?.clear()
         isSignedIn = false
     }
 }

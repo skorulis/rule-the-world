@@ -40,8 +40,11 @@ struct PowerUpInventoryViewModelTests {
             return (Data(responseBody.utf8),
                     HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
         }
+        let service = AuthenticatedService(tokenStore: tokenStore, urlSession: session)
         return PowerUpInventoryViewModel(
-            service: AuthenticatedService(tokenStore: tokenStore, urlSession: session),
+            service: service,
+            profileService: ProfileService(
+                service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())),
             catalog: PowerUpCatalog(data: catalogData),
             locationService: LocationService(),
             store: try makeStore()
@@ -71,11 +74,14 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         #expect(model.items.isEmpty)
         #expect(model.totalCount == 0)
+        let failingService = AuthenticatedService(
+            tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
+            urlSession: FakeURLSession { _ in throw URLError(.notConnectedToInternet) }
+        )
         let failing = PowerUpInventoryViewModel(
-            service: AuthenticatedService(
-                tokenStore: AuthTokenStore(keyValueStore: InMemoryKeyValueStore()),
-                urlSession: FakeURLSession { _ in throw URLError(.notConnectedToInternet) }
-            ),
+            service: failingService,
+            profileService: ProfileService(
+                service: failingService, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())),
             catalog: PowerUpCatalog(data: catalogData),
             locationService: LocationService(),
             store: try makeStore()

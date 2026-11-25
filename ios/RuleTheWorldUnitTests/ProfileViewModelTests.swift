@@ -22,7 +22,11 @@ struct ProfileViewModelTests {
             visitStore: store
         )
         let names = RegionNameCatalog(data: Data(#"{"1":"Zambia","2":"Australia","3":"Australia","4":" "}"#.utf8))
-        return (ProfileViewModel(authManager: manager, service: service, regionNames: names), manager)
+        let profileService = ProfileService(
+            service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore()))
+        let model = ProfileViewModel(
+            authManager: manager, service: service, regionNames: names, profileService: profileService)
+        return (model, manager)
     }
 
     @Test func startsWithoutInventedCounts() throws {

@@ -3,6 +3,7 @@ import type { SQL } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({ db: { transaction: vi.fn() } }));
+vi.mock("@/lib/rankings/sync-player-rankings", () => ({ syncPlayerRankings: vi.fn() }));
 vi.mock("./hex-info", () => ({ getHexInfo: vi.fn() }));
 vi.mock("@/lib/regions/country-regions", () => ({
   regionIdForPoint: vi.fn(() => BigInt(42)),
@@ -13,6 +14,7 @@ vi.mock("@/lib/regions/country-regions", () => ({
 import { db } from "@/lib/db";
 import { hexDetails, hexVisit } from "@/db/schema";
 import { regionIdForPoint, stateIdForPoint, suburbIdForPoint } from "@/lib/regions/country-regions";
+import { syncPlayerRankings } from "@/lib/rankings/sync-player-rankings";
 import { ingestVisits } from "./ingest-visits";
 import { getHexInfo } from "./hex-info";
 import { parseVisitBatch } from "./visit-batch";
@@ -55,6 +57,7 @@ function harness(previous = "0", current = "0.5", latest = timestamp,
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getHexInfo).mockResolvedValue({ totals: { totalVisits: 1, rivalScore: 0 }, regions: null, userVisit: null });
+  vi.mocked(syncPlayerRankings).mockResolvedValue([]);
   vi.mocked(regionIdForPoint).mockReturnValue(BigInt(42));
   vi.mocked(stateIdForPoint).mockReturnValue(BigInt(0));
   vi.mocked(suburbIdForPoint).mockReturnValue(BigInt(0));
@@ -237,6 +240,15 @@ describe("visit ingestion SQL contract", () => {
     ] }));
     expect(getHexInfo).toHaveBeenCalledExactlyOnceWith("u1", cellId, expect.anything());
     expect(result.hexInfos).toEqual([{ cell, ...info }]);
+  });
+
+  it("refreshes player rankings inside the transaction and returns changed rows", async () => {
+    const mock = harness();
+    const rankings = [{ id: 1, type: "global" as const, number: 20, visited: 3, owned: 1 }];
+    vi.mocked(syncPlayerRankings).mockResolvedValueOnce(rankings);
+    const result = await ingestVisits("u1", batch());
+    expect(syncPlayerRankings).toHaveBeenCalledWith("u1", expect.objectContaining({ select: mock.select }));
+    expect(result.rankings).toEqual(rankings);
   });
 
   it("does not acknowledge if HexInfo cannot be loaded", async () => {

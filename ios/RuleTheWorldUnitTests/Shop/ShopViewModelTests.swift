@@ -15,7 +15,10 @@ struct ShopViewModelTests {
         let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         tokens.save("session-token")
         let service = AuthenticatedService(tokenStore: tokens, urlSession: FakeURLSession(handler: handler))
-        return ShopViewModel(service: service, lootBoxes: LootBoxCatalog(data: boxData))
+        let profileService = ProfileService(
+            service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore()))
+        return ShopViewModel(
+            service: service, profileService: profileService, lootBoxes: LootBoxCatalog(data: boxData))
     }
 
     private func ok(_ request: URLRequest, body: String) -> (Data, URLResponse) {

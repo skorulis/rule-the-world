@@ -16,6 +16,7 @@ nonisolated private struct UploadedVisitBatch: Decodable {
 private final class VisitUploadSession {
     var calls: [[UploadedVisit]] = []
     var hexInfos: [HexInfo] = []
+    var rankings: [ProfileSummary.Ranking] = []
     var handler: (([UploadedVisit]) async throws -> Set<String>)?
 
     lazy var service: AuthenticatedService = {
@@ -39,8 +40,10 @@ private final class VisitUploadSession {
         struct Response: Encodable {
             let acceptedIds: [String]
             let hexInfos: [HexInfo]
+            let rankings: [ProfileSummary.Ranking]
         }
-        let data = try JSONEncoder().encode(Response(acceptedIds: Array(accepted), hexInfos: hexInfos))
+        let data = try JSONEncoder().encode(Response(
+            acceptedIds: Array(accepted), hexInfos: hexInfos, rankings: rankings))
         let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
         return (data, response)
     }
@@ -75,6 +78,26 @@ struct HexVisitSyncServiceTests {
         tokens.clear()
         try await sync.syncPendingVisits()
         #expect(uploader.calls.isEmpty)
+    }
+
+    @Test func syncUpdatesStoredProfileRankings() async throws {
+        let store = HexVisitLogStore(database: try AppDatabase.inMemory())
+        _ = try await store.record(entry())
+        let uploader = VisitUploadSession()
+        uploader.rankings = [ProfileSummary.Ranking(id: 7, type: "suburb", number: 1, visited: 5, owned: 3)]
+        let profileStore = ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+        profileStore.save(try JSONDecoder().decode(
+            ProfileSummary.self,
+            from: Data(#"{"visited":25,"rankings":[{"id":1,"type":"country","number":2}]}"#.utf8)))
+        let sync = HexVisitSyncService(
+            store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()),
+            uploader: uploader.service, tokenStore: tokenStore(), profileStore: profileStore)
+        try await sync.syncPendingVisits()
+        let summary = try #require(profileStore.summary)
+        #expect(summary.visited == 25)
+        #expect(summary.rankings.count == 1)
+        #expect(summary.rankings[0].id == 7)
+        #expect(summary.rankings[0].type == "suburb")
     }
 
     @Test func successfulUploadsAreNotSentAgain() async throws {

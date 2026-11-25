@@ -30,6 +30,7 @@ describe("POST /api/hex-visits/batch", () => {
     const result = {
       acceptedIds: ["123"], visits: [userVisit],
       hexInfos: [{ cell: visit.cell, totals: { totalVisits: 4, rivalScore: 1 }, regions: null, userVisit }],
+      rankings: [],
     };
     vi.mocked(ingestVisits).mockResolvedValueOnce(result);
     const response = await POST(request({ userId: "someone-else", visits: [visit] }));
@@ -59,7 +60,7 @@ describe("POST /api/hex-visits/batch", () => {
     const response = POST(request()).then((result) => { finished = true; return result; });
     await vi.waitFor(() => expect(ingestVisits).toHaveBeenCalled());
     expect(finished).toBe(false);
-    complete({ acceptedIds: ["123"], visits: [], hexInfos: [] });
+    complete({ acceptedIds: ["123"], visits: [], hexInfos: [], rankings: [] });
     expect((await response).status).toBe(200);
   });
 

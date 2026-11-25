@@ -19,6 +19,7 @@ final class ShopViewModel {
     }
 
     private let service: AuthenticatedService
+    private let profileService: ProfileService
     let boxes: [LootBoxDefinition]
     private(set) var coins: Int?
     private(set) var isPurchasing = false
@@ -26,13 +27,14 @@ final class ShopViewModel {
     var openedBox: OpenedBox?
 
     @Resolvable<Resolver>
-    init(service: AuthenticatedService, lootBoxes: LootBoxCatalog) {
+    init(service: AuthenticatedService, profileService: ProfileService, lootBoxes: LootBoxCatalog) {
         self.service = service
+        self.profileService = profileService
         self.boxes = lootBoxes.all
     }
 
     func load() async {
-        guard let summary = try? await service.fetchProfile(), !Task.isCancelled else { return }
+        guard let summary = try? await profileService.fetchProfile(), !Task.isCancelled else { return }
         coins = summary.coins
     }
 

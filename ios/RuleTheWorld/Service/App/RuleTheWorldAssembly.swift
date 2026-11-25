@@ -59,12 +59,17 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         .inObjectScope(.container)
         container.register(HexTotalsProviding.self) { $0.authenticatedService() }
         .inObjectScope(.container)
+        container.register(ProfileService.self) {
+            ProfileService(service: $0.authenticatedService(), store: $0.profileSummaryStore())
+        }
+        .inObjectScope(.container)
         container.register(HexVisitSyncService.self) {
             HexVisitSyncService(
                 store: $0.hexVisitLogStore(),
                 hexInfoStore: $0.hexInfoStore(),
                 uploader: $0.authenticatedService(),
-                tokenStore: $0.authTokenStore()
+                tokenStore: $0.authTokenStore(),
+                profileStore: $0.profileSummaryStore()
             )
         }
         .inObjectScope(.container)
@@ -78,7 +83,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
                 authenticatedService: $0.authenticatedService(),
                 tokenStore: $0.authTokenStore(),
                 database: $0.appDatabase(),
-                visitStore: $0.hexInfoStore()
+                visitStore: $0.hexInfoStore(),
+                profileStore: $0.profileSummaryStore()
             )
         }
         .inObjectScope(.container)
@@ -115,6 +121,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexInfoStore.self) { HexInfoStore(database: $0.appDatabase()) }
             .inObjectScope(.container)
         container.register(HexVisitLogStore.self) { HexVisitLogStore(database: $0.appDatabase()) }
+            .inObjectScope(.container)
+        container.register(ProfileSummaryStore.self) { ProfileSummaryStore(keyValueStore: $0.pKeyValueStore()) }
             .inObjectScope(.container)
     }
 

@@ -16,6 +16,7 @@ final class ProfileViewModel {
     private let authManager: AuthManager
     private let service: AuthenticatedService
     private let regionNames: RegionNameCatalog
+    private let profileService: ProfileService
     let dailyReward: DailyRewardViewModel
     let stipend: StipendViewModel
     private(set) var visitedHexCount: Int?
@@ -26,16 +27,27 @@ final class ProfileViewModel {
     private(set) var regions: [Region] = []
 
     @Resolvable<Resolver>
-    init(authManager: AuthManager, service: AuthenticatedService, regionNames: RegionNameCatalog) {
+    init(
+        authManager: AuthManager, service: AuthenticatedService,
+        regionNames: RegionNameCatalog, profileService: ProfileService
+    ) {
         self.authManager = authManager
         self.service = service
         self.regionNames = regionNames
-        self.dailyReward = DailyRewardViewModel(service: service)
-        self.stipend = StipendViewModel(service: service)
+        self.profileService = profileService
+        self.dailyReward = DailyRewardViewModel(service: service, profileService: profileService)
+        self.stipend = StipendViewModel(service: service, profileService: profileService)
     }
 
     func load() async {
-        guard let summary = try? await service.fetchProfile(), !Task.isCancelled else { return }
+        if let cached = profileService.cachedSummary {
+            apply(cached)
+        }
+        guard let summary = try? await profileService.fetchProfile(), !Task.isCancelled else { return }
+        apply(summary)
+    }
+
+    private func apply(_ summary: ProfileSummary) {
         visitedHexCount = summary.visited
         ownedHexCount = summary.owned
         powerUpCount = summary.powerups.values.reduce(0, +)

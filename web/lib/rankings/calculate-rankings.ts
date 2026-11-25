@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { hexDetails, hexVisit, playerRanking } from "@/db/schema";
+import { playerRanking } from "@/db/schema";
 import { db } from "@/lib/db";
+import { loadRegionAggregates } from "./aggregates";
 import { allocateRanks, type RegionPlayer } from "./allocate";
 import { countryRanks, globalRanks, suburbRanks } from "./ranks";
 
@@ -17,35 +18,7 @@ export async function calculateRankings(): Promise<RankingsSummary> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext('calculate_rankings'))`);
 
-    const rows = await tx.execute<{
-      user_id: string;
-      region: string;
-      type: "global" | "country" | "suburb";
-      visited: number;
-      owned: number;
-      score: number;
-    }>(sql`
-      with cells as (
-        select ${hexVisit.userId} as user_id, ${hexVisit.cell} as cell, ${hexVisit.score} as score,
-          ${hexVisit.total} > 0 as visited,
-          rank() over (partition by ${hexVisit.cell} order by ${hexVisit.score} desc) as position,
-          count(*) over (partition by ${hexVisit.cell}, ${hexVisit.score}) as tied
-        from ${hexVisit}
-      )
-      select cells.user_id, regions.id::text as region, regions.type,
-        count(*) filter (where cells.visited)::int as visited,
-        count(*) filter (where cells.position = 1 and cells.tied = 1 and cells.score > 0)::int as owned,
-        coalesce(sum(cells.score), 0)::float8 as score
-      from cells
-      left join ${hexDetails} on ${hexDetails.cell} = cells.cell
-      cross join lateral (values
-        ('global', 1::bigint),
-        ('country', ${hexDetails.regionCountry}),
-        ('suburb', ${hexDetails.regionSuburb})
-      ) as regions(type, id)
-      where regions.id is not null
-      group by cells.user_id, regions.type, regions.id
-    `);
+    const rows = await loadRegionAggregates(tx);
 
     const regions = new Map<string, { id: number; type: "global" | "country" | "suburb"; players: RegionPlayer[] }>();
     for (const row of rows) {

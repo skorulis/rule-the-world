@@ -17,6 +17,7 @@ final class PowerUpInventoryViewModel {
     }
 
     private let service: AuthenticatedService
+    private let profileService: ProfileService
     private let catalog: PowerUpCatalog
     private let locationService: LocationService
     private let store: HexInfoStore
@@ -27,11 +28,13 @@ final class PowerUpInventoryViewModel {
     @Resolvable<Resolver>
     init(
         service: AuthenticatedService,
+        profileService: ProfileService,
         catalog: PowerUpCatalog,
         locationService: LocationService,
         store: HexInfoStore
     ) {
         self.service = service
+        self.profileService = profileService
         self.catalog = catalog
         self.locationService = locationService
         self.store = store
@@ -42,7 +45,7 @@ final class PowerUpInventoryViewModel {
     }
 
     func load() async {
-        guard let summary = try? await service.fetchProfile(), !Task.isCancelled else { return }
+        guard let summary = try? await profileService.fetchProfile(), !Task.isCancelled else { return }
         items = summary.powerups
             .map { Item(id: $0.key, definition: catalog.definition(for: $0.key), count: $0.value) }
             .sorted { lhs, rhs in

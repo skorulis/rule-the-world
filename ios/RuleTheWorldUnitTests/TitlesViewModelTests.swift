@@ -9,7 +9,10 @@ struct TitlesViewModelTests {
         let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         tokens.save("session-token")
         return TitlesViewModel(
-            service: AuthenticatedService(tokenStore: tokens, urlSession: session),
+            profileService: ProfileService(
+                service: AuthenticatedService(tokenStore: tokens, urlSession: session),
+                store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+            ),
             catalog: RankCatalog(data: Data(#"""
                 {"global":[{"number":1,"name":"Emperor","rarity":"mythic","description":"World ruler","icon":"RankEmperor"}],"country":[
                 {"number":1,"name":"King","rarity":"legendary","femaleName":"Queen","description":"Sovereign","stipend":100},

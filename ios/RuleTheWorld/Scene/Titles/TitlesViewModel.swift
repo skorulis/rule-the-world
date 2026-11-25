@@ -21,7 +21,7 @@ final class TitlesViewModel {
         let stipend: Int?
     }
 
-    private let service: AuthenticatedService
+    private let profileService: ProfileService
     private let catalog: RankCatalog
     private let regionNames: RegionNameCatalog
     private(set) var items: [Item] = []
@@ -30,8 +30,8 @@ final class TitlesViewModel {
     private(set) var message: String?
 
     @Resolvable<Resolver>
-    init(service: AuthenticatedService, catalog: RankCatalog, regionNames: RegionNameCatalog) {
-        self.service = service
+    init(profileService: ProfileService, catalog: RankCatalog, regionNames: RegionNameCatalog) {
+        self.profileService = profileService
         self.catalog = catalog
         self.regionNames = regionNames
     }
@@ -41,7 +41,7 @@ final class TitlesViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            let summary = try await service.fetchProfile()
+            let summary = try await profileService.fetchProfile()
             guard !Task.isCancelled else { return }
             var seen: Set<String> = []
             items = summary.rankings.sorted { $0.number < $1.number }.compactMap { ranking -> Item? in

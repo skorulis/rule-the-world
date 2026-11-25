@@ -32,8 +32,11 @@ struct DailyRewardViewModelTests {
                                     httpVersion: nil, headerFields: nil)!)
         }
         let fixedNow = now
+        let service = AuthenticatedService(tokenStore: tokenStore, urlSession: session)
         return DailyRewardViewModel(
-            service: AuthenticatedService(tokenStore: tokenStore, urlSession: session),
+            service: service,
+            profileService: ProfileService(
+                service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())),
             now: { fixedNow }
         )
     }

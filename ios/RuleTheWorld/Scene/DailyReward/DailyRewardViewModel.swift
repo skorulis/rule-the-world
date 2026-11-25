@@ -7,14 +7,16 @@ import Observation
 @MainActor
 final class DailyRewardViewModel {
     private let service: AuthenticatedService
+    private let profileService: ProfileService
     private let now: () -> Date
     private(set) var availableAt: Date?
     private(set) var isClaiming = false
     private(set) var errorMessage: String?
     var reward: PowerUpDefinition?
 
-    init(service: AuthenticatedService, now: @escaping () -> Date = { Date() }) {
+    init(service: AuthenticatedService, profileService: ProfileService, now: @escaping () -> Date = { Date() }) {
         self.service = service
+        self.profileService = profileService
         self.now = now
     }
 
@@ -46,7 +48,7 @@ final class DailyRewardViewModel {
         } catch {
             // The server rejects repeat claims with a status ASKCore surfaces as a generic error,
             // so resync from the profile to tell "already claimed" apart from a real failure.
-            if let summary = try? await service.fetchProfile(),
+            if let summary = try? await profileService.fetchProfile(),
                let serverAvailableAt = summary.dailyRewardAvailableAt,
                serverAvailableAt > now() {
                 availableAt = serverAvailableAt
