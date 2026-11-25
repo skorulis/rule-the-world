@@ -7,6 +7,7 @@ final class LocationCaptureService {
     private let grid: HexGridService
     let store: HexInfoStore
     let logStore: HexVisitLogStore
+    private let haptics: any CaptureHaptics
     private var task: Task<Void, Never>?
 
     struct Recorded: Equatable {
@@ -17,10 +18,16 @@ final class LocationCaptureService {
 
     private(set) var lastRecorded: Recorded?
 
-    init(grid: HexGridService, store: HexInfoStore, logStore: HexVisitLogStore) {
+    init(
+        grid: HexGridService,
+        store: HexInfoStore,
+        logStore: HexVisitLogStore,
+        haptics: any CaptureHaptics = UICaptureHaptics()
+    ) {
         self.grid = grid
         self.store = store
         self.logStore = logStore
+        self.haptics = haptics
     }
 
     func start(samples: AsyncStream<LocationSample>) {
@@ -96,9 +103,15 @@ final class LocationCaptureService {
             return
         }
         do {
+            let wasOwned = store.snapshot.states[cell]?.isOwned ?? false
             _ = try await store.recordVisit(cell, score: score, at: sample.timestamp)
             _ = try await logStore.record(HexVisitLog(sample: sample, cell: cell, score: score))
             lastRecorded = Recorded(cell: cell, score: score, date: sample.timestamp)
+            if !wasOwned, store.snapshot.states[cell]?.isOwned == true {
+                haptics.captureFeedback()
+            } else {
+                haptics.visitFeedback()
+            }
         } catch {
             Logger().error("recordVisit failed: \(error)")
         }

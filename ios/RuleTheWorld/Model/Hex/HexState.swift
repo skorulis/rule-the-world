@@ -20,6 +20,11 @@ enum HexState: String, Codable, CaseIterable, Comparable {
         return score > rivalScore ? .owned : .contested
     }
 
+    /// Whether the user currently owns the hex in this state.
+    nonisolated var isOwned: Bool {
+        self == .visited || self == .owned
+    }
+
     nonisolated var color: Color? {
         switch self {
         case .unclaimed:

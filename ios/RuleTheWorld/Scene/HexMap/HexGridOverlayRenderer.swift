@@ -301,9 +301,13 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             shown = animation.to
             scaleX = CGFloat(2 * progress - 1)
         }
+        if animation.to.isOwned {
+            drawCaptureRing(boundary: boundary, center: center, progress: progress, zoomScale: zoomScale, in: context)
+        }
+        let pop = 1 + 0.15 * CGFloat(sin(progress * .pi))
         context.saveGState()
         context.translateBy(x: center.x, y: center.y)
-        context.scaleBy(x: max(scaleX, 0.01), y: 1)
+        context.scaleBy(x: max(scaleX, 0.01) * pop, y: pop)
         context.translateBy(x: -center.x, y: -center.y)
         var path = CGMutablePath()
         appendPath(to: &path, boundary: boundary)
@@ -318,6 +322,29 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             context.drawPath(using: .fillStroke)
         }
         context.restoreGState()
+    }
+
+    /// An expanding hex outline radiating from a captured cell, starting as
+    /// the new (owned) face of the flip appears and fading as it grows.
+    private func drawCaptureRing(
+        boundary: [CLLocationCoordinate2D],
+        center: CGPoint,
+        progress: Double,
+        zoomScale: MKZoomScale,
+        in context: CGContext
+    ) {
+        let ringProgress = CGFloat(max(progress - 0.35, 0) / 0.65)
+        guard ringProgress > 0 else { return }
+        var transform = CGAffineTransform(translationX: center.x, y: center.y)
+            .scaledBy(x: 1 + 0.6 * ringProgress, y: 1 + 0.6 * ringProgress)
+            .translatedBy(x: -center.x, y: -center.y)
+        var hexPath = CGMutablePath()
+        appendPath(to: &hexPath, boundary: boundary)
+        guard let ringPath = hexPath.copy(using: &transform) else { return }
+        context.addPath(ringPath)
+        context.setStrokeColor(UIColor.white.withAlphaComponent((1 - ringProgress) * 0.9).cgColor)
+        context.setLineWidth((3 - ringProgress) / zoomScale)
+        context.strokePath()
     }
 
     private func drawContested(path: CGPath, outline: CGPath, zoomScale: MKZoomScale, in context: CGContext) {

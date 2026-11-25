@@ -7,11 +7,13 @@ import Testing
 struct LocationCaptureServiceTests {
     private let grid = HexGridService()
 
-    private func makeService() throws -> LocationCaptureService {
+    private func makeService(
+        haptics: any CaptureHaptics = UICaptureHaptics()
+    ) throws -> LocationCaptureService {
         let database = try AppDatabase.inMemory()
         let store = HexInfoStore(database: database)
         let logStore = HexVisitLogStore(database: database)
-        return LocationCaptureService(grid: grid, store: store, logStore: logStore)
+        return LocationCaptureService(grid: grid, store: store, logStore: logStore, haptics: haptics)
     }
 
     private func sample(
@@ -227,7 +229,60 @@ struct LocationCaptureServiceTests {
         #expect(service.store.snapshot.states.isEmpty)
     }
 
+    @Test func firstVisitTriggersVisitHaptic() async throws {
+        let haptics = CaptureHapticsSpy()
+        let service = try makeService(haptics: haptics)
+        await service.handle(sample(speed: 30 / 3.6))
+        #expect(haptics.visitCount == 1)
+        #expect(haptics.captureCount == 0)
+    }
+
+    @Test func visitTakingOwnershipTriggersCaptureHaptic() async throws {
+        let haptics = CaptureHapticsSpy()
+        let service = try makeService(haptics: haptics)
+        await service.handle(sample(speed: 1.0))
+        #expect(haptics.captureCount == 1)
+        #expect(haptics.visitCount == 0)
+    }
+
+    @Test func visitBeatingRivalScoreTriggersCaptureHaptic() async throws {
+        let haptics = CaptureHapticsSpy()
+        let service = try makeService(haptics: haptics)
+        let cell = cellOf(sample(speed: 1.0))
+        _ = try await service.store.save(
+            HexInfo(cell: cell, totals: HexTotals(totalVisits: 3, rivalScore: 0.5), userVisit: nil)
+        )
+        await service.handle(sample(speed: 1.0))
+        #expect(haptics.captureCount == 1)
+        #expect(haptics.visitCount == 0)
+    }
+
+    @Test func revisitWhileAlreadyOwnedTriggersVisitHaptic() async throws {
+        let haptics = CaptureHapticsSpy()
+        let service = try makeService(haptics: haptics)
+        await service.handle(sample(speed: 1.0))
+        await service.handle(sample(speed: 1.0, timestamp: .now.addingTimeInterval(86_400)))
+        #expect(haptics.captureCount == 1)
+        #expect(haptics.visitCount == 1)
+    }
+
+    @Test func rejectedSampleTriggersNoHaptic() async throws {
+        let haptics = CaptureHapticsSpy()
+        let service = try makeService(haptics: haptics)
+        await service.handle(sample(speed: nil, accuracy: 150))
+        #expect(haptics.visitCount == 0)
+        #expect(haptics.captureCount == 0)
+    }
+
     private func store(of service: LocationCaptureService) -> HexInfoStore {
         service.store
     }
+}
+
+@MainActor
+private final class CaptureHapticsSpy: CaptureHaptics {
+    var visitCount = 0
+    var captureCount = 0
+    func visitFeedback() { visitCount += 1 }
+    func captureFeedback() { captureCount += 1 }
 }
