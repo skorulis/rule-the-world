@@ -48,8 +48,14 @@ struct LoginView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 120)
-                .padding(.trailing, 8)
-                .offset(y: -100)
+                .background(alignment: .bottom) {
+                    Circle()
+                        .fill(.black.opacity(0.35))
+                        .frame(width: 64, height: 64)
+                        .blur(radius: 12)
+                        .offset(y: 8)
+                }
+                .offset(x: 16, y: -84)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }

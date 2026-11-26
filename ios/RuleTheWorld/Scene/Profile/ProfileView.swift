@@ -15,12 +15,10 @@ struct ProfileView: View {
             }
             if model.visitedHexCount != nil || model.ownedHexCount != nil {
                 Section {
-                    if let visited = model.visitedHexCount {
-                        LabeledContent("Hexes visited", value: visited.formatted())
-                    }
-                    if let owned = model.ownedHexCount {
-                        LabeledContent("Hexes owned", value: owned.formatted())
-                    }
+                    ProfileStatsCard(visited: model.visitedHexCount, owned: model.ownedHexCount)
+                        .listRowInsets(EdgeInsets())
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                 }
             }
             Section {

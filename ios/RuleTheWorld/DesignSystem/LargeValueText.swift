@@ -2,17 +2,19 @@ import SwiftUI
 
 struct LargeValueText: View {
     let text: String
+    let color: Color
 
     @ScaledMetric(relativeTo: .largeTitle) private var fontSize: CGFloat = 32
 
-    init(_ text: String) {
+    init(_ text: String, color: Color = Color(red: 1, green: 0.88, blue: 0.48)) {
         self.text = text
+        self.color = color
     }
 
     var body: some View {
         Text(text)
             .font(.system(size: fontSize, weight: .heavy, design: .rounded))
-            .foregroundStyle(Color(red: 1, green: 0.88, blue: 0.48))
+            .foregroundStyle(color)
             .background {
                 ZStack {
                     ForEach(0..<8) { step in
