@@ -51,8 +51,9 @@ struct RegionDetailView: View {
             Label {
                 Text(leader.owned.formatted())
             } icon: {
-                Image("HexOwned").resizable().frame(width: 14, height: 14)
+                Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
             }
+            .font(.system(.title3, design: .rounded, weight: .semibold))
             .foregroundStyle(.secondary)
             .padding(.top, 2)
         }

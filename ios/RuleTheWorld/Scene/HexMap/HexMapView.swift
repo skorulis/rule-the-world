@@ -82,8 +82,8 @@ struct HexMapView: View {
                         Image(mode.imageName)
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 20, height: 20)
                             .frame(width: 36, height: 36)
+                            .frame(width: 48, height: 48)
                             .background(
                                 model.mapMode == mode ? Color.accentColor : Color.clear,
                                 in: .circle

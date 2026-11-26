@@ -25,23 +25,30 @@ struct TitlesView: View {
                                 .padding(.top, 2)
                         }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(item.name).font(.headline)
+                            Text(item.name).font(.title3.bold())
                             if item.visited != nil || item.stipend != nil {
-                                HStack(spacing: 6) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     if let visited = item.visited, let owned = item.owned {
-                                        Image("HexVisited").resizable().frame(width: 20, height: 20)
-                                        Text(visited.formatted())
-                                        Image("HexOwned").resizable().frame(width: 20, height: 20)
-                                            .padding(.leading, 6)
-                                        Text(owned.formatted())
+                                        Label {
+                                            Text(visited.formatted())
+                                        } icon: {
+                                            Image("HexVisited").resizable().scaledToFit().frame(width: 32, height: 32)
+                                        }
+                                        Label {
+                                            Text(owned.formatted())
+                                        } icon: {
+                                            Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
+                                        }
                                     }
                                     if let stipend = item.stipend {
-                                        Image("Coin").resizable().frame(width: 20, height: 20)
-                                            .padding(.leading, item.visited == nil ? 0 : 6)
-                                        Text("+\(stipend.formatted())")
+                                        Label {
+                                            Text("+\(stipend.formatted())")
+                                        } icon: {
+                                            Image("Coin").resizable().scaledToFit().frame(width: 32, height: 32)
+                                        }
                                     }
                                 }
-                                .font(.subheadline.bold())
+                                .font(.system(.title3, design: .rounded, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(accessibilityLabel(for: item))

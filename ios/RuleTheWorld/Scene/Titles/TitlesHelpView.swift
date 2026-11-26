@@ -29,8 +29,10 @@ struct TitlesHelpView: View {
                 } icon: {
                     Image("Coin")
                         .resizable()
-                        .frame(width: 20, height: 20)
+                        .scaledToFit()
+                        .frame(width: 32, height: 32)
                 }
+                .font(.title3)
             }
         }
         .navigationTitle("About titles")

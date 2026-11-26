@@ -15,7 +15,7 @@ struct RegionTitlesView: View {
                                 Label {
                                     Text("Hexes visited")
                                 } icon: {
-                                    Image("HexVisited").resizable().frame(width: 18, height: 18)
+                                    Image("HexVisited").resizable().scaledToFit().frame(width: 32, height: 32)
                                 }
                             }
                         }
@@ -26,11 +26,12 @@ struct RegionTitlesView: View {
                                 Label {
                                     Text("Hexes owned")
                                 } icon: {
-                                    Image("HexOwned").resizable().frame(width: 18, height: 18)
+                                    Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
                                 }
                             }
                         }
                     }
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
                 }
                 Section {
                     ForEach(item.ranks, id: \.number) { rank in
@@ -70,21 +71,23 @@ struct RegionTitlesView: View {
                     .padding(.top, 2)
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text(rank.name).font(.headline)
+                Text(rank.name).font(.title3.bold())
                 Text(rank.description).font(.subheadline).foregroundStyle(.secondary)
                 if let owned = rank.minOwnership {
                     Label {
                         Text("Minimum hexes owned: \(owned.formatted())")
                     } icon: {
-                        Image("HexOwned").resizable().frame(width: 14, height: 14)
+                        Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
                     }
+                    .font(.system(.body, design: .rounded, weight: .medium))
                 }
                 if let visited = rank.minVisits {
                     Label {
                         Text("Minimum hexes visited: \(visited.formatted())")
                     } icon: {
-                        Image("HexVisited").resizable().frame(width: 14, height: 14)
+                        Image("HexVisited").resizable().scaledToFit().frame(width: 32, height: 32)
                     }
+                    .font(.system(.body, design: .rounded, weight: .medium))
                 }
                 if rank.minOwnership == nil || rank.minVisits == nil {
                     Text("Some requirements are unavailable.")
