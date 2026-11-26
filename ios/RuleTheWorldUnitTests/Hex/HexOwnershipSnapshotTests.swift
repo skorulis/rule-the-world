@@ -118,7 +118,7 @@ struct HexOwnershipSnapshotTests {
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
         let snapshot = HexOwnershipSnapshot(states: [
             children[0]: .rivalOwned,
-            children[1]: .owned
+            children[1]: .owned,
         ])
         #expect(snapshot.aggregated(at: 7, grid: grid)[parent] == .owned)
     }
@@ -149,9 +149,51 @@ struct HexOwnershipSnapshotTests {
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
         let snapshot = HexOwnershipSnapshot(states: [
             children[0]: .partialVisit,
-            children[1]: .visited
+            children[1]: .visited,
         ])
         let aggregated = snapshot.aggregated(at: 7, grid: grid)
         #expect(aggregated[parent] == .visited)
+    }
+
+    @Test func levelsComputedFromScoreMargin() {
+        let snapshot = HexOwnershipSnapshot(infos: [
+            HexInfo(
+                cell: sydneyCell,
+                totals: HexTotals(totalVisits: 5, rivalScore: 6),
+                userVisit: HexVisit(lastVisit: .now, score: 10, lastScore: 1, total: 5),
+            ),
+        ])
+        #expect(snapshot.levels[sydneyCell] == 2)
+        #expect(snapshot.aggregatedWithLevels(at: HexGridService.baseResolution, grid: grid).levels[sydneyCell] == 2)
+    }
+
+    @Test func aggregatedLevelsTakeMaxOfChildren() {
+        let parent = grid.parent(of: sydneyCell, at: 7)!
+        let children = grid.children(of: parent, at: HexGridService.baseResolution)
+        let snapshot = HexOwnershipSnapshot(
+            states: [children[0]: .owned, children[1]: .partialVisit],
+            levels: [children[0]: 1, children[1]: 3]
+        )
+        let aggregated = snapshot.aggregatedWithLevels(at: 7, grid: grid)
+        #expect(aggregated.levels[parent] == 3)
+    }
+
+    @Test func personalAggregationExcludesRivalLevels() {
+        let rival = sydneyCell
+        let snapshot = HexOwnershipSnapshot(
+            states: [rival: .rivalOwned],
+            levels: [rival: 4]
+        )
+        let aggregated = snapshot.aggregatedPersonalWithLevels(at: HexGridService.baseResolution, grid: grid)
+        #expect(aggregated.states.isEmpty)
+        #expect(aggregated.levels.isEmpty)
+    }
+
+    @Test func levelsAffectEquality() {
+        let states: [HexCell: HexState] = [sydneyCell: .owned]
+        #expect(
+            HexOwnershipSnapshot(states: states)
+                != HexOwnershipSnapshot(states: states, levels: [sydneyCell: 2])
+        )
     }
 }

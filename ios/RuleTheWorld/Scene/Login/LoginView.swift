@@ -58,5 +58,16 @@ struct LoginView: View {
         }
         .padding()
         .contentShape(Rectangle())
+        .background {
+            GeometryReader { geometry in
+                Image("LoginBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .accessibilityHidden(true)
+            }
+            .ignoresSafeArea()
+        }
     }
 }
