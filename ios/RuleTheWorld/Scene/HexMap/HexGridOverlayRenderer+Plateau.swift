@@ -2,49 +2,6 @@ import MapKit
 import SwiftUI
 import os
 
-struct QuantizedMapPoint: Hashable, Comparable {
-    let xCoord: Int64
-    let yCoord: Int64
-
-    init(_ point: MKMapPoint) {
-        xCoord = Int64((point.x * 4).rounded())
-        yCoord = Int64((point.y * 4).rounded())
-    }
-
-    static func < (lhs: QuantizedMapPoint, rhs: QuantizedMapPoint) -> Bool {
-        lhs.xCoord != rhs.xCoord ? lhs.xCoord < rhs.xCoord : lhs.yCoord < rhs.yCoord
-    }
-}
-
-struct HexEdgeKey: Hashable {
-    let start: QuantizedMapPoint
-    let end: QuantizedMapPoint
-
-    init(_ pointA: MKMapPoint, _ pointB: MKMapPoint) {
-        let first = QuantizedMapPoint(pointA)
-        let second = QuantizedMapPoint(pointB)
-        (start, end) = first < second ? (first, second) : (second, first)
-    }
-}
-
-struct HexCellEdge {
-    let key: HexEdgeKey
-    let start: CGPoint
-    let end: CGPoint
-}
-
-/// A plateau groups cells that share the same state and elevation level.
-/// Edges between equal plateaus get no border or wall, keeping joined
-/// regions as a single merged outline.
-struct PlateauKey: Hashable, Comparable {
-    let state: HexState
-    let level: Int
-
-    static func < (lhs: PlateauKey, rhs: PlateauKey) -> Bool {
-        lhs.state != rhs.state ? lhs.state < rhs.state : lhs.level < rhs.level
-    }
-}
-
 struct PlateauCell {
     let key: PlateauKey
     let sortY: CGFloat
@@ -61,6 +18,7 @@ struct FlippingCell {
 struct CollectedGeometry {
     var cells: [PlateauCell] = []
     var edgePlateaus: [HexEdgeKey: [PlateauKey: Int]] = [:]
+    var topPaths: [HexState: CGMutablePath] = [:]
     var todayCells: [(boundary: [CLLocationCoordinate2D], lift: CGFloat)] = []
     var flipping: [FlippingCell] = []
 }
@@ -124,13 +82,28 @@ extension HexGridOverlayRenderer {
     }
 
     func strokeOverlays(geometry: CollectedGeometry, zoomScale: MKZoomScale, in context: CGContext) {
-        context.setLineWidth(2 / zoomScale)
         context.setLineJoin(.round)
         context.setLineCap(.round)
-        for (strokeState, path) in boundaryPaths(geometry: geometry, zoomScale: zoomScale) {
+        let paths = boundaryPaths(geometry: geometry, zoomScale: zoomScale)
+        for (strokeState, path) in paths {
             guard strokeState != .contested, let color = strokeState.color else { continue }
+            if let interior = geometry.topPaths[strokeState] {
+                context.saveGState()
+                context.addPath(interior)
+                context.clip()
+                context.addPath(path)
+                context.setStrokeColor(glowColor(for: color).cgColor)
+                context.setLineWidth(10 / zoomScale)
+                context.setShadow(
+                    offset: .zero, blur: 8 / zoomScale,
+                    color: glowColor(for: color).cgColor
+                )
+                context.strokePath()
+                context.restoreGState()
+            }
             context.addPath(path)
             context.setStrokeColor(UIColor(color).cgColor)
+            context.setLineWidth(2 / zoomScale)
             context.strokePath()
         }
         context.setStrokeColor(UIColor.systemGreen.cgColor)
@@ -165,10 +138,14 @@ extension HexGridOverlayRenderer {
                 guard cellState != .unclaimed else { continue }
                 let fillState = cellState == .contested ? .owned : cellState
                 appendCell(
-                    to: &geometry, key: PlateauKey(state: fillState, level: level), boundary: boundary
+                    to: &geometry, key: PlateauKey(state: fillState, level: level),
+                    boundary: boundary, zoomScale: zoomScale
                 )
             } else if cellState != .unclaimed {
-                appendCell(to: &geometry, key: PlateauKey(state: cellState, level: level), boundary: boundary)
+                appendCell(
+                    to: &geometry, key: PlateauKey(state: cellState, level: level),
+                    boundary: boundary, zoomScale: zoomScale
+                )
             }
         }
         geometry.cells.sort { $0.sortY < $1.sortY }
@@ -178,7 +155,8 @@ extension HexGridOverlayRenderer {
     func appendCell(
         to geometry: inout CollectedGeometry,
         key: PlateauKey,
-        boundary: [CLLocationCoordinate2D]
+        boundary: [CLLocationCoordinate2D],
+        zoomScale: MKZoomScale
     ) {
         var sortY: CGFloat = 0
         var edges: [HexCellEdge] = []
@@ -196,6 +174,11 @@ extension HexGridOverlayRenderer {
         geometry.cells.append(
             PlateauCell(key: key, sortY: sortY / CGFloat(boundary.count), boundary: boundary, edges: edges)
         )
+        var topPath = CGMutablePath()
+        appendPath(to: &topPath, boundary: boundary, lift: liftPoints(key.level, zoomScale: zoomScale))
+        let union = geometry.topPaths[key.state] ?? CGMutablePath()
+        union.addPath(topPath)
+        geometry.topPaths[key.state] = union
     }
 
     func isPlateauBoundary(edge: HexCellEdge, in edgePlateaus: [HexEdgeKey: [PlateauKey: Int]]) -> Bool {
@@ -227,6 +210,20 @@ extension HexGridOverlayRenderer {
             }
         }
         return paths
+    }
+
+    /// A bright, washed-out version of the plateau color used for the
+    /// inner glow bleeding inward from territory borders.
+    func glowColor(for color: Color) -> UIColor {
+        let base = UIColor(color)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        base.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return UIColor(
+            red: red + (1 - red) * 0.65,
+            green: green + (1 - green) * 0.65,
+            blue: blue + (1 - blue) * 0.65,
+            alpha: 0.85
+        )
     }
 
     func wallColor(for cellState: HexState) -> UIColor {
