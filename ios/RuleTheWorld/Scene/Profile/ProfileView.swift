@@ -33,12 +33,17 @@ struct ProfileView: View {
                 Button {
                     coordinator?.push(MainPath.shop)
                 } label: {
-                    Label("Shop", systemImage: "bag")
+                    IconText(icon: "Shop", text: "Shop")
                 }
                 Button {
                     coordinator?.push(MainPath.titles)
                 } label: {
-                    LabeledContent("Titles", value: (model.titleCount ?? 0).formatted())
+                    LabeledContent {
+                        Text((model.titleCount ?? 0).formatted())
+                            .font(.system(.title2, design: .rounded, weight: .semibold))
+                    } label: {
+                        IconText(icon: "HexOwned", text: "Titles")
+                    }
                 }
             }
             Section("Debug") {
