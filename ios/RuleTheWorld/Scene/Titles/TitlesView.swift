@@ -4,6 +4,7 @@ import SwiftUI
 struct TitlesView: View {
     @Environment(\.coordinator) private var coordinator
     @State var model: TitlesViewModel
+    @State private var isHelpPresented = false
 
     var body: some View {
         List {
@@ -81,6 +82,23 @@ struct TitlesView: View {
             }
         }
         .navigationTitle("Titles")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Help", systemImage: "questionmark.circle") {
+                    isHelpPresented = true
+                }
+            }
+        }
+        .sheet(isPresented: $isHelpPresented) {
+            NavigationStack {
+                TitlesHelpView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { isHelpPresented = false }
+                        }
+                    }
+            }
+        }
         .task { await model.load() }
         .refreshable { await model.load() }
     }
