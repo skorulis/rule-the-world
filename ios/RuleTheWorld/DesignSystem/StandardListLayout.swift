@@ -56,7 +56,7 @@ struct StandardListLayout<Content: View, HeaderActions: View>: View {
         .navigationBarBackButtonHidden()
         .toolbar(.hidden, for: .navigationBar)
         .tint(Color(red: 1, green: 0.9, blue: 0.7))
-        .preferredColorScheme(.dark)
+        .environment(\.colorScheme, .dark)
     }
 
     private var header: some View {

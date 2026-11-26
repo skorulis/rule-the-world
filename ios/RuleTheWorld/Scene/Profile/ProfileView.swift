@@ -24,15 +24,19 @@ struct ProfileView: View {
                 }
             }
             Section {
-                DailyRewardButton(model: model.dailyReward) { response in
-                    model.applyInventory(response.powerups)
+                TitledParchmentPanel("Daily rewards") {
+                    VStack(spacing: 16) {
+                        DailyRewardButton(model: model.dailyReward) { response in
+                            model.applyInventory(response.powerups)
+                        }
+                        StipendButton(model: model.stipend) { response in
+                            model.applyCoins(response.coins)
+                        }
+                    }
                 }
-                StipendButton(model: model.stipend) { response in
-                    model.applyCoins(response.coins)
-                }
-            } header: {
-                Text("Daily reward")
-                    .foregroundStyle(Color(red: 1, green: 0.9, blue: 0.7))
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
             Section {
                 HStack(spacing: 12) {

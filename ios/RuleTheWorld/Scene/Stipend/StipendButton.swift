@@ -11,12 +11,14 @@ struct StipendButton: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(alignment: .leading, spacing: 4) {
-                button(at: context.date)
-                if let errorMessage = model.errorMessage {
-                    Text(errorMessage).font(.footnote).foregroundStyle(.secondary)
-                }
-            }
+            let isEnabled = model.isAvailable(at: context.date) && !model.isCollecting
+            RewardActionRow(
+                systemName: isEnabled ? "dollarsign.circle.fill" : "dollarsign.circle",
+                text: buttonText(at: context.date),
+                isEnabled: isEnabled,
+                errorMessage: model.errorMessage,
+                action: collect
+            )
         }
         .fullScreenCover(
             isPresented: Binding(get: { reveal != nil }, set: { if !$0 { reveal = nil } })
@@ -38,31 +40,15 @@ struct StipendButton: View {
         }
     }
 
-    @ViewBuilder
-    private func button(at date: Date) -> some View {
+    private func buttonText(at date: Date) -> String {
         if model.isCollecting {
-            Label("Collecting…", systemImage: "dollarsign.circle")
-                .foregroundStyle(.secondary)
+            return "Collecting…"
         } else if model.isAvailable(at: date) {
-            Button {
-                collect()
-            } label: {
-                Label(
-                    model.amount.map { "Collect \($0.formatted()) daily stipend" } ?? "Collect daily stipend",
-                    systemImage: "dollarsign.circle.fill"
-                )
-            }
+            return model.amount.map { "Collect \($0.formatted()) stipend" } ?? "Collect stipend"
         } else if let remaining = model.remaining(at: date) {
-            LabeledContent {
-                Text(remaining.formatted(.time(pattern: .hourMinuteSecond)))
-                    .monospacedDigit()
-            } label: {
-                Label("Next stipend in", systemImage: "dollarsign.circle")
-            }
-            .foregroundStyle(.secondary)
+            return "Next stipend in \(remaining.formatted(.time(pattern: .hourMinuteSecond)))"
         } else {
-            Label("Stipend unavailable", systemImage: "dollarsign.circle")
-                .foregroundStyle(.secondary)
+            return "Stipend unavailable"
         }
     }
 

@@ -11,12 +11,14 @@ struct DailyRewardButton: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(alignment: .leading, spacing: 4) {
-                button(at: context.date)
-                if let errorMessage = model.errorMessage {
-                    Text(errorMessage).font(.footnote).foregroundStyle(.secondary)
-                }
-            }
+            let isEnabled = model.isAvailable(at: context.date) && !model.isClaiming
+            RewardActionRow(
+                systemName: isEnabled ? "gift.fill" : "gift",
+                text: buttonText(at: context.date),
+                isEnabled: isEnabled,
+                errorMessage: model.errorMessage,
+                action: open
+            )
         }
         .fullScreenCover(
             isPresented: Binding(get: { reveal != nil }, set: { if !$0 { reveal = nil } })
@@ -38,28 +40,15 @@ struct DailyRewardButton: View {
         }
     }
 
-    @ViewBuilder
-    private func button(at date: Date) -> some View {
+    private func buttonText(at date: Date) -> String {
         if model.isClaiming {
-            Label("Opening…", systemImage: "gift")
-                .foregroundStyle(.secondary)
+            return "Opening…"
         } else if model.isAvailable(at: date) {
-            Button {
-                open()
-            } label: {
-                Label("Open Common Daily Box", systemImage: "gift.fill")
-            }
+            return "Open Common Box"
         } else if let remaining = model.remaining(at: date) {
-            LabeledContent {
-                Text(remaining.formatted(.time(pattern: .hourMinuteSecond)))
-                    .monospacedDigit()
-            } label: {
-                Label("Next box in", systemImage: "gift")
-            }
-            .foregroundStyle(.secondary)
+            return "Next box in \(remaining.formatted(.time(pattern: .hourMinuteSecond)))"
         } else {
-            Label("Daily box unavailable", systemImage: "gift")
-                .foregroundStyle(.secondary)
+            return "Daily box unavailable"
         }
     }
 

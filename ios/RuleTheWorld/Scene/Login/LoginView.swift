@@ -43,6 +43,17 @@ struct LoginView: View {
                 modeToggleButton
             }
         }
+        .overlay(alignment: .topTrailing) {
+            Image("mascot-half")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 120)
+                .padding(.trailing, 8)
+                .offset(y: -100)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+        .padding(.top, 76)
     }
 
     private var inputFields: some View {
