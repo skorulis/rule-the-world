@@ -43,7 +43,7 @@ struct TitledParchmentPanel<Content: View>: View {
                 }
                 .overlay {
                     TitledParchmentShape()
-                        .stroke(ink, style: StrokeStyle(lineWidth: 2.5, lineJoin: .round))
+                        .stroke(.black, style: StrokeStyle(lineWidth: 4, lineJoin: .round))
                 }
                 .compositingGroup()
                 .shadow(color: .black.opacity(0.3), radius: 3, y: 4)
@@ -55,9 +55,10 @@ struct TitledParchmentPanel<Content: View>: View {
 
 private struct TitledParchmentShape: Shape {
     func path(in rect: CGRect) -> Path {
-        let paper = rect.insetBy(dx: 3, dy: 3)
+        let paper = rect.insetBy(dx: 5, dy: 5)
         let shoulder = min(12, paper.height * 0.1)
         let notch: CGFloat = 4
+        let curl = min(5, paper.width * 0.015)
         return Path { path in
             path.addLines([
                 CGPoint(x: paper.minX, y: paper.minY + shoulder),
@@ -66,19 +67,41 @@ private struct TitledParchmentShape: Shape {
                 CGPoint(x: paper.maxX - paper.width * 0.2 - 8, y: paper.minY),
                 CGPoint(x: paper.maxX - paper.width * 0.2, y: paper.minY + shoulder),
                 CGPoint(x: paper.maxX, y: paper.minY + shoulder - 1),
-                CGPoint(x: paper.maxX - 1, y: paper.midY - notch),
-                CGPoint(x: paper.maxX - notch, y: paper.midY),
-                CGPoint(x: paper.maxX, y: paper.midY + notch),
-                CGPoint(x: paper.maxX - 2, y: paper.maxY - notch),
-                CGPoint(x: paper.maxX - 10, y: paper.maxY),
-                CGPoint(x: paper.midX + notch, y: paper.maxY - 1),
-                CGPoint(x: paper.midX, y: paper.maxY - notch),
-                CGPoint(x: paper.midX - notch, y: paper.maxY),
-                CGPoint(x: paper.minX + 1, y: paper.maxY - 1),
-                CGPoint(x: paper.minX + 2, y: paper.midY + notch),
-                CGPoint(x: paper.minX + notch, y: paper.midY),
-                CGPoint(x: paper.minX, y: paper.midY - notch),
             ])
+            path.addQuadCurve(
+                to: CGPoint(x: paper.maxX - 1, y: paper.midY - notch),
+                control: CGPoint(x: paper.maxX - curl, y: paper.minY + paper.height * 0.3)
+            )
+            path.addLine(to: CGPoint(x: paper.maxX - notch, y: paper.midY))
+            path.addLine(to: CGPoint(x: paper.maxX, y: paper.midY + notch))
+            path.addQuadCurve(
+                to: CGPoint(x: paper.maxX - 2, y: paper.maxY - 8),
+                control: CGPoint(x: paper.maxX - curl, y: paper.minY + paper.height * 0.78)
+            )
+            path.addQuadCurve(to: CGPoint(x: paper.maxX - 10, y: paper.maxY - 2),
+                              control: CGPoint(x: paper.maxX, y: paper.maxY))
+            path.addQuadCurve(
+                to: CGPoint(x: paper.midX + notch, y: paper.maxY - 1),
+                control: CGPoint(x: paper.minX + paper.width * 0.75, y: paper.maxY - curl)
+            )
+            path.addLine(to: CGPoint(x: paper.midX, y: paper.maxY - notch))
+            path.addLine(to: CGPoint(x: paper.midX - notch, y: paper.maxY))
+            path.addQuadCurve(
+                to: CGPoint(x: paper.minX + 10, y: paper.maxY - 2),
+                control: CGPoint(x: paper.minX + paper.width * 0.25, y: paper.maxY - curl)
+            )
+            path.addQuadCurve(to: CGPoint(x: paper.minX + 1, y: paper.maxY - 9),
+                              control: CGPoint(x: paper.minX, y: paper.maxY))
+            path.addQuadCurve(
+                to: CGPoint(x: paper.minX + 2, y: paper.midY + notch),
+                control: CGPoint(x: paper.minX + curl, y: paper.minY + paper.height * 0.75)
+            )
+            path.addLine(to: CGPoint(x: paper.minX + notch, y: paper.midY))
+            path.addLine(to: CGPoint(x: paper.minX, y: paper.midY - notch))
+            path.addQuadCurve(
+                to: CGPoint(x: paper.minX, y: paper.minY + shoulder),
+                control: CGPoint(x: paper.minX + curl, y: paper.minY + paper.height * 0.3)
+            )
             path.closeSubpath()
         }
     }
