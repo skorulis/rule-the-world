@@ -52,6 +52,7 @@ struct LoginView: View {
                     .textContentType(.name)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
+                    .textFieldStyle(ParchmentTextFieldStyle(symbol: "person.fill"))
             }
 
             TextField("Email", text: $model.email, prompt: fieldPrompt("Email"))
@@ -59,14 +60,15 @@ struct LoginView: View {
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .textFieldStyle(ParchmentTextFieldStyle(symbol: "envelope.fill"))
 
             SecureField(
                 "Password", text: $model.password,
                 prompt: fieldPrompt("Password")
             )
             .textContentType(model.isSignUpMode ? .newPassword : .password)
+            .textFieldStyle(ParchmentTextFieldStyle(symbol: "key.fill"))
         }
-        .textFieldStyle(ParchmentTextFieldStyle())
     }
 
     private func fieldPrompt(_ title: String) -> Text {
