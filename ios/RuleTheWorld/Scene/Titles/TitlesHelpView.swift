@@ -37,3 +37,4 @@ struct TitlesHelpView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+// swiftlint:enable line_length

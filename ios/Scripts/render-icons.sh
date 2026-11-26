@@ -13,9 +13,6 @@ render() {
     echo "rendered $svg -> $name.imageset/${name}.png"
 }
 
-render coin.svg Coin 256 256
-render hex-visited.svg HexVisited 256 256
-render hex-owned.svg HexOwned 256 256
 render onboarding-explore.svg OnboardingExplore 1170 2532
 render onboarding-capture.svg OnboardingCapture 1170 2532
 render onboarding-powerup.svg OnboardingPowerUp 1170 2532
