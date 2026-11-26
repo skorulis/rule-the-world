@@ -8,6 +8,11 @@ struct ProfileView: View {
 
     var body: some View {
         List {
+            if let userName = model.userName {
+                Section {
+                    LabeledContent("Name", value: userName)
+                }
+            }
             if model.visitedHexCount != nil || model.ownedHexCount != nil {
                 Section {
                     if let visited = model.visitedHexCount {

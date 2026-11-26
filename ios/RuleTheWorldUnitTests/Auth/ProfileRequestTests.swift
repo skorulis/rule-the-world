@@ -69,6 +69,15 @@ struct ProfileRequestTests {
         #expect(invalidOwned.owned == nil)
     }
 
+    @Test func decodesUserNameAndToleratesItsAbsence() async throws {
+        let summary = try await service(body: #"{"user":{"id":"u1","name":"Alex"}}"#).fetchProfile()
+        #expect(summary.userName == "Alex")
+        for body in ["{}", #"{"user":{}}"#, #"{"user":null}"#, #"{"user":{"name":123}}"#] {
+            let summary = try await service(body: body).fetchProfile()
+            #expect(summary.userName == nil)
+        }
+    }
+
     @Test func decodesPowerUpInventoryDroppingInvalidEntries() async throws {
         let summary = try await service(body: """
             {"visited":2,"owned":1,

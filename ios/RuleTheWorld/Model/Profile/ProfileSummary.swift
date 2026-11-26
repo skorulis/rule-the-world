@@ -10,6 +10,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
     let coins: Int?
     let stipend: Int?
     let stipendAvailableAt: Date?
+    let userName: String?
 
     struct Ranking: Codable, Sendable {
         let id: Int64
@@ -17,6 +18,10 @@ nonisolated struct ProfileSummary: Codable, Sendable {
         let number: Int
         let visited: Int?
         let owned: Int?
+    }
+
+    struct User: Codable, Sendable {
+        let name: String?
     }
 
     struct Region: Codable, Sendable {
@@ -28,7 +33,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case visited, owned, regions, rankings, powerups, dailyRewardAvailableAt
-        case coins, stipend, stipendAvailableAt
+        case coins, stipend, stipendAvailableAt, user
     }
 
     init(from decoder: any Decoder) throws {
@@ -54,6 +59,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
         stipend = (try? container.decode(Int.self, forKey: .stipend)).flatMap { $0 >= 0 ? $0 : nil }
         stipendAvailableAt = (try? container.decode(String.self, forKey: .stipendAvailableAt))
             .flatMap(Self.parseDate)
+        userName = (try? container.decode(User.self, forKey: .user))?.name
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -67,6 +73,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
         try container.encodeIfPresent(coins, forKey: .coins)
         try container.encodeIfPresent(stipend, forKey: .stipend)
         try container.encodeIfPresent(stipendAvailableAt.map(Self.formatDate), forKey: .stipendAvailableAt)
+        try container.encodeIfPresent(userName.map(User.init(name:)), forKey: .user)
     }
 
     private static func formatDate(_ date: Date) -> String {

@@ -16,6 +16,7 @@ final class ProfileViewModel {
     private(set) var coins: Int?
     private(set) var powerUpCount: Int?
     private(set) var titleCount: Int?
+    private(set) var userName: String?
 
     @Resolvable<Resolver>
     init(
@@ -45,6 +46,7 @@ final class ProfileViewModel {
         dailyReward.update(availableAt: summary.dailyRewardAvailableAt)
         stipend.update(availableAt: summary.stipendAvailableAt, amount: summary.stipend)
         coins = summary.coins
+        userName = summary.userName
     }
 
     func applyInventory(_ powerups: [String: Int]) {
