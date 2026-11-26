@@ -14,26 +14,31 @@ struct StandardListLayout<Content: View>: View {
             Group {
                 content
             }
-            .listRowBackground(Color.clear)
+            .listRowBackground(
+                LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom)
+            )
+            .tint(Color(red: 0.3, green: 0.15, blue: 0.08))
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background {
-            LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom)
-                .overlay {
-                    RadialGradient(
-                        colors: [Color(red: 1, green: 0.94, blue: 0.75).opacity(0.75), .clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 600
-                    )
-                }
+            LinearGradient(
+                colors: [
+                    Color(red: 0.3, green: 0.19, blue: 0.15),
+                    Color(red: 0.2, green: 0.12, blue: 0.13),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
         .navigationTitle(title)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarBackground(Color(red: 0.3, green: 0.19, blue: 0.15), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .tint(Color(red: 1, green: 0.9, blue: 0.7))
         .preferredColorScheme(.light)
     }
 }
@@ -44,8 +49,20 @@ struct StandardListLayout<Content: View>: View {
             Section {
                 LabeledContent("Name", value: "Explorer")
             }
-            Section("Daily reward") {
+            Section {
                 Button("Claim reward") {}
+            } header: {
+                Text("Daily reward")
+                    .foregroundStyle(Color(red: 1, green: 0.9, blue: 0.7))
+            }
+            Section {
+                HStack(spacing: 12) {
+                    SquareCell(title: "Shop", icon: "Shop", value: 1_086)
+                    SquareCell(title: "Titles", icon: "HexOwned", value: 5)
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
         }
     }

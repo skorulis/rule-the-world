@@ -23,13 +23,16 @@ struct ProfileView: View {
                     }
                 }
             }
-            Section("Daily reward") {
+            Section {
                 DailyRewardButton(model: model.dailyReward) { response in
                     model.applyInventory(response.powerups)
                 }
                 StipendButton(model: model.stipend) { response in
                     model.applyCoins(response.coins)
                 }
+            } header: {
+                Text("Daily reward")
+                    .foregroundStyle(Color(red: 1, green: 0.9, blue: 0.7))
             }
             Section {
                 HStack(spacing: 12) {
@@ -37,22 +40,30 @@ struct ProfileView: View {
                         coordinator?.push(MainPath.shop)
                     } label: {
                         SquareCell(title: "Shop", icon: "Shop", value: model.coins ?? 0)
+                            .frame(maxWidth: .infinity)
                     }
                     Button {
                         coordinator?.push(MainPath.titles)
                     } label: {
                         SquareCell(title: "Titles", icon: "HexOwned", value: model.titleCount ?? 0)
+                            .frame(maxWidth: .infinity)
                     }
                 }
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
-            Section("Debug") {
+            Section {
                 Button {
                     coordinator?.push(MainPath.visitLog)
                 } label: {
                     Label("Visit Log", systemImage: "list.bullet")
                 }
+            } header: {
+                Text("Debug")
+                    .foregroundStyle(Color(red: 1, green: 0.9, blue: 0.7))
             }
             Section {
                 Button("Log out", role: .destructive) {

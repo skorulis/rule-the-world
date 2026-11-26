@@ -23,28 +23,34 @@ struct TitlesView: View {
                 }
                 .buttonStyle(.plain)
                 .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
             }
         }
         .overlay {
             if model.items.isEmpty {
-                if model.isLoading || (!model.hasLoaded && model.message == nil) {
-                    ProgressView("Loading titles…")
-                } else if let message = model.message {
-                    ContentUnavailableView {
-                        Label("Unable to load titles", systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text(message)
-                    } actions: {
-                        Button("Retry") { Task { await model.load() } }
+                ParchmentPanel {
+                    if model.isLoading || (!model.hasLoaded && model.message == nil) {
+                        ProgressView("Loading titles…")
+                            .frame(maxWidth: .infinity)
+                    } else if let message = model.message {
+                        ContentUnavailableView {
+                            Label("Unable to load titles", systemImage: "exclamationmark.triangle")
+                        } description: {
+                            Text(message)
+                        } actions: {
+                            Button("Retry") { Task { await model.load() } }
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        ContentUnavailableView(
+                            "No titles yet",
+                            systemImage: "crown",
+                            description: Text("Titles you are awarded will appear here.")
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
                     }
-                } else {
-                    ContentUnavailableView(
-                        "No titles yet",
-                        systemImage: "crown",
-                        description: Text("Titles you are awarded will appear here.")
-                    )
                 }
+                .tint(Color(red: 0.3, green: 0.15, blue: 0.08))
+                .padding(20)
             }
         }
         .toolbar {
