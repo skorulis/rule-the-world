@@ -7,6 +7,12 @@ struct LoginView: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: -10) {
+                Image("HexOwned")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 96)
+                    .accessibilityHidden(true)
+
                 DecorativeText("RULE THE", fontSize: 48)
                 DecorativeText("WORLD", fontSize: 52)
             }
