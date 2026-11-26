@@ -5,40 +5,54 @@ struct StandardListLayout<Content: View, HeaderActions: View>: View {
     @Environment(\.coordinator) private var coordinator
     @ScaledMetric(relativeTo: .largeTitle) private var titleSize: CGFloat = 32
 
-    private let title: LocalizedStringKey
+    private let title: String
     private let content: Content
     private let headerActions: HeaderActions
+    private let scrollTarget: (any Hashable)?
 
     init(
-        _ title: LocalizedStringKey,
+        _ title: String,
+        scrollTarget: (any Hashable)? = nil,
         @ViewBuilder content: () -> Content,
         @ViewBuilder headerActions: () -> HeaderActions
     ) {
         self.title = title
+        self.scrollTarget = scrollTarget
         self.content = content()
         self.headerActions = headerActions()
     }
 
-    init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) where HeaderActions == EmptyView {
-        self.init(title, content: content, headerActions: { EmptyView() })
+    init(
+        _ title: String,
+        scrollTarget: (any Hashable)? = nil,
+        @ViewBuilder content: () -> Content
+    ) where HeaderActions == EmptyView {
+        self.init(title, scrollTarget: scrollTarget, content: content, headerActions: { EmptyView() })
     }
 
     var body: some View {
         VStack(spacing: 0) {
             header
             WoodenDivider()
-            List {
-                Group {
-                    content
+            ScrollViewReader { proxy in
+                List {
+                    Group {
+                        content
+                    }
+                    .listRowBackground(
+                        LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom)
+                    )
+                    .tint(Color(red: 0.3, green: 0.15, blue: 0.08))
                 }
-                .listRowBackground(
-                    LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom)
-                )
-                .tint(Color(red: 0.3, green: 0.15, blue: 0.08))
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .environment(\.colorScheme, .light)
+                .onAppear {
+                    if let scrollTarget {
+                        proxy.scrollTo(scrollTarget, anchor: .center)
+                    }
+                }
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .environment(\.colorScheme, .light)
         }
         .background {
             LinearGradient(
