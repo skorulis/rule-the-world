@@ -61,7 +61,7 @@ struct RegionBoundaryTests {
         let coarse = feature(id: "country", geometry: "[[[0,0],[2,0],[2,2],[0,2],[0,0]]]")
         let catalog = try RegionBoundaryCatalog(fixtures: [
             .medium: Data("{\"type\":\"FeatureCollection\",\"features\":[\(medium)]}".utf8),
-            .coarse: Data("{\"type\":\"FeatureCollection\",\"features\":[\(coarse)]}".utf8),
+            .coarse: Data("{\"type\":\"FeatureCollection\",\"features\":[\(coarse)]}".utf8)
         ])
         let selected = catalog.selection(latitude: 3, longitude: 3, level: .coarse)
         #expect(selected?.boundary.id == "country")
@@ -90,7 +90,7 @@ struct RegionBoundaryTests {
         {"type":"FeatureCollection","features":[\(states)]}
         """.utf8)
         let catalog = try RegionBoundaryCatalog(fixtures: [
-            .medium: countryData, .coarse: countryData, .state: stateData,
+            .medium: countryData, .coarse: countryData, .state: stateData
         ])
         #expect(catalog.selection(latitude: 5, longitude: 2, level: .state)?.boundary.id == "child")
         #expect(catalog.selection(latitude: 5, longitude: 7, level: .state) == nil)
@@ -116,7 +116,7 @@ struct RegionBoundaryTests {
         {"type":"FeatureCollection","features":[\(suburbs)]}
         """.utf8)
         let catalog = try RegionBoundaryCatalog(fixtures: [
-            .medium: countryData, .coarse: countryData, .state: stateData, .suburb: suburbData,
+            .medium: countryData, .coarse: countryData, .state: stateData, .suburb: suburbData
         ])
         #expect(catalog.selection(latitude: 2, longitude: 1, level: .suburb)?.boundary.id == "nested")
         #expect(catalog.selection(latitude: 2, longitude: 3, level: .suburb) == nil)
@@ -138,7 +138,7 @@ struct RegionBoundaryTests {
         }
         let catalog = try RegionBoundaryCatalog(fixtures: [
             .medium: collection(country), .coarse: collection(country),
-            .state: collection(state), .suburb: collection(suburb),
+            .state: collection(state), .suburb: collection(suburb)
         ])
         #expect(catalog.selection(latitude: 2, longitude: 3, level: .suburb)?.boundary.id == "suburb")
         #expect(catalog.selection(latitude: 2, longitude: 3, level: .medium) == nil)
@@ -200,7 +200,7 @@ struct RegionBoundaryTests {
             "Australia": .init(longitude: 134, latitude: -25),
             "France": .init(longitude: 2.35, latitude: 48.85),
             "Switzerland": .init(longitude: 8.2, latitude: 46.8),
-            "Fiji": .init(longitude: 178, latitude: -17.8),
+            "Fiji": .init(longitude: 178, latitude: -17.8)
         ]
         for (name, point) in locations {
             let medium = try await service.selection(

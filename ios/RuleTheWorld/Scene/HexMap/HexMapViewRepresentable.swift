@@ -12,11 +12,11 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let onTap: (CLLocationCoordinate2D) -> Void
 
     func makeUIView(context: Context) -> MKMapView {
-        
+
         let config = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
         config.pointOfInterestFilter = .excludingAll
         config.showsTraffic = false
-        
+
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.pointOfInterestFilter = .excludingAll

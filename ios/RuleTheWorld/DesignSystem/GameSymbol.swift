@@ -12,7 +12,7 @@ struct GameSymbolStyle {
         face: [
             Color(red: 1, green: 0.94, blue: 0.68),
             Color(red: 0.9, green: 0.65, blue: 0.28),
-            Color(red: 0.65, green: 0.37, blue: 0.13),
+            Color(red: 0.65, green: 0.37, blue: 0.13)
         ],
         outline: Color(red: 0.26, green: 0.14, blue: 0.08),
         extrusion: Color(red: 0.43, green: 0.25, blue: 0.12),

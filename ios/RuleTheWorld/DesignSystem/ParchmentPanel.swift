@@ -17,7 +17,7 @@ enum ParchmentPalette {
         Color(red: 0.76, green: 0.55, blue: 0.31),
         Color(red: 0.98, green: 0.88, blue: 0.64),
         Color(red: 0.94, green: 0.81, blue: 0.55),
-        Color(red: 0.74, green: 0.52, blue: 0.3),
+        Color(red: 0.74, green: 0.52, blue: 0.3)
     ]
 }
 
@@ -129,7 +129,7 @@ private struct ParchmentPanelBackground: View {
                 CGPoint(x: rect.minX + 2, y: rect.midY + notch),
                 CGPoint(x: rect.minX + notch, y: rect.midY),
                 CGPoint(x: rect.minX, y: rect.midY - notch),
-                CGPoint(x: rect.minX + 1, y: rect.minY + notch),
+                CGPoint(x: rect.minX + 1, y: rect.minY + notch)
             ])
             path.closeSubpath()
         }
@@ -145,7 +145,7 @@ private struct ParchmentPanelBackground: View {
                     path.move(to: .zero)
                     path.addLines([
                         CGPoint(x: 40, y: 0), CGPoint(x: 30, y: 13),
-                        CGPoint(x: 15, y: 15), CGPoint(x: 13, y: 30), CGPoint(x: 0, y: 40),
+                        CGPoint(x: 15, y: 15), CGPoint(x: 13, y: 30), CGPoint(x: 0, y: 40)
                     ])
                     path.closeSubpath()
                 }
@@ -166,7 +166,7 @@ private struct ParchmentPanelBackground: View {
             CGPoint(x: rect.minX + inset, y: rect.maxY - inset),
             CGPoint(x: rect.maxX - inset, y: rect.maxY - inset),
             CGPoint(x: rect.midX, y: rect.minY + inset),
-            CGPoint(x: rect.midX, y: rect.maxY - inset),
+            CGPoint(x: rect.midX, y: rect.maxY - inset)
         ]
         for position in positions {
             let rivet = Path(ellipseIn: CGRect(x: position.x - 4, y: position.y - 4, width: 8, height: 8))

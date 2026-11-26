@@ -49,11 +49,11 @@ private struct GoldButtonFace: View {
             .fill(LinearGradient(
                 colors: pressed ? [
                     Color(red: 0.88, green: 0.48, blue: 0.04),
-                    Color(red: 1, green: 0.74, blue: 0.12),
+                    Color(red: 1, green: 0.74, blue: 0.12)
                 ] : [
                     Color(red: 1, green: 0.93, blue: 0.43),
                     Color(red: 1, green: 0.76, blue: 0.09),
-                    Color(red: 0.94, green: 0.5, blue: 0.03),
+                    Color(red: 0.94, green: 0.5, blue: 0.03)
                 ],
                 startPoint: .top, endPoint: .bottom
             ))
@@ -88,7 +88,7 @@ private struct GoldButtonFace: View {
                     let marks: [(CGPoint, CGFloat)] = [
                         (CGPoint(x: 0.09, y: 0.11), 5), (CGPoint(x: 0.15, y: 0.9), 7),
                         (CGPoint(x: 0.33, y: 0.08), 4), (CGPoint(x: 0.72, y: 0.91), 6),
-                        (CGPoint(x: 0.85, y: 0.1), 5), (CGPoint(x: 0.92, y: 0.85), 3),
+                        (CGPoint(x: 0.85, y: 0.1), 5), (CGPoint(x: 0.92, y: 0.85), 3)
                     ]
                     for (position, length) in marks {
                         let point = CGPoint(x: size.width * position.x, y: size.height * position.y)

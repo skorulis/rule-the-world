@@ -12,7 +12,7 @@ struct RegionOverlayRendererTests {
         let coordinates = [
             CLLocationCoordinate2D(latitude: 0, longitude: 0),
             CLLocationCoordinate2D(latitude: 0, longitude: 1),
-            CLLocationCoordinate2D(latitude: 1, longitude: 1),
+            CLLocationCoordinate2D(latitude: 1, longitude: 1)
         ]
         let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
         let overlay = MKMultiPolygon([polygon])
@@ -29,7 +29,7 @@ struct RegionOverlayRendererTests {
         map.addOverlay(grid)
         let ring = try MapRegionBoundary.Ring(points: [
             .init(longitude: 0, latitude: 0), .init(longitude: 1, latitude: 0),
-            .init(longitude: 1, latitude: 1), .init(longitude: 0, latitude: 0),
+            .init(longitude: 1, latitude: 1), .init(longitude: 0, latitude: 0)
         ])
         let boundary = MapRegionBoundary(
             id: "country", name: "Country", kind: .country,

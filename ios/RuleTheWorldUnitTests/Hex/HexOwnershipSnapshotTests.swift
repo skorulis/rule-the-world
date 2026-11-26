@@ -119,7 +119,7 @@ struct HexOwnershipSnapshotTests {
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
         let snapshot = HexOwnershipSnapshot(states: [
             children[0]: .rivalOwned,
-            children[1]: .owned,
+            children[1]: .owned
         ])
         #expect(snapshot.aggregated(at: 7, grid: grid)[parent] == .owned)
     }
@@ -150,7 +150,7 @@ struct HexOwnershipSnapshotTests {
         let children = grid.children(of: parent, at: HexGridService.baseResolution)
         let snapshot = HexOwnershipSnapshot(states: [
             children[0]: .partialVisit,
-            children[1]: .visited,
+            children[1]: .visited
         ])
         let aggregated = snapshot.aggregated(at: 7, grid: grid)
         #expect(aggregated[parent] == .visited)
@@ -162,7 +162,7 @@ struct HexOwnershipSnapshotTests {
                 cell: sydneyCell,
                 totals: HexTotals(totalVisits: 5, rivalScore: 6),
                 userVisit: HexVisit(lastVisit: .now, score: 10, lastScore: 1, total: 5),
-            ),
+            )
         ])
         #expect(snapshot.levels[sydneyCell] == 3)
         #expect(snapshot.aggregatedWithLevels(at: HexGridService.baseResolution, grid: grid).levels[sydneyCell] == 3)
@@ -209,7 +209,7 @@ struct HexOwnershipSnapshotTests {
                 cell: sydneyCell,
                 totals: nil,
                 userVisit: HexVisit(lastVisit: .now, score: 9, lastScore: 1, total: 12),
-            ),
+            )
         ])
         #expect(snapshot.visitLevels[sydneyCell] == 5)
     }

@@ -4,7 +4,7 @@ import SwiftUI
 /// Sources are hand-authored SVGs in ios/Icons, rasterized into the asset catalog.
 struct RankIcon: View {
     let name: String
-    var rarity: Rarity? = nil
+    var rarity: Rarity?
     var size: CGFloat = 56
 
     var body: some View {

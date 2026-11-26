@@ -39,7 +39,7 @@ private struct ParchmentFieldModifier: ViewModifier {
                 .fill(LinearGradient(
                     colors: [
                         Color(red: 0.88, green: 0.76, blue: 0.54),
-                        Color(red: 1, green: 0.94, blue: 0.77),
+                        Color(red: 1, green: 0.94, blue: 0.77)
                     ],
                     startPoint: .top, endPoint: .bottom
                 ))

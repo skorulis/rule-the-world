@@ -24,6 +24,18 @@ struct TitlesView: View {
                 .buttonStyle(.plain)
                 .listRowSeparator(.hidden)
             }
+        } headerActions: {
+            Button {
+                isHelpPresented = true
+            } label: {
+                Label("Help", systemImage: "questionmark.circle")
+                    .labelStyle(.iconOnly)
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 1, green: 0.96, blue: 0.84))
+                    .frame(width: 56, height: 56)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .overlay {
             if model.items.isEmpty {
@@ -50,14 +62,8 @@ struct TitlesView: View {
                     }
                 }
                 .tint(Color(red: 0.3, green: 0.15, blue: 0.08))
+                .environment(\.colorScheme, .light)
                 .padding(20)
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Help", systemImage: "questionmark.circle") {
-                    isHelpPresented = true
-                }
             }
         }
         .sheet(isPresented: $isHelpPresented) {
@@ -69,6 +75,7 @@ struct TitlesView: View {
                         }
                     }
             }
+            .preferredColorScheme(.light)
         }
         .task { await model.load() }
         .refreshable { await model.load() }

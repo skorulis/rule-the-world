@@ -80,7 +80,7 @@ struct HexTotalsServiceTests {
                 {"visits":[{"cell":"8a2830828007fff","totals":{"totalVisits":1,"rivalScore":0},"userVisit":{
                     "cell":"not-a-cell","lastVisit":"2026-11-20T10:00:00.000Z",
                     "total":1,"score":1,"lastScore":0.5}}]}
-                """),
+                """)
         ] {
             await #expect(throws: (any Error).self) {
                 _ = try await service.totals(for: [cell])

@@ -51,7 +51,7 @@ struct ProfileRequestTests {
     @Test func missingOrInvalidFieldsAreAbsentAndRealZeroesSurvive() async throws {
         for body in [
             "{}", #"{"visited":null,"owned":null,"regions":null}"#,
-            #"{"visited":-1,"owned":"bad","regions":{}}"#,
+            #"{"visited":-1,"owned":"bad","regions":{}}"#
         ] {
             let summary = try await service(body: body).fetchProfile()
             #expect(summary.visited == nil)

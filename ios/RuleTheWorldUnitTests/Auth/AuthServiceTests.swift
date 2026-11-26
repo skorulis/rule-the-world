@@ -145,7 +145,7 @@ struct AuthServiceTests {
                 "score":1,"lastScore":1,"total":1}}]}
                 """),
             (200, "{\"visits\":[{\"totals\":{\"totalVisits\":-1,\"rivalScore\":0},\"userVisit\":null}]}"),
-            (200, "{\"visits\":[{\"totals\":{\"totalVisits\":1,\"rivalScore\":-2},\"userVisit\":null}]}"),
+            (200, "{\"visits\":[{\"totals\":{\"totalVisits\":1,\"rivalScore\":-2},\"userVisit\":null}]}")
         ] {
             let service = await makeAuthenticatedService { request in
                 jsonResponse(url: request.url!, status: status, body: body)

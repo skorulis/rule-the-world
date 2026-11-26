@@ -16,7 +16,7 @@ struct RegionDetailViewModelTests {
     @Test func loadsLeadersForRankedRegionTypes() async {
         let provider = StubLeadersProvider(leaders: [
             RegionLeader(rank: 1, name: "Alice", owned: 0),
-            RegionLeader(rank: 3, name: "Bob", owned: 0),
+            RegionLeader(rank: 3, name: "Bob", owned: 0)
         ])
         let model = RegionDetailViewModel(region: country, leadersProvider: provider, catalog: catalog)
         await model.load()

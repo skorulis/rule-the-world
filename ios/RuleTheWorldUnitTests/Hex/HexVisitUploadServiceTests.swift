@@ -93,7 +93,7 @@ struct HexVisitUploadServiceTests {
             service(body: "{}"),
             service(body: "{\"acceptedIds\":[\"unknown\"],\"hexInfos\":[]}"),
             service(body: "{\"acceptedIds\":[\"visit-1\",\"visit-1\"],\"hexInfos\":[]}"),
-            service(body: "{\"acceptedIds\":[\"visit-1\"]}"),
+            service(body: "{\"acceptedIds\":[\"visit-1\"]}")
         ] {
             await #expect(throws: (any Error).self) {
                 _ = try await uploader.upload([entry()])

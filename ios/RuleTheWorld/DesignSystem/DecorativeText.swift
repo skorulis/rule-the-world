@@ -16,7 +16,7 @@ struct DecorativeTextStyle {
             Color(red: 1, green: 0.97, blue: 0.83),
             Color(red: 0.76, green: 0.72, blue: 0.62),
             Color(red: 1, green: 0.94, blue: 0.76),
-            Color(red: 0.58, green: 0.53, blue: 0.44),
+            Color(red: 0.58, green: 0.53, blue: 0.44)
         ],
         outline: Color(red: 0.12, green: 0.08, blue: 0.06),
         rim: Color(red: 0.89, green: 0.66, blue: 0.3),

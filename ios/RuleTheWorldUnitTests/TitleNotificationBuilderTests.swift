@@ -49,7 +49,7 @@ struct TitleNotificationBuilderTests {
 
     @Test func unknownCatalogEntriesHaveFallbackAndInvalidRankingsAreIgnored() {
         let notifications = builder.notifications(from: [], to: [
-            ranking(99), ranking(0), ranking(1, id: 0), ranking(1, type: "unknown"),
+            ranking(99), ranking(0), ranking(1, id: 0), ranking(1, type: "unknown")
         ])
         #expect(notifications.count == 1)
         #expect(notifications.first?.message == "You have gained the Title #99 title in Australia")
