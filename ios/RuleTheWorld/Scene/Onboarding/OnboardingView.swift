@@ -43,12 +43,8 @@ struct OnboardingView: View {
                     }
                 } label: {
                     Text(model.buttonTitle)
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(.orange)
+                .buttonStyle(GoldButtonStyle(fillsWidth: true))
                 .padding(.horizontal, 32)
 
                 pageIndicator

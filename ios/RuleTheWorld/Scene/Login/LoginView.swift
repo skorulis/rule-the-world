@@ -58,8 +58,7 @@ struct LoginView: View {
                             Text(model.submitTitle)
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .buttonStyle(GoldButtonStyle(fillsWidth: true))
                     .disabled(!model.canSubmit || model.isLoading)
 
                     Button(model.modeToggleTitle) {
