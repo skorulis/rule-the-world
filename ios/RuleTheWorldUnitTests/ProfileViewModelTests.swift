@@ -6,6 +6,7 @@ import Testing
 @MainActor
 struct ProfileViewModelTests {
     private func makeModel(
+        values: PKeyValueStore = InMemoryKeyValueStore(),
         handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)
     ) throws -> (ProfileViewModel, AuthManager) {
         let database = try AppDatabase.inMemory()
@@ -19,12 +20,14 @@ struct ProfileViewModelTests {
             authenticatedService: service,
             tokenStore: tokenStore,
             database: database,
-            visitStore: store
+            visitStore: store,
+            profileStore: ProfileSummaryStore(keyValueStore: values)
         )
         let profileService = ProfileService(
-            service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore()))
+            service: service, store: ProfileSummaryStore(keyValueStore: values))
         let model = ProfileViewModel(
-            authManager: manager, service: service, profileService: profileService)
+            authManager: manager, service: service, profileService: profileService,
+            bannerStore: BannerStore(keyValueStore: values))
         return (model, manager)
     }
 
@@ -121,6 +124,72 @@ struct ProfileViewModelTests {
         #expect(manager.isSignedIn)
         model.signOut()
         #expect(!manager.isSignedIn)
+    }
+
+    @Test func cachedIdentityLoadsSavedBannerOfflineAndRefreshesAfterEditing() async throws {
+        let values = InMemoryKeyValueStore()
+        let summary = try JSONDecoder().decode(
+            ProfileSummary.self, from: Data(#"{"user":{"id":"alice","name":"Alice"}}"#.utf8))
+        ProfileSummaryStore(keyValueStore: values).save(summary)
+        let banners = BannerStore(keyValueStore: values)
+        var banner = BannerConfiguration.default
+        banner.emblem = .sword
+        try banners.save(banner, for: "alice")
+        let (model, _) = try makeModel(values: values) { _ in throw URLError(.notConnectedToInternet) }
+        await model.load()
+        #expect(model.userID == "alice")
+        #expect(model.canEditBanner)
+        #expect(model.banner == banner)
+        banner.backgroundColor = .crimson
+        try banners.save(banner, for: "alice")
+        model.refreshBanner()
+        #expect(model.banner == banner)
+        await model.load()
+        #expect(model.banner == banner)
+    }
+
+    @Test func signOutClearsProfileCacheButPreservesAccountBanner() async throws {
+        let values = InMemoryKeyValueStore()
+        let summary = try JSONDecoder().decode(
+            ProfileSummary.self, from: Data(#"{"user":{"id":"alice"}}"#.utf8))
+        let profiles = ProfileSummaryStore(keyValueStore: values)
+        profiles.save(summary)
+        let banners = BannerStore(keyValueStore: values)
+        var banner = BannerConfiguration.default
+        banner.emblem = .crown
+        try banners.save(banner, for: "alice")
+        let (model, _) = try makeModel(values: values) { _ in throw URLError(.notConnectedToInternet) }
+        await model.load()
+        model.signOut()
+        #expect(profiles.summary == nil)
+        #expect(banners.banner(for: "alice") == banner)
+        #expect(banners.banner(for: "bob") == .default)
+    }
+
+    @Test func profileWithoutIdentityCannotEditBanner() async throws {
+        let (model, _) = try makeModel { request in
+            (Data(#"{"user":{"name":"Legacy"}}"#.utf8),
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        await model.load()
+        #expect(model.userID == nil)
+        #expect(!model.canEditBanner)
+        #expect(model.banner == .default)
+    }
+
+    @Test func fetchedIdentityDoesNotUseAnotherAccountsBanner() async throws {
+        let values = InMemoryKeyValueStore()
+        var banner = BannerConfiguration.default
+        banner.emblem = .shield
+        try BannerStore(keyValueStore: values).save(banner, for: "alice")
+        let (model, _) = try makeModel(values: values) { request in
+            (Data(#"{"user":{"id":"bob","name":"Bob"}}"#.utf8),
+             HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+        await model.load()
+        #expect(model.userID == "bob")
+        #expect(model.banner == .default)
+        #expect(model.canEditBanner)
     }
 
     private actor Replies {

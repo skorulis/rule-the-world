@@ -21,6 +21,8 @@ struct MainPathRenderer: CoordinatorPathRenderer {
             HexVisitLogListView(model: HexVisitLogListViewModel.make(resolver: resolver))
         case .profile:
             ProfileView(model: ProfileViewModel.make(resolver: resolver))
+        case let .bannerEditor(userID):
+            BannerEditorView(model: BannerEditorViewModel.make(resolver: resolver, userID: userID))
         case let .powerUpInventory(model):
             PowerUpInventoryView(model: model)
                 .toolbar {

@@ -11,6 +11,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
     let stipend: Int?
     let stipendAvailableAt: Date?
     let userName: String?
+    let userID: String?
 
     struct Ranking: Codable, Sendable {
         let id: Int64
@@ -21,6 +22,7 @@ nonisolated struct ProfileSummary: Codable, Sendable {
     }
 
     struct User: Codable, Sendable {
+        let id: String?
         let name: String?
     }
 
@@ -59,7 +61,9 @@ nonisolated struct ProfileSummary: Codable, Sendable {
         stipend = (try? container.decode(Int.self, forKey: .stipend)).flatMap { $0 >= 0 ? $0 : nil }
         stipendAvailableAt = (try? container.decode(String.self, forKey: .stipendAvailableAt))
             .flatMap(Self.parseDate)
-        userName = (try? container.decode(User.self, forKey: .user))?.name
+        let user = try? container.decode(User.self, forKey: .user)
+        userName = user?.name
+        userID = (user?.id).flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -73,7 +77,9 @@ nonisolated struct ProfileSummary: Codable, Sendable {
         try container.encodeIfPresent(coins, forKey: .coins)
         try container.encodeIfPresent(stipend, forKey: .stipend)
         try container.encodeIfPresent(stipendAvailableAt.map(Self.formatDate), forKey: .stipendAvailableAt)
-        try container.encodeIfPresent(userName.map(User.init(name:)), forKey: .user)
+        if userID != nil || userName != nil {
+            try container.encode(User(id: userID, name: userName), forKey: .user)
+        }
     }
 
     private static func formatDate(_ date: Date) -> String {

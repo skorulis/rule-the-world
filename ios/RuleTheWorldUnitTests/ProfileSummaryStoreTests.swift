@@ -23,6 +23,22 @@ struct ProfileSummaryStoreTests {
         #expect(summary?.rankings.count == 1)
     }
 
+    @Test func savedSummaryPreservesAccountIdentity() throws {
+        let (store, _) = makeStore()
+        store.save(try summary(#"{"user":{"id":"alice","name":"Alice"}}"#))
+        #expect(store.summary?.userID == "alice")
+        #expect(store.summary?.userName == "Alice")
+    }
+
+    @Test func legacyAndBlankIdentityRemainCompatible() throws {
+        for json in [#"{}"#, #"{"user":{"name":"Legacy"}}"#, #"{"user":{"id":" "}}"#] {
+            let (store, _) = makeStore()
+            store.save(try summary(json))
+            #expect(store.summary != nil)
+            #expect(store.summary?.userID == nil)
+        }
+    }
+
     @Test func savedSummaryPreservesDates() throws {
         let (store, _) = makeStore()
         let original = try summary(#"{"dailyRewardAvailableAt":"2026-11-24T00:00:00.000Z"}"#)

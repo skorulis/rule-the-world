@@ -9,6 +9,10 @@ final class ProfileViewModel {
     private let authManager: AuthManager
     private let service: AuthenticatedService
     private let profileService: ProfileService
+    private let bannerStore: BannerStore
+    private(set) var banner: BannerConfiguration = .default
+    private(set) var userID: String?
+    var canEditBanner: Bool { userID != nil }
     let dailyReward: DailyRewardViewModel
     let stipend: StipendViewModel
     private(set) var visitedHexCount: Int?
@@ -21,16 +25,18 @@ final class ProfileViewModel {
     @Resolvable<Resolver>
     init(
         authManager: AuthManager, service: AuthenticatedService,
-        profileService: ProfileService
+        profileService: ProfileService, bannerStore: BannerStore
     ) {
         self.authManager = authManager
         self.service = service
         self.profileService = profileService
+        self.bannerStore = bannerStore
         self.dailyReward = DailyRewardViewModel(service: service, profileService: profileService)
         self.stipend = StipendViewModel(service: service, profileService: profileService)
     }
 
     func load() async {
+        refreshBanner()
         if let cached = profileService.cachedSummary {
             apply(cached)
         }
@@ -47,6 +53,12 @@ final class ProfileViewModel {
         stipend.update(availableAt: summary.stipendAvailableAt, amount: summary.stipend)
         coins = summary.coins
         userName = summary.userName
+        userID = summary.userID
+        refreshBanner()
+    }
+
+    func refreshBanner() {
+        banner = userID.map { bannerStore.banner(for: $0) } ?? .default
     }
 
     func applyInventory(_ powerups: [String: Int]) {

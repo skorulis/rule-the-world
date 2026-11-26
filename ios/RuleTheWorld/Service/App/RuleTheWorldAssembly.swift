@@ -133,6 +133,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             .inObjectScope(.container)
         container.register(ProfileSummaryStore.self) { ProfileSummaryStore(keyValueStore: $0.pKeyValueStore()) }
             .inObjectScope(.container)
+        container.register(BannerStore.self) { BannerStore(keyValueStore: $0.pKeyValueStore()) }
+            .inObjectScope(.container)
     }
 
     @MainActor
@@ -142,6 +144,9 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         container.register(HexMapViewModel.self) { HexMapViewModel.make(resolver: $0) }
         container.register(HexVisitLogListViewModel.self) { HexVisitLogListViewModel.make(resolver: $0) }
         container.register(ProfileViewModel.self) { ProfileViewModel.make(resolver: $0) }
+        container.register(BannerEditorViewModel.self) { (resolver: Resolver, userID: String) in
+            BannerEditorViewModel.make(resolver: resolver, userID: userID)
+        }
         container.register(TitlesViewModel.self) { TitlesViewModel.make(resolver: $0) }
         container.register(ShopViewModel.self) { ShopViewModel.make(resolver: $0) }
         container.register(PowerUpInventoryViewModel.self) { PowerUpInventoryViewModel.make(resolver: $0) }

@@ -6,6 +6,7 @@ enum MainPath: CoordinatorPath {
     case hexMap
     case visitLog
     case profile
+    case bannerEditor(String)
     case powerUpInventory(PowerUpInventoryViewModel)
     case titles
     case regionTitles(TitlesViewModel.Item)
@@ -22,6 +23,8 @@ enum MainPath: CoordinatorPath {
             "visitLog"
         case .profile:
             "profile"
+        case let .bannerEditor(userID):
+            "bannerEditor:\(userID)"
         case .powerUpInventory:
             "powerUpInventory"
         case .titles:
