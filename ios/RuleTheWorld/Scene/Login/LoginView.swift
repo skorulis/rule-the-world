@@ -6,83 +6,116 @@ struct LoginView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            VStack(spacing: -10) {
-                Image("HexOwned")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 96, height: 96)
-                    .accessibilityHidden(true)
-
-                DecorativeText("RULE THE", fontSize: 48)
-                DecorativeText("WORLD", fontSize: 52)
-            }
-            .padding(.top, 48)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Rule the World")
-            .accessibilityAddTraits(.isHeader)
-
-            ParchmentPanel {
-                VStack(spacing: 24) {
-                    VStack(spacing: 12) {
-                        if model.isSignUpMode {
-                            TextField("Name", text: $model.name)
-                                .textContentType(.name)
-                                .textInputAutocapitalization(.words)
-                                .autocorrectionDisabled()
-                        }
-
-                        TextField("Email", text: $model.email)
-                            .textContentType(.username)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-
-                        SecureField("Password", text: $model.password)
-                            .textContentType(model.isSignUpMode ? .newPassword : .password)
-                    }
-                    .textFieldStyle(.roundedBorder)
-
-                    if let errorMessage = model.errorMessage {
-                        Text(errorMessage)
-                            .font(.callout)
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button {
-                        Task { await model.submit() }
-                    } label: {
-                        if model.isLoading {
-                            ProgressView()
-                        } else {
-                            Text(model.submitTitle)
-                        }
-                    }
-                    .buttonStyle(GoldButtonStyle(fillsWidth: true))
-                    .disabled(!model.canSubmit || model.isLoading)
-
-                    Button(model.modeToggleTitle) {
-                        model.toggleMode()
-                    }
-                    .font(.callout)
-                }
-            }
-
+            title
+            formPanel
             Spacer()
         }
         .padding()
         .contentShape(Rectangle())
         .background {
-            GeometryReader { geometry in
-                Image("LoginBackground")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
-                    .accessibilityHidden(true)
-            }
-            .ignoresSafeArea()
+            background
         }
+    }
+
+    private var title: some View {
+        VStack(spacing: -10) {
+            Image("HexOwned")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 96, height: 96)
+                .accessibilityHidden(true)
+
+            DecorativeText("RULE THE", fontSize: 48)
+            DecorativeText("WORLD", fontSize: 52)
+        }
+        .padding(.top, 48)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rule the World")
+        .accessibilityAddTraits(.isHeader)
+    }
+
+    private var formPanel: some View {
+        ParchmentPanel {
+            VStack(spacing: 24) {
+                inputFields
+                errorMessage
+                submitButton
+                modeToggleButton
+            }
+        }
+    }
+
+    private var inputFields: some View {
+        VStack(spacing: 12) {
+            if model.isSignUpMode {
+                TextField("Name", text: $model.name, prompt: fieldPrompt("Name"))
+                    .textContentType(.name)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+            }
+
+            TextField("Email", text: $model.email, prompt: fieldPrompt("Email"))
+                .textContentType(.username)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            SecureField(
+                "Password", text: $model.password,
+                prompt: fieldPrompt("Password")
+            )
+            .textContentType(model.isSignUpMode ? .newPassword : .password)
+        }
+        .textFieldStyle(ParchmentTextFieldStyle())
+    }
+
+    private func fieldPrompt(_ title: String) -> Text {
+        Text(title)
+            .fontWeight(.semibold)
+            .foregroundStyle(Color(red: 0.35, green: 0.22, blue: 0.13))
+    }
+
+    @ViewBuilder
+    private var errorMessage: some View {
+        if let errorMessage = model.errorMessage {
+            Text(errorMessage)
+                .font(.callout)
+                .foregroundStyle(.red)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var submitButton: some View {
+        Button {
+            Task { await model.submit() }
+        } label: {
+            if model.isLoading {
+                ProgressView()
+            } else {
+                Text(model.submitTitle)
+            }
+        }
+        .buttonStyle(GoldButtonStyle(fillsWidth: true))
+        .disabled(!model.canSubmit || model.isLoading)
+    }
+
+    private var modeToggleButton: some View {
+        Button(model.modeToggleTitle) {
+            model.toggleMode()
+        }
+        .buttonStyle(ParchmentButtonStyle())
+    }
+
+    private var background: some View {
+        GeometryReader { geometry in
+            Image("LoginBackground")
+                .resizable()
+                .scaledToFill()
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
+                .accessibilityHidden(true)
+        }
+        .ignoresSafeArea()
     }
 }
 
