@@ -8,23 +8,24 @@ struct GoldButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         let pressed = isEnabled && configuration.isPressed
-        let outline = Color(red: 0.25, green: 0.12, blue: 0.04)
+        let palette: GoldButtonPalette = configuration.role == .destructive ? .destructive : .gold
+        let outline = palette.outline
 
         configuration.label
             .font(.system(.title3, design: .serif, weight: .heavy))
-            .foregroundStyle(outline)
-            .tint(outline)
+            .foregroundStyle(palette.label)
+            .tint(palette.label)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: 48)
             .background {
-                GoldButtonFace(pressed: pressed)
+                GoldButtonFace(pressed: pressed, palette: palette)
             }
             .offset(y: pressed ? 4 : 0)
             .background {
                 RoundedRectangle(cornerRadius: 13)
-                    .fill(Color(red: 0.55, green: 0.25, blue: 0.05))
+                    .fill(palette.base)
                     .overlay {
                         RoundedRectangle(cornerRadius: 13)
                             .strokeBorder(outline, lineWidth: 2)
@@ -40,21 +41,57 @@ struct GoldButtonStyle: ButtonStyle {
     }
 }
 
+private struct GoldButtonPalette {
+    let outline: Color
+    let label: Color
+    let base: Color
+    let face: [Color]
+    let pressedFace: [Color]
+    let rim: [Color]
+
+    static let gold = GoldButtonPalette(
+        outline: Color(red: 0.25, green: 0.12, blue: 0.04),
+        label: Color(red: 0.25, green: 0.12, blue: 0.04),
+        base: Color(red: 0.55, green: 0.25, blue: 0.05),
+        face: [
+            Color(red: 1, green: 0.93, blue: 0.43),
+            Color(red: 1, green: 0.76, blue: 0.09),
+            Color(red: 0.94, green: 0.5, blue: 0.03),
+        ],
+        pressedFace: [
+            Color(red: 0.88, green: 0.48, blue: 0.04),
+            Color(red: 1, green: 0.74, blue: 0.12),
+        ],
+        rim: [.yellow.opacity(0.95), Color(red: 0.69, green: 0.32, blue: 0.02)]
+    )
+
+    static let destructive = GoldButtonPalette(
+        outline: Color(red: 0.3, green: 0.04, blue: 0.03),
+        label: Color(red: 1, green: 0.96, blue: 0.85),
+        base: Color(red: 0.42, green: 0.05, blue: 0.03),
+        face: [
+            Color(red: 0.93, green: 0.3, blue: 0.24),
+            Color(red: 0.78, green: 0.12, blue: 0.09),
+            Color(red: 0.56, green: 0.05, blue: 0.04),
+        ],
+        pressedFace: [
+            Color(red: 0.55, green: 0.05, blue: 0.04),
+            Color(red: 0.8, green: 0.16, blue: 0.12),
+        ],
+        rim: [Color(red: 1, green: 0.55, blue: 0.43), Color(red: 0.46, green: 0.04, blue: 0.03)]
+    )
+}
+
 private struct GoldButtonFace: View {
     let pressed: Bool
-    private let outline = Color(red: 0.25, green: 0.12, blue: 0.04)
+    let palette: GoldButtonPalette
+
+    private var outline: Color { palette.outline }
 
     var body: some View {
         RoundedRectangle(cornerRadius: 13)
             .fill(LinearGradient(
-                colors: pressed ? [
-                    Color(red: 0.88, green: 0.48, blue: 0.04),
-                    Color(red: 1, green: 0.74, blue: 0.12)
-                ] : [
-                    Color(red: 1, green: 0.93, blue: 0.43),
-                    Color(red: 1, green: 0.76, blue: 0.09),
-                    Color(red: 0.94, green: 0.5, blue: 0.03)
-                ],
+                colors: pressed ? palette.pressedFace : palette.face,
                 startPoint: .top, endPoint: .bottom
             ))
             .overlay {
@@ -66,7 +103,7 @@ private struct GoldButtonFace: View {
                     .inset(by: 4)
                     .strokeBorder(
                         LinearGradient(
-                            colors: [.yellow.opacity(0.95), Color(red: 0.69, green: 0.32, blue: 0.02)],
+                            colors: palette.rim,
                             startPoint: .top, endPoint: .bottom
                         ),
                         lineWidth: 2
@@ -118,6 +155,9 @@ private struct GoldButtonFace: View {
                 ProgressView()
             }
             Button("A longer button title that can wrap onto multiple lines") { }
+            Button("Log out", role: .destructive) { }
+            Button("Disabled destructive action", role: .destructive) { }
+                .disabled(true)
         }
         .buttonStyle(GoldButtonStyle(fillsWidth: true))
     }

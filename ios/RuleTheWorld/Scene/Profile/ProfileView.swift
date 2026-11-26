@@ -58,19 +58,23 @@ struct ProfileView: View {
                 .listRowBackground(Color.clear)
             }
             Section {
-                Button {
-                    coordinator?.push(MainPath.visitLog)
-                } label: {
-                    Label("Visit Log", systemImage: "list.bullet")
-                }
-            } header: {
-                Text("Debug")
-                    .foregroundStyle(Color(red: 1, green: 0.9, blue: 0.7))
-            }
-            Section {
                 Button("Log out", role: .destructive) {
                     showSignOutConfirmation = true
                 }
+                .buttonStyle(GoldButtonStyle(fillsWidth: true))
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+            Section {
+                TitledParchmentPanel("Debug") {
+                    RewardActionRow(systemName: "list.bullet", text: "Visit Log", isEnabled: true) {
+                        coordinator?.push(MainPath.visitLog)
+                    }
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
         }
         .task { await model.load() }
