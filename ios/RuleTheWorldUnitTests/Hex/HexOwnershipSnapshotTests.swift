@@ -164,8 +164,8 @@ struct HexOwnershipSnapshotTests {
                 userVisit: HexVisit(lastVisit: .now, score: 10, lastScore: 1, total: 5),
             ),
         ])
-        #expect(snapshot.levels[sydneyCell] == 2)
-        #expect(snapshot.aggregatedWithLevels(at: HexGridService.baseResolution, grid: grid).levels[sydneyCell] == 2)
+        #expect(snapshot.levels[sydneyCell] == 3)
+        #expect(snapshot.aggregatedWithLevels(at: HexGridService.baseResolution, grid: grid).levels[sydneyCell] == 3)
     }
 
     @Test func aggregatedLevelsTakeMaxOfChildren() {
@@ -183,11 +183,35 @@ struct HexOwnershipSnapshotTests {
         let rival = sydneyCell
         let snapshot = HexOwnershipSnapshot(
             states: [rival: .rivalOwned],
-            levels: [rival: 4]
+            levels: [rival: 4],
+            visitLevels: [rival: 5]
         )
         let aggregated = snapshot.aggregatedPersonalWithLevels(at: HexGridService.baseResolution, grid: grid)
         #expect(aggregated.states.isEmpty)
         #expect(aggregated.levels.isEmpty)
+    }
+
+    @Test func personalLevelsUseVisitCountsNotMargin() {
+        let parent = grid.parent(of: sydneyCell, at: 7)!
+        let children = grid.children(of: parent, at: HexGridService.baseResolution)
+        let snapshot = HexOwnershipSnapshot(
+            states: [children[0]: .owned, children[1]: .visited],
+            levels: [children[0]: 4, children[1]: 4],
+            visitLevels: [children[0]: 2, children[1]: 5]
+        )
+        let aggregated = snapshot.aggregatedPersonalWithLevels(at: 7, grid: grid)
+        #expect(aggregated.levels[parent] == 5)
+    }
+
+    @Test func visitLevelsComputedFromVisitDays() {
+        let snapshot = HexOwnershipSnapshot(infos: [
+            HexInfo(
+                cell: sydneyCell,
+                totals: nil,
+                userVisit: HexVisit(lastVisit: .now, score: 9, lastScore: 1, total: 12),
+            ),
+        ])
+        #expect(snapshot.visitLevels[sydneyCell] == 5)
     }
 
     @Test func levelsAffectEquality() {

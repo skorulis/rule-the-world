@@ -10,8 +10,15 @@ enum HexElevationPolicy {
     /// so the extrusion looks the same at every zoom.
     static let stepFraction: CGFloat = 0.12
 
-    /// Margin thresholds that raise the level by one each.
-    private static let thresholds: [Double] = [1, 3, 6, 10]
+    /// Margin thresholds that raise the level by one each. A score margin
+    /// of +5 or more reaches the maximum height.
+    private static let thresholds: [Double] = [1, 2, 3, 5]
+
+    /// Number of visit days that reaches the ceiling in exploration mode.
+    static let visitCap = 5
+
+    /// Highest lift the renderer can produce across both level sources.
+    static var maxLiftLevel: Int { max(maxLevel, visitCap) }
 
     nonisolated static func level(userScore: Double, rivalScore: Double) -> Int {
         let margin = abs(userScore - rivalScore)
@@ -20,5 +27,10 @@ enum HexElevationPolicy {
             level += 1
         }
         return min(level, maxLevel)
+    }
+
+    /// Exploration mode height: one level per visit day, capped at 5.
+    nonisolated static func level(forVisitDays total: Int) -> Int {
+        min(max(total, 0), visitCap)
     }
 }

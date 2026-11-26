@@ -91,7 +91,7 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         let hexEdge = hexEdgeMeters * MKMapPointsPerMeterAtLatitude(latitude)
         var paddingPoints = hexEdge * 1.5
         // Lifted tops extend beyond the cell footprint; pull in cells just offscreen.
-        paddingPoints += Double(lift(HexElevationPolicy.maxLevel, hexEdge: hexEdge))
+        paddingPoints += Double(lift(HexElevationPolicy.maxLiftLevel, hexEdge: hexEdge))
         let paddedRect = mapRect.insetBy(dx: -paddingPoints, dy: -paddingPoints)
         let region = MKCoordinateRegion(paddedRect)
 

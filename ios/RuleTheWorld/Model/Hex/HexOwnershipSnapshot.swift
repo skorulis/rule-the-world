@@ -3,26 +3,31 @@ import Foundation
 struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     nonisolated var states: [HexCell: HexState]
     nonisolated var levels: [HexCell: Int]
+    nonisolated var visitLevels: [HexCell: Int]
     nonisolated var visitedToday: Set<HexCell> = []
 
     nonisolated init(
         states: [HexCell: HexState],
         levels: [HexCell: Int] = [:],
+        visitLevels: [HexCell: Int] = [:],
         visitedToday: Set<HexCell> = []
     ) {
         self.states = states
         self.levels = levels
+        self.visitLevels = visitLevels
         self.visitedToday = visitedToday
     }
 
     nonisolated init(infos: [HexInfo], at date: Date = .now) {
         states = [:]
         levels = [:]
+        visitLevels = [:]
         for info in infos {
             if let visit = info.userVisit {
                 states[info.cell] = HexState.forScore(
                     visit.score, rivalScore: info.totals?.rivalScore, hasVisited: visit.total > 0
                 )
+                visitLevels[info.cell] = HexElevationPolicy.level(forVisitDays: visit.total)
             } else if (info.totals?.rivalScore ?? 0) > 0 {
                 states[info.cell] = .rivalOwned
             } else {
@@ -46,7 +51,8 @@ struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
     }
 
     nonisolated static func == (lhs: HexOwnershipSnapshot, rhs: HexOwnershipSnapshot) -> Bool {
-        lhs.states == rhs.states && lhs.levels == rhs.levels && lhs.visitedToday == rhs.visitedToday
+        lhs.states == rhs.states && lhs.levels == rhs.levels
+            && lhs.visitLevels == rhs.visitLevels && lhs.visitedToday == rhs.visitedToday
     }
 
     nonisolated func aggregated(at resolution: Int, grid: HexGridService) -> [HexCell: HexState] {
@@ -63,13 +69,15 @@ struct HexOwnershipSnapshot: Sendable, nonisolated Equatable {
         Self.aggregate(states: states, levels: levels, at: resolution, grid: grid)
     }
 
+    /// Personal (exploration) aggregation uses visit-day levels, not
+    /// score-margin levels, so height reflects pure visit counts.
     nonisolated func aggregatedPersonalWithLevels(
         at resolution: Int, grid: HexGridService
     ) -> (states: [HexCell: HexState], levels: [HexCell: Int]) {
         var personalLevels: [HexCell: Int] = [:]
         let personalStates = states.filter { key, value in
             if value != .rivalOwned {
-                personalLevels[key] = levels[key]
+                personalLevels[key] = visitLevels[key]
                 return true
             }
             return false
