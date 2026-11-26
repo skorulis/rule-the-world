@@ -1,5 +1,40 @@
 import CoreLocation
 import MapKit
+import SwiftUI
+
+/// Display color of a plateau: the state color normally, or the
+/// visit-today overrides (green when owned, yellow when not).
+enum PlateauColor: Hashable, Comparable {
+    case normal(HexState)
+    case ownedToday
+    case visitedUnowned
+
+    private var rank: Int {
+        switch self {
+        case .normal(let state):
+            return HexState.allCases.firstIndex(of: state) ?? 0
+        case .visitedUnowned:
+            return HexState.allCases.count
+        case .ownedToday:
+            return HexState.allCases.count + 1
+        }
+    }
+
+    static func < (lhs: PlateauColor, rhs: PlateauColor) -> Bool {
+        lhs.rank < rhs.rank
+    }
+
+    var color: Color? {
+        switch self {
+        case .normal(let state):
+            return state.color
+        case .ownedToday:
+            return .green
+        case .visitedUnowned:
+            return .yellow
+        }
+    }
+}
 
 struct QuantizedMapPoint: Hashable, Comparable {
     let xCoord: Int64
@@ -36,11 +71,11 @@ struct HexCellEdge {
 /// Edges between equal plateaus get no border or wall, keeping joined
 /// regions as a single merged outline.
 struct PlateauKey: Hashable, Comparable {
-    let state: HexState
+    let tint: PlateauColor
     let level: Int
 
     static func < (lhs: PlateauKey, rhs: PlateauKey) -> Bool {
-        lhs.state != rhs.state ? lhs.state < rhs.state : lhs.level < rhs.level
+        lhs.tint != rhs.tint ? lhs.tint < rhs.tint : lhs.level < rhs.level
     }
 }
 

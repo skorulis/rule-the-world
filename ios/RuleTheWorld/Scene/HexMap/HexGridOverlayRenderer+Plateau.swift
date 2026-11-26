@@ -18,12 +18,18 @@ struct FlippingCell {
 struct CollectedGeometry {
     var cells: [PlateauCell] = []
     var edgePlateaus: [HexEdgeKey: [PlateauKey: Int]] = [:]
-    var topPaths: [HexState: CGMutablePath] = [:]
-    var todayCells: [(boundary: [CLLocationCoordinate2D], lift: CGFloat)] = []
+    var topPaths: [PlateauColor: CGMutablePath] = [:]
     var flipping: [FlippingCell] = []
 }
 
 extension HexGridOverlayRenderer {
+    /// Maps a cell's ownership state and today's visit to its display tint:
+    /// green when owned and visited today, yellow when visited but not owned.
+    func plateauTint(for cellState: HexState, visited: Bool) -> PlateauColor {
+        guard visited else { return .normal(cellState) }
+        return cellState.isOwned ? .ownedToday : .visitedUnowned
+    }
+
     /// Vertical lift for a plateau level, in drawing units, proportional to
     /// the hexagon edge length so extrusions scale with the hexes on screen.
     func lift(_ level: Int, hexEdge: CGFloat) -> CGFloat {
@@ -48,26 +54,17 @@ extension HexGridOverlayRenderer {
             if ownLift > otherLift {
                 drawWall(
                     edge: edge, topLift: ownLift, bottomLift: otherLift,
-                    color: wallColor(for: cell.key.state), in: context
+                    color: wallColor(for: cell.key.tint), in: context
                 )
             }
         }
         var topPath = CGMutablePath()
         appendPath(to: &topPath, boundary: cell.boundary, lift: ownLift)
-        if cell.key.state == .contested {
-            var outline = CGMutablePath()
-            for edge in cell.edges where isPlateauBoundary(edge: edge, in: geometry.edgePlateaus) {
-                outline.move(to: CGPoint(x: edge.start.x, y: edge.start.y - ownLift))
-                outline.addLine(to: CGPoint(x: edge.end.x, y: edge.end.y - ownLift))
-            }
-            drawContested(path: topPath, outline: outline, zoomScale: zoomScale, in: context)
-        } else {
-            context.addPath(topPath)
-            context.setFillColor(
-                UIColor(cell.key.state.color ?? .gray).withAlphaComponent(0.45).cgColor
-            )
-            context.fillPath()
-        }
+        context.addPath(topPath)
+        context.setFillColor(
+            UIColor(cell.key.tint.color ?? .gray).withAlphaComponent(0.45).cgColor
+        )
+        context.fillPath()
     }
 
     func strokeOverlays(
@@ -79,9 +76,9 @@ extension HexGridOverlayRenderer {
         context.setLineJoin(.round)
         context.setLineCap(.round)
         let paths = boundaryPaths(geometry: geometry, hexEdge: hexEdge)
-        for (strokeState, path) in paths {
-            guard strokeState != .contested, let color = strokeState.color else { continue }
-            if let interior = geometry.topPaths[strokeState] {
+        for (strokeTint, path) in paths {
+            guard let color = strokeTint.color else { continue }
+            if let interior = geometry.topPaths[strokeTint] {
                 context.saveGState()
                 context.addPath(interior)
                 context.clip()
@@ -100,14 +97,6 @@ extension HexGridOverlayRenderer {
             context.setLineWidth(2 / zoomScale)
             context.strokePath()
         }
-        context.setStrokeColor(UIColor.systemGreen.cgColor)
-        context.setLineWidth(3 / zoomScale)
-        for today in geometry.todayCells {
-            var path = CGMutablePath()
-            appendPath(to: &path, boundary: today.boundary, lift: today.lift)
-            context.addPath(path)
-        }
-        context.strokePath()
     }
 
     func collect(input: CollectInput, hexEdge: CGFloat) -> CollectedGeometry {
@@ -116,10 +105,8 @@ extension HexGridOverlayRenderer {
             let boundary = grid.boundary(of: cell)
             guard !boundary.isEmpty else { continue }
             let level = input.aggregation.levels[cell] ?? 0
-            if input.aggregation.visits.contains(cell) {
-                geometry.todayCells.append((boundary, lift(level, hexEdge: hexEdge)))
-            }
             let cellState = input.aggregation.states[cell] ?? .unclaimed
+            let visited = input.aggregation.visits.contains(cell)
             if let animation = input.changed[cell], input.progress < 1 {
                 geometry.flipping.append(
                     FlippingCell(
@@ -131,13 +118,15 @@ extension HexGridOverlayRenderer {
             } else if input.exploring {
                 guard cellState != .unclaimed else { continue }
                 let fillState = cellState == .contested ? .owned : cellState
+                let tint = plateauTint(for: fillState, visited: visited)
                 appendCell(
-                    to: &geometry, key: PlateauKey(state: fillState, level: level),
+                    to: &geometry, key: PlateauKey(tint: tint, level: level),
                     boundary: boundary, hexEdge: hexEdge
                 )
             } else if cellState != .unclaimed {
+                let tint = plateauTint(for: cellState, visited: visited)
                 appendCell(
-                    to: &geometry, key: PlateauKey(state: cellState, level: level),
+                    to: &geometry, key: PlateauKey(tint: tint, level: level),
                     boundary: boundary, hexEdge: hexEdge
                 )
             }
@@ -170,9 +159,9 @@ extension HexGridOverlayRenderer {
         )
         var topPath = CGMutablePath()
         appendPath(to: &topPath, boundary: boundary, lift: lift(key.level, hexEdge: hexEdge))
-        let union = geometry.topPaths[key.state] ?? CGMutablePath()
+        let union = geometry.topPaths[key.tint] ?? CGMutablePath()
         union.addPath(topPath)
-        geometry.topPaths[key.state] = union
+        geometry.topPaths[key.tint] = union
     }
 
     func isPlateauBoundary(edge: HexCellEdge, in edgePlateaus: [HexEdgeKey: [PlateauKey: Int]]) -> Bool {
@@ -191,16 +180,16 @@ extension HexGridOverlayRenderer {
     func boundaryPaths(
         geometry: CollectedGeometry,
         hexEdge: CGFloat
-    ) -> [HexState: CGMutablePath] {
-        var paths: [HexState: CGMutablePath] = [:]
+    ) -> [PlateauColor: CGMutablePath] {
+        var paths: [PlateauColor: CGMutablePath] = [:]
         for cell in geometry.cells {
             for edge in cell.edges where isPlateauBoundary(edge: edge, in: geometry.edgePlateaus) {
                 let strokeKey = geometry.edgePlateaus[edge.key]?.keys.max() ?? cell.key
                 let edgeLift = lift(strokeKey.level, hexEdge: hexEdge)
-                let path = paths[strokeKey.state] ?? CGMutablePath()
+                let path = paths[strokeKey.tint] ?? CGMutablePath()
                 path.move(to: CGPoint(x: edge.start.x, y: edge.start.y - edgeLift))
                 path.addLine(to: CGPoint(x: edge.end.x, y: edge.end.y - edgeLift))
-                paths[strokeKey.state] = path
+                paths[strokeKey.tint] = path
             }
         }
         return paths
@@ -220,11 +209,8 @@ extension HexGridOverlayRenderer {
         )
     }
 
-    func wallColor(for cellState: HexState) -> UIColor {
-        if cellState == .contested {
-            return UIColor(red: 0.33, green: 0.12, blue: 0.42, alpha: 0.95)
-        }
-        let base = UIColor(cellState.color ?? .gray)
+    func wallColor(for tint: PlateauColor) -> UIColor {
+        let base = UIColor(tint.color ?? .gray)
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         base.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         return UIColor(red: red * 0.55, green: green * 0.55, blue: blue * 0.55, alpha: 0.95)
@@ -299,16 +285,12 @@ extension HexGridOverlayRenderer {
         context.translateBy(x: -center.x, y: -center.y)
         var path = CGMutablePath()
         appendPath(to: &path, boundary: cell.boundary, lift: lift)
-        if shown == .contested {
-            drawContested(path: path, outline: path, zoomScale: zoomScale, in: context)
-        } else {
-            context.addPath(path)
-            let uiColor = shown.color.map(UIColor.init) ?? .gray
-            context.setFillColor(uiColor.withAlphaComponent(shown == .unclaimed ? 0 : 0.45).cgColor)
-            context.setStrokeColor(uiColor.cgColor)
-            context.setLineWidth(1 / zoomScale)
-            context.drawPath(using: .fillStroke)
-        }
+        context.addPath(path)
+        let uiColor = shown.color.map(UIColor.init) ?? .gray
+        context.setFillColor(uiColor.withAlphaComponent(shown == .unclaimed ? 0 : 0.45).cgColor)
+        context.setStrokeColor(uiColor.cgColor)
+        context.setLineWidth(1 / zoomScale)
+        context.drawPath(using: .fillStroke)
         context.restoreGState()
     }
 
@@ -333,29 +315,6 @@ extension HexGridOverlayRenderer {
         context.setStrokeColor(UIColor.white.withAlphaComponent((1 - ringProgress) * 0.9).cgColor)
         context.setLineWidth((3 - ringProgress) / zoomScale)
         context.strokePath()
-    }
-
-    func drawContested(path: CGPath, outline: CGPath, zoomScale: MKZoomScale, in context: CGContext) {
-        let bounds = path.boundingBoxOfPath
-        let padded = bounds.insetBy(dx: -2 / zoomScale, dy: -2 / zoomScale)
-        let halves: [(UIColor, CGRect)] = [
-            (UIColor(Color.red), CGRect(x: padded.minX, y: padded.minY,
-                                       width: bounds.midX - padded.minX, height: padded.height)),
-            (UIColor(Color.blue), CGRect(x: bounds.midX, y: padded.minY,
-                                        width: padded.maxX - bounds.midX, height: padded.height)),
-        ]
-        for (color, clip) in halves {
-            context.saveGState()
-            context.clip(to: clip)
-            context.addPath(path)
-            context.setFillColor(color.withAlphaComponent(0.45).cgColor)
-            context.fillPath()
-            context.addPath(outline)
-            context.setStrokeColor(color.cgColor)
-            context.setLineWidth(2 / zoomScale)
-            context.strokePath()
-            context.restoreGState()
-        }
     }
 
     func aggregated(

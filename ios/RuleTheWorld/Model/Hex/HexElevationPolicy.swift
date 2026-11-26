@@ -13,7 +13,7 @@ enum HexElevationPolicy {
     /// Margin thresholds that raise the level by one each.
     private static let thresholds: [Double] = [1, 3, 6, 10]
 
-    static func level(userScore: Double, rivalScore: Double) -> Int {
+    nonisolated static func level(userScore: Double, rivalScore: Double) -> Int {
         let margin = abs(userScore - rivalScore)
         var level = 0
         for threshold in thresholds where margin >= threshold {

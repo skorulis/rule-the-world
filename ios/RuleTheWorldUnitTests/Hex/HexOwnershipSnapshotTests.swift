@@ -70,6 +70,7 @@ struct HexOwnershipSnapshotTests {
         #expect(HexState.rivalOwned.color == Color.red)
         #expect(HexState.partialVisit.color == Color.cyan)
         #expect(HexState.explored.color == Color.mint)
+        #expect(HexState.contested.color == Color.purple)
         #expect(HexState.unclaimed.color == nil)
     }
 
