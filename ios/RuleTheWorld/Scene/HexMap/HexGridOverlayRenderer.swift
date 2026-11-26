@@ -88,9 +88,10 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         }
 
         let hexEdgeMeters = sqrt(HexZoomPolicy.averageHexagonAreaM2[resolution] / 2.598)
-        var paddingPoints = hexEdgeMeters * 1.5 * MKMapPointsPerMeterAtLatitude(latitude)
+        let hexEdge = hexEdgeMeters * MKMapPointsPerMeterAtLatitude(latitude)
+        var paddingPoints = hexEdge * 1.5
         // Lifted tops extend beyond the cell footprint; pull in cells just offscreen.
-        paddingPoints += Double(liftPoints(HexElevationPolicy.maxLevel, zoomScale: zoomScale))
+        paddingPoints += Double(lift(HexElevationPolicy.maxLevel, hexEdge: hexEdge))
         let paddedRect = mapRect.insetBy(dx: -paddingPoints, dy: -paddingPoints)
         let region = MKCoordinateRegion(paddedRect)
 
@@ -106,17 +107,16 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
                 progress: min(max(elapsed / Self.flipDuration, 0), 1),
                 exploring: exploring,
             ),
-            zoomScale: zoomScale
+            hexEdge: hexEdge
         )
 
         for cell in geometry.cells {
             drawPlateau(
                 cell: cell, geometry: geometry,
-                ownLift: liftPoints(cell.key.level, zoomScale: zoomScale),
-                zoomScale: zoomScale, in: context
+                hexEdge: hexEdge, zoomScale: zoomScale, in: context
             )
         }
-        strokeOverlays(geometry: geometry, zoomScale: zoomScale, in: context)
+        strokeOverlays(geometry: geometry, hexEdge: hexEdge, zoomScale: zoomScale, in: context)
         let progress = min(max(elapsed / Self.flipDuration, 0), 1)
         for item in geometry.flipping {
             drawFlip(cell: item, progress: progress, zoomScale: zoomScale, in: context)

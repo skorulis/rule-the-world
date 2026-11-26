@@ -23,39 +23,28 @@ struct CollectedGeometry {
     var flipping: [FlippingCell] = []
 }
 
-struct AggregatedResult {
-    var states: [HexCell: HexState]
-    var levels: [HexCell: Int]
-    var visits: Set<HexCell>
-}
-
-struct CollectInput {
-    var cells: [HexCell]
-    var aggregation: AggregatedResult
-    var changed: [HexCell: (from: HexState, to: HexState)]
-    var progress: Double
-    var exploring: Bool
-}
-
 extension HexGridOverlayRenderer {
-    func liftPoints(_ level: Int, zoomScale: MKZoomScale) -> CGFloat {
-        CGFloat(level) * HexElevationPolicy.stepPoints / zoomScale
+    /// Vertical lift for a plateau level, in drawing units, proportional to
+    /// the hexagon edge length so extrusions scale with the hexes on screen.
+    func lift(_ level: Int, hexEdge: CGFloat) -> CGFloat {
+        CGFloat(level) * HexElevationPolicy.stepFraction * hexEdge
     }
 
     func drawPlateau(
         cell: PlateauCell,
         geometry: CollectedGeometry,
-        ownLift: CGFloat,
+        hexEdge: CGFloat,
         zoomScale: MKZoomScale,
         in context: CGContext
     ) {
+        let ownLift = lift(cell.key.level, hexEdge: hexEdge)
         for edge in cell.edges {
             guard isPlateauBoundary(edge: edge, in: geometry.edgePlateaus) else { continue }
             // Only south-facing edges show a wall; upper-side walls are
             // occluded by the top face and would show through as a dark rim.
             guard (edge.start.y + edge.end.y) / 2 > cell.sortY else { continue }
             let neighbour = maxNeighbourLevel(edge: edge, excluding: cell.key, in: geometry.edgePlateaus)
-            let otherLift = liftPoints(neighbour, zoomScale: zoomScale)
+            let otherLift = lift(neighbour, hexEdge: hexEdge)
             if ownLift > otherLift {
                 drawWall(
                     edge: edge, topLift: ownLift, bottomLift: otherLift,
@@ -81,10 +70,15 @@ extension HexGridOverlayRenderer {
         }
     }
 
-    func strokeOverlays(geometry: CollectedGeometry, zoomScale: MKZoomScale, in context: CGContext) {
+    func strokeOverlays(
+        geometry: CollectedGeometry,
+        hexEdge: CGFloat,
+        zoomScale: MKZoomScale,
+        in context: CGContext
+    ) {
         context.setLineJoin(.round)
         context.setLineCap(.round)
-        let paths = boundaryPaths(geometry: geometry, zoomScale: zoomScale)
+        let paths = boundaryPaths(geometry: geometry, hexEdge: hexEdge)
         for (strokeState, path) in paths {
             guard strokeState != .contested, let color = strokeState.color else { continue }
             if let interior = geometry.topPaths[strokeState] {
@@ -116,21 +110,21 @@ extension HexGridOverlayRenderer {
         context.strokePath()
     }
 
-    func collect(input: CollectInput, zoomScale: MKZoomScale) -> CollectedGeometry {
+    func collect(input: CollectInput, hexEdge: CGFloat) -> CollectedGeometry {
         var geometry = CollectedGeometry()
         for cell in input.cells {
             let boundary = grid.boundary(of: cell)
             guard !boundary.isEmpty else { continue }
             let level = input.aggregation.levels[cell] ?? 0
             if input.aggregation.visits.contains(cell) {
-                geometry.todayCells.append((boundary, liftPoints(level, zoomScale: zoomScale)))
+                geometry.todayCells.append((boundary, lift(level, hexEdge: hexEdge)))
             }
             let cellState = input.aggregation.states[cell] ?? .unclaimed
             if let animation = input.changed[cell], input.progress < 1 {
                 geometry.flipping.append(
                     FlippingCell(
                         boundary: boundary,
-                        lift: liftPoints(level, zoomScale: zoomScale),
+                        lift: lift(level, hexEdge: hexEdge),
                         animation: animation,
                     )
                 )
@@ -139,12 +133,12 @@ extension HexGridOverlayRenderer {
                 let fillState = cellState == .contested ? .owned : cellState
                 appendCell(
                     to: &geometry, key: PlateauKey(state: fillState, level: level),
-                    boundary: boundary, zoomScale: zoomScale
+                    boundary: boundary, hexEdge: hexEdge
                 )
             } else if cellState != .unclaimed {
                 appendCell(
                     to: &geometry, key: PlateauKey(state: cellState, level: level),
-                    boundary: boundary, zoomScale: zoomScale
+                    boundary: boundary, hexEdge: hexEdge
                 )
             }
         }
@@ -156,7 +150,7 @@ extension HexGridOverlayRenderer {
         to geometry: inout CollectedGeometry,
         key: PlateauKey,
         boundary: [CLLocationCoordinate2D],
-        zoomScale: MKZoomScale
+        hexEdge: CGFloat
     ) {
         var sortY: CGFloat = 0
         var edges: [HexCellEdge] = []
@@ -175,7 +169,7 @@ extension HexGridOverlayRenderer {
             PlateauCell(key: key, sortY: sortY / CGFloat(boundary.count), boundary: boundary, edges: edges)
         )
         var topPath = CGMutablePath()
-        appendPath(to: &topPath, boundary: boundary, lift: liftPoints(key.level, zoomScale: zoomScale))
+        appendPath(to: &topPath, boundary: boundary, lift: lift(key.level, hexEdge: hexEdge))
         let union = geometry.topPaths[key.state] ?? CGMutablePath()
         union.addPath(topPath)
         geometry.topPaths[key.state] = union
@@ -196,16 +190,16 @@ extension HexGridOverlayRenderer {
 
     func boundaryPaths(
         geometry: CollectedGeometry,
-        zoomScale: MKZoomScale
+        hexEdge: CGFloat
     ) -> [HexState: CGMutablePath] {
         var paths: [HexState: CGMutablePath] = [:]
         for cell in geometry.cells {
             for edge in cell.edges where isPlateauBoundary(edge: edge, in: geometry.edgePlateaus) {
                 let strokeKey = geometry.edgePlateaus[edge.key]?.keys.max() ?? cell.key
-                let lift = liftPoints(strokeKey.level, zoomScale: zoomScale)
+                let edgeLift = lift(strokeKey.level, hexEdge: hexEdge)
                 let path = paths[strokeKey.state] ?? CGMutablePath()
-                path.move(to: CGPoint(x: edge.start.x, y: edge.start.y - lift))
-                path.addLine(to: CGPoint(x: edge.end.x, y: edge.end.y - lift))
+                path.move(to: CGPoint(x: edge.start.x, y: edge.start.y - edgeLift))
+                path.addLine(to: CGPoint(x: edge.end.x, y: edge.end.y - edgeLift))
                 paths[strokeKey.state] = path
             }
         }

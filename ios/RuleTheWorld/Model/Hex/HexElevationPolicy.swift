@@ -6,8 +6,9 @@ import Foundation
 enum HexElevationPolicy {
     static let maxLevel = 4
 
-    /// Screen points of vertical lift per level.
-    static let stepPoints: CGFloat = 7
+    /// Vertical lift per level as a fraction of the hexagon's edge length,
+    /// so the extrusion looks the same at every zoom.
+    static let stepFraction: CGFloat = 0.12
 
     /// Margin thresholds that raise the level by one each.
     private static let thresholds: [Double] = [1, 3, 6, 10]

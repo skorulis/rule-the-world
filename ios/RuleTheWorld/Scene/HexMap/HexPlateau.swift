@@ -43,3 +43,17 @@ struct PlateauKey: Hashable, Comparable {
         lhs.state != rhs.state ? lhs.state < rhs.state : lhs.level < rhs.level
     }
 }
+
+struct AggregatedResult {
+    var states: [HexCell: HexState]
+    var levels: [HexCell: Int]
+    var visits: Set<HexCell>
+}
+
+struct CollectInput {
+    var cells: [HexCell]
+    var aggregation: AggregatedResult
+    var changed: [HexCell: (from: HexState, to: HexState)]
+    var progress: Double
+    var exploring: Bool
+}

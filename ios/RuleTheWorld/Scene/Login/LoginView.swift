@@ -6,10 +6,16 @@ struct LoginView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            Spacer()
+            VStack(spacing: -10) {
+                DecorativeText("RULE THE", fontSize: 48)
+                DecorativeText("WORLD", fontSize: 52)
+            }
+            .padding(.top, 48)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Rule the World")
+            .accessibilityAddTraits(.isHeader)
 
-            Text("Rule the World")
-                .font(.largeTitle.bold())
+            Spacer()
 
             VStack(spacing: 12) {
                 if model.isSignUpMode {
