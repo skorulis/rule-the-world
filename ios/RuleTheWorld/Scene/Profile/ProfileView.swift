@@ -16,9 +16,6 @@ struct ProfileView: View {
                     if let owned = model.ownedHexCount {
                         LabeledContent("Hexes owned", value: owned.formatted())
                     }
-                    if let coins = model.coins {
-                        LabeledContent("Coins", value: coins.formatted())
-                    }
                 }
             }
             Section("Daily reward") {
@@ -30,21 +27,20 @@ struct ProfileView: View {
                 }
             }
             Section {
-                Button {
-                    coordinator?.push(MainPath.shop)
-                } label: {
-                    IconText(icon: "Shop", text: "Shop")
-                }
-                Button {
-                    coordinator?.push(MainPath.titles)
-                } label: {
-                    LabeledContent {
-                        Text((model.titleCount ?? 0).formatted())
-                            .font(.system(.title2, design: .rounded, weight: .semibold))
+                HStack(spacing: 12) {
+                    Button {
+                        coordinator?.push(MainPath.shop)
                     } label: {
-                        IconText(icon: "HexOwned", text: "Titles")
+                        SquareCell(title: "Shop", icon: "Shop", value: model.coins ?? 0)
+                    }
+                    Button {
+                        coordinator?.push(MainPath.titles)
+                    } label: {
+                        SquareCell(title: "Titles", icon: "HexOwned", value: model.titleCount ?? 0)
                     }
                 }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
             }
             Section("Debug") {
                 Button {
