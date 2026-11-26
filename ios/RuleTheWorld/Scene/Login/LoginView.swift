@@ -1,3 +1,4 @@
+import Knit
 import SwiftUI
 
 struct LoginView: View {
@@ -70,4 +71,9 @@ struct LoginView: View {
             .ignoresSafeArea()
         }
     }
+}
+
+#Preview {
+    let assembler = RuleTheWorldAssembly.testing()
+    LoginView(model: assembler.resolver.loginViewModel())
 }
