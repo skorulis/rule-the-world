@@ -13,21 +13,11 @@ struct RankCell: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(rank.name).font(.title3.bold())
                 Text(rank.description).font(.subheadline).foregroundStyle(.secondary)
-                if let owned = rank.minOwnership {
-                    Label {
-                        Text("Minimum hexes owned: \(owned.formatted())")
-                    } icon: {
-                        Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
-                    }
-                    .font(.system(.body, design: .rounded, weight: .medium))
+                if let owned = rank.minOwnership, owned > 0 {
+                    IconText(icon: "HexOwned", text: ("Own: \(owned.formatted())+"))
                 }
-                if let visited = rank.minVisits {
-                    Label {
-                        Text("Minimum hexes visited: \(visited.formatted())")
-                    } icon: {
-                        Image("HexVisited").resizable().scaledToFit().frame(width: 32, height: 32)
-                    }
-                    .font(.system(.body, design: .rounded, weight: .medium))
+                if let visited = rank.minVisits, visited > 0 {
+                    IconText(icon: "HexVisited", text: ("Visit: \(visited.formatted())+"))
                 }
                 if rank.minOwnership == nil || rank.minVisits == nil {
                     Text("Some requirements are unavailable.")

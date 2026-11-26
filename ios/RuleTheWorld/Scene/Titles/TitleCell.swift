@@ -12,8 +12,6 @@ struct TitleCell: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.name).font(.title3.bold())
                 values
-                    .font(.system(.title3, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.secondary)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(statsAccessibilityLabel)
             }
@@ -30,27 +28,15 @@ struct TitleCell: View {
     private var values: some View {
         HStack(spacing: 6) {
             if let visited = item.visited {
-                Label {
-                    Text(visited.formatted())
-                } icon: {
-                    Image("HexVisited").resizable().scaledToFit().frame(width: 32, height: 32)
-                }
+                IconText(icon: "HexVisited", text: visited.formatted())
             }
             if let owned = item.owned {
-                Label {
-                    Text(owned.formatted())
-                } icon: {
-                    Image("HexOwned").resizable().scaledToFit().frame(width: 32, height: 32)
-                }
+                IconText(icon: "HexOwned", text: owned.formatted())
             }
         }
 
         if let stipend = item.stipend {
-            Label {
-                Text("+\(stipend.formatted())")
-            } icon: {
-                Image("Coin").resizable().scaledToFit().frame(width: 32, height: 32)
-            }
+            IconText(icon: "Coin", text: "+\(stipend.formatted())")
         }
     }
 
