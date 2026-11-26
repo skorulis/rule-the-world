@@ -1,19 +1,40 @@
 import SwiftUI
 
 struct HexNumber: View {
+    enum Size {
+        case regular
+        case small
+
+        var badgeWidth: CGFloat {
+            switch self {
+            case .regular: 64
+            case .small: 40
+            }
+        }
+
+        var fontSize: CGFloat {
+            switch self {
+            case .regular: 32
+            case .small: 19
+            }
+        }
+    }
+
     let value: Int
     var color: Color = .blue
+    var size: Size = .regular
 
-    @ScaledMetric(relativeTo: .largeTitle) private var badgeWidth: CGFloat = 64
+    @ScaledMetric(relativeTo: .largeTitle) private var scale: CGFloat = 1
 
-    init(_ value: Int, color: Color = .blue) {
+    init(_ value: Int, color: Color = .blue, size: Size = .regular) {
         self.value = value
         self.color = color
+        self.size = size
     }
 
     var body: some View {
         let text = value.formatted()
-        let width = badgeWidth * min(2, max(1, CGFloat(text.count) / 4))
+        let width = size.badgeWidth * scale * min(2, max(1, CGFloat(text.count) / 4))
         let ink = Color(red: 0.1, green: 0.12, blue: 0.16)
         let depth = width * 0.07
 
@@ -29,7 +50,7 @@ struct HexNumber: View {
             badgeFace(ink: ink)
                 .accessibilityHidden(true)
 
-            LargeValueText(text, color: .white)
+            LargeValueText(text, color: .white, size: size.fontSize)
                 .lineLimit(1)
                 .minimumScaleFactor(0.25)
                 .padding(.horizontal, width * 0.17)
@@ -74,6 +95,13 @@ struct HexNumber: View {
                 .scaleEffect(0.74)
         }
     }
+}
+
+extension Color {
+    /// Blue used for "hexes visited" stats (profile card, title rows).
+    static let hexVisited = Color(red: 0.2, green: 0.57, blue: 0.79)
+    /// Red used for "hexes owned" stats (profile card, title rows).
+    static let hexOwned = Color(red: 0.84, green: 0.27, blue: 0.25)
 }
 
 private struct HexNumberShape: Shape {
@@ -124,6 +152,16 @@ private struct HexNumberShape: Shape {
     .padding(20)
     .frame(maxHeight: .infinity)
     .background(Color(red: 0.2, green: 0.12, blue: 0.13))
+}
+
+#Preview("Small") {
+    HStack(spacing: 12) {
+        HexNumber(23, color: .hexVisited, size: .small)
+        HexNumber(17, color: .hexOwned, size: .small)
+        HexNumber(1_234_567, color: .hexVisited, size: .small)
+    }
+    .padding(20)
+    .background(LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom))
 }
 
 #Preview("Large values") {

@@ -3,13 +3,17 @@ import SwiftUI
 struct LargeValueText: View {
     let text: String
     let color: Color
+    let size: CGFloat
 
-    @ScaledMetric(relativeTo: .largeTitle) private var fontSize: CGFloat = 32
+    @ScaledMetric(relativeTo: .largeTitle) private var scale: CGFloat = 1
 
-    init(_ text: String, color: Color = Color(red: 1, green: 0.88, blue: 0.48)) {
+    init(_ text: String, color: Color = Color(red: 1, green: 0.88, blue: 0.48), size: CGFloat = 32) {
         self.text = text
         self.color = color
+        self.size = size
     }
+
+    private var fontSize: CGFloat { size * scale }
 
     var body: some View {
         Text(text)

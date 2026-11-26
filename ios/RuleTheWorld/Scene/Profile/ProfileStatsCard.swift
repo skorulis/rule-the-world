@@ -38,11 +38,11 @@ struct ProfileStatsCard: View {
     }
 
     private var visitedStat: some View {
-        stat(visited, title: "Hexes\nVisited", color: Color(red: 0.2, green: 0.57, blue: 0.79))
+        stat(visited, title: "Hexes\nVisited", color: .hexVisited)
     }
 
     private var ownedStat: some View {
-        stat(owned, title: "Hexes\nOwned", color: Color(red: 0.84, green: 0.27, blue: 0.25))
+        stat(owned, title: "Hexes\nOwned", color: .hexOwned)
     }
 
     @ViewBuilder

@@ -23,6 +23,8 @@ struct TitlesView: View {
                 }
                 .buttonStyle(.plain)
                 .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10))
             }
         } headerActions: {
             Button {
