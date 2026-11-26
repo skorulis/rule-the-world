@@ -33,11 +33,12 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         let endpoint = DebugSettings().endpoint
 
         registerSupportServices(container: container)
-        container.register(LocationCaptureService.self) {
+        container.register(LocationCaptureService.self) { resolver in
             LocationCaptureService(
-                grid: $0.hexGridService(),
-                store: $0.hexInfoStore(),
-                logStore: $0.hexVisitLogStore()
+                grid: resolver.hexGridService(),
+                store: resolver.hexInfoStore(),
+                logStore: resolver.hexVisitLogStore(),
+                onNewDailyHex: resolver.hexVisitSyncService().requestImmediateSync
             )
         }
         .inObjectScope(.container)
@@ -71,7 +72,11 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
                 hexInfoStore: $0.hexInfoStore(),
                 uploader: $0.authenticatedService(),
                 tokenStore: $0.authTokenStore(),
-                profileStore: $0.profileSummaryStore()
+                profileStore: $0.profileSummaryStore(),
+                notificationService: $0.notificationService(),
+                titleNotifications: TitleNotificationBuilder(
+                    catalog: $0.rankCatalog(), regionNames: $0.regionNameCatalog()
+                )
             )
         }
         .inObjectScope(.container)

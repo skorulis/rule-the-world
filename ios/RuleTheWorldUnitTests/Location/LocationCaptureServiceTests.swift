@@ -8,12 +8,15 @@ struct LocationCaptureServiceTests {
     private let grid = HexGridService()
 
     private func makeService(
-        haptics: any CaptureHaptics = UICaptureHaptics()
+        haptics: any CaptureHaptics = UICaptureHaptics(),
+        onNewDailyHex: @escaping () -> Void = {}
     ) throws -> LocationCaptureService {
         let database = try AppDatabase.inMemory()
         let store = HexInfoStore(database: database)
         let logStore = HexVisitLogStore(database: database)
-        return LocationCaptureService(grid: grid, store: store, logStore: logStore, haptics: haptics)
+        return LocationCaptureService(
+            grid: grid, store: store, logStore: logStore, haptics: haptics, onNewDailyHex: onNewDailyHex
+        )
     }
 
     private func sample(
@@ -272,6 +275,47 @@ struct LocationCaptureServiceTests {
         await service.handle(sample(speed: nil, accuracy: 150))
         #expect(haptics.visitCount == 0)
         #expect(haptics.captureCount == 0)
+    }
+
+}
+
+extension LocationCaptureServiceTests {
+    @Test func requestsSyncOnlyForFirstForegroundVisitPerHexPerDay() async throws {
+        var requests = 0
+        let service = try makeService(onNewDailyHex: { requests += 1 })
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        await service.handle(sample(speed: 30 / 3.6, timestamp: date))
+        #expect(requests == 1)
+        await service.handle(sample(speed: 1, timestamp: date))
+        #expect(requests == 1)
+        await service.handle(sample(speed: 1, latitude: -33.95, timestamp: date))
+        #expect(requests == 2)
+        await service.handle(sample(speed: 1, timestamp: date))
+        #expect(requests == 2)
+        await service.handle(sample(speed: 1, timestamp: date.addingTimeInterval(86_400)))
+        #expect(requests == 3)
+    }
+
+    @Test func backgroundAndRejectedSamplesDoNotRequestSync() async throws {
+        var requests = 0
+        let service = try makeService(onNewDailyHex: { requests += 1 })
+        await service.handle(sample(speed: 1, locationType: .background))
+        await service.handle(sample(speed: 1, accuracy: 150, latitude: -33.95))
+        #expect(requests == 0)
+        #expect(try await service.logStore.all().count == 1)
+    }
+
+    @Test func restartedCaptureDoesNotRequestSyncForExistingDailyHex() async throws {
+        var requests = 0
+        let first = try makeService(onNewDailyHex: { requests += 1 })
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        await first.handle(sample(speed: 30 / 3.6, timestamp: date))
+        let restarted = LocationCaptureService(
+            grid: grid, store: first.store, logStore: first.logStore, onNewDailyHex: { requests += 1 }
+        )
+        await restarted.handle(sample(speed: 1, timestamp: date))
+        #expect(requests == 1)
+        #expect(try await first.logStore.all().count == 1)
     }
 
     private func store(of service: LocationCaptureService) -> HexInfoStore {

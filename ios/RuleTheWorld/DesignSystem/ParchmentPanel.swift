@@ -12,7 +12,7 @@ enum ParchmentPanelStyle {
     }
 }
 
-private enum ParchmentPalette {
+enum ParchmentPalette {
     static let colors: [Color] = [
         Color(red: 0.76, green: 0.55, blue: 0.31),
         Color(red: 0.98, green: 0.88, blue: 0.64),

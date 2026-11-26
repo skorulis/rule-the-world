@@ -8,6 +8,7 @@ final class LocationCaptureService {
     let store: HexInfoStore
     let logStore: HexVisitLogStore
     private let haptics: any CaptureHaptics
+    private let onNewDailyHex: @MainActor () -> Void
     private var task: Task<Void, Never>?
 
     struct Recorded: Equatable {
@@ -22,12 +23,14 @@ final class LocationCaptureService {
         grid: HexGridService,
         store: HexInfoStore,
         logStore: HexVisitLogStore,
-        haptics: (any CaptureHaptics)? = nil
+        haptics: (any CaptureHaptics)? = nil,
+        onNewDailyHex: @escaping @MainActor () -> Void = {}
     ) {
         self.grid = grid
         self.store = store
         self.logStore = logStore
         self.haptics = haptics ?? UICaptureHaptics()
+        self.onNewDailyHex = onNewDailyHex
     }
 
     func start(samples: AsyncStream<LocationSample>) {
@@ -73,7 +76,8 @@ final class LocationCaptureService {
         guard samples.count == 5 else { throw NearbyVisitError.notEnoughCells }
         for (cell, sample) in samples {
             _ = try await store.recordVisit(cell, at: sample.timestamp)
-            _ = try await logStore.record(HexVisitLog(sample: sample, cell: cell, score: 1))
+            let result = try await logStore.recordWithResult(HexVisitLog(sample: sample, cell: cell, score: 1))
+            if result.isNewDailyVisit { onNewDailyHex() }
         }
     }
 
@@ -105,8 +109,11 @@ final class LocationCaptureService {
         do {
             let wasOwned = store.snapshot.states[cell]?.isOwned ?? false
             _ = try await store.recordVisit(cell, score: score, at: sample.timestamp)
-            _ = try await logStore.record(HexVisitLog(sample: sample, cell: cell, score: score))
+            let result = try await logStore.recordWithResult(HexVisitLog(sample: sample, cell: cell, score: score))
             lastRecorded = Recorded(cell: cell, score: score, date: sample.timestamp)
+            if result.isNewDailyVisit, sample.locationType == .foreground {
+                onNewDailyHex()
+            }
             if !wasOwned, store.snapshot.states[cell]?.isOwned == true {
                 haptics.captureFeedback()
             } else {

@@ -9,7 +9,16 @@ final class HexVisitLogStore {
         self.database = database
     }
 
+    nonisolated struct RecordResult: Sendable {
+        let entry: HexVisitLog
+        let isNewDailyVisit: Bool
+    }
+
     func record(_ entry: HexVisitLog) async throws -> HexVisitLog {
+        try await recordWithResult(entry).entry
+    }
+
+    func recordWithResult(_ entry: HexVisitLog) async throws -> RecordResult {
         try await database.writer.write { db in
             let last = try HexVisitLog
                 .filter(Column("hexId") == entry.cell)
@@ -19,14 +28,14 @@ final class HexVisitLogStore {
                HexVisit.scoringCalendar.isDate(last.timestamp, inSameDayAs: entry.timestamp) {
                 var merged = last.merging(entry)
                 try merged.update(db)
-                return merged
+                return RecordResult(entry: merged, isNewDailyVisit: false)
             }
             var new = entry
             new.id = nil
             new.uploadID = UUID().uuidString
             new.uploaded = false
             try new.insert(db)
-            return new
+            return RecordResult(entry: new, isNewDailyVisit: true)
         }
     }
 

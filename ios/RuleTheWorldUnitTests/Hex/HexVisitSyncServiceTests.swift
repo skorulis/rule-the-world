@@ -3,20 +3,22 @@ import Foundation
 import Testing
 @testable import RuleTheWorld
 
-nonisolated private struct UploadedVisit: Decodable {
+nonisolated struct UploadedVisit: Decodable {
     let id: String
     var uploadID: String { id }
 }
 
-nonisolated private struct UploadedVisitBatch: Decodable {
+nonisolated struct UploadedVisitBatch: Decodable {
     let visits: [UploadedVisit]
 }
 
 @MainActor
-private final class VisitUploadSession {
+final class VisitUploadSession {
     var calls: [[UploadedVisit]] = []
     var hexInfos: [HexInfo] = []
     var rankings: [ProfileSummary.Ranking] = []
+    var profileData = Data(#"{"rankings":[]}"#.utf8)
+    var profileRequests = 0
     var handler: (([UploadedVisit]) async throws -> Set<String>)?
 
     lazy var service: AuthenticatedService = {
@@ -29,6 +31,11 @@ private final class VisitUploadSession {
     }()
 
     private func respond(to request: URLRequest) async throws -> (Data, URLResponse) {
+        if request.url?.path == "/api/me" {
+            profileRequests += 1
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (profileData, response)
+        }
         let entries = try JSONDecoder().decode(UploadedVisitBatch.self, from: request.httpBody ?? Data()).visits
         calls.append(entries)
         let accepted: Set<String>
@@ -51,7 +58,7 @@ private final class VisitUploadSession {
 
 @MainActor
 struct HexVisitSyncServiceTests {
-    private func entry(
+    func entry(
         cell: UInt64 = 0x8A283082876FFFF,
         score: Double = 0.5,
         timestamp: Date = Date(timeIntervalSince1970: 1_700_000_000)
@@ -62,7 +69,7 @@ struct HexVisitSyncServiceTests {
         )
     }
 
-    private func tokenStore() -> AuthTokenStore {
+    func tokenStore() -> AuthTokenStore {
         let store = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         store.save("token")
         return store
@@ -263,6 +270,100 @@ struct HexVisitSyncServiceTests {
         await sync.run()
         #expect(uploader.calls.count == 2)
         #expect(try await store.pending().isEmpty)
+    }
+
+}
+
+extension HexVisitSyncServiceTests {
+    @Test(.timeLimit(.minutes(1)))
+    func newDailyHexWakesSleepingSyncLoop() async throws {
+        let store = HexVisitLogStore(database: try AppDatabase.inMemory())
+        _ = try await store.record(entry())
+        let uploader = VisitUploadSession()
+        var waits = 0
+        var sync: HexVisitSyncService!
+        sync = HexVisitSyncService(
+            store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()),
+            uploader: uploader.service, tokenStore: tokenStore(), waitForNextCheck: {
+                waits += 1
+                if waits > 1 { throw CancellationError() }
+                _ = try await store.record(entry(cell: 0x8A283082872FFFF))
+                sync.requestImmediateSync()
+                let suspended = AsyncStream<Void> { _ in }
+                for await _ in suspended {}
+            }
+        )
+        await sync.run()
+        #expect(uploader.calls.count == 2)
+        #expect(try await store.pending().isEmpty)
+    }
+
+    @Test func requestsDuringUploadCoalesceIntoOneFollowUpPass() async throws {
+        let store = HexVisitLogStore(database: try AppDatabase.inMemory())
+        _ = try await store.record(entry())
+        let uploader = VisitUploadSession()
+        let sync = HexVisitSyncService(
+            store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()),
+            uploader: uploader.service, tokenStore: tokenStore(), waitForNextCheck: { throw CancellationError() }
+        )
+        uploader.handler = { entries in
+            if uploader.calls.count == 1 {
+                _ = try await store.record(entry(cell: 0x8A283082872FFFF))
+                sync.requestImmediateSync()
+                sync.requestImmediateSync()
+                sync.requestImmediateSync()
+            }
+            return Set(entries.map(\.uploadID))
+        }
+        await sync.run()
+        #expect(uploader.calls.count == 2)
+        #expect(try await store.pending().isEmpty)
+    }
+
+    @Test func immediateRequestsOutsideForegroundRunLeaveVisitsBatched() async throws {
+        let store = HexVisitLogStore(database: try AppDatabase.inMemory())
+        _ = try await store.record(entry())
+        let uploader = VisitUploadSession()
+        let sync = HexVisitSyncService(
+            store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()),
+            uploader: uploader.service, tokenStore: tokenStore(), waitForNextCheck: { throw CancellationError() }
+        )
+        sync.requestImmediateSync()
+        #expect(uploader.calls.isEmpty)
+        #expect(try await store.pending().count == 1)
+        await sync.run()
+        #expect(uploader.calls.count == 1)
+        _ = try await store.record(entry(cell: 0x8A283082872FFFF))
+        sync.requestImmediateSync()
+        #expect(uploader.calls.count == 1)
+        #expect(try await store.pending().count == 1)
+        await sync.run()
+        #expect(uploader.calls.count == 2)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func cancellingForegroundRunStopsImmediateRequests() async throws {
+        let store = HexVisitLogStore(database: try AppDatabase.inMemory())
+        _ = try await store.record(entry())
+        let uploader = VisitUploadSession()
+        let (ready, continuation) = AsyncStream<Void>.makeStream()
+        defer { continuation.finish() }
+        let sync = HexVisitSyncService(
+            store: store, hexInfoStore: HexInfoStore(database: try AppDatabase.inMemory()),
+            uploader: uploader.service, tokenStore: tokenStore(), waitForNextCheck: {
+                continuation.yield(())
+                try await Task.sleep(for: .seconds(600))
+            }
+        )
+        let runner = Task { await sync.run() }
+        var iterator = ready.makeAsyncIterator()
+        _ = await iterator.next()
+        runner.cancel()
+        await runner.value
+        _ = try await store.record(entry(cell: 0x8A283082872FFFF))
+        sync.requestImmediateSync()
+        #expect(uploader.calls.count == 1)
+        #expect(try await store.pending().count == 1)
     }
 
     @Test func runChecksImmediatelyThenAgainAfterTheInterval() async throws {

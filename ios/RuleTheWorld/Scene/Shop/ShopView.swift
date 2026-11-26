@@ -4,7 +4,7 @@ struct ShopView: View {
     @State var model: ShopViewModel
 
     var body: some View {
-        List {
+        StandardListLayout("Shop") {
             Section {
                 LabeledContent("Coins", value: (model.coins ?? 0).formatted())
                 if let errorMessage = model.errorMessage {
@@ -29,7 +29,6 @@ struct ShopView: View {
                 }
             }
         }
-        .navigationTitle("Shop")
         .task { await model.load() }
         .alert(
             "Loot box opened",

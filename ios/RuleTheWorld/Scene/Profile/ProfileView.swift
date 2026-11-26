@@ -7,7 +7,7 @@ struct ProfileView: View {
     @State private var showSignOutConfirmation = false
 
     var body: some View {
-        List {
+        StandardListLayout("Profile") {
             if let userName = model.userName {
                 Section {
                     LabeledContent("Name", value: userName)
@@ -60,7 +60,6 @@ struct ProfileView: View {
                 }
             }
         }
-        .navigationTitle("Profile")
         .task { await model.load() }
         .alert("Log out?", isPresented: $showSignOutConfirmation) {
             Button("Log out", role: .destructive) {

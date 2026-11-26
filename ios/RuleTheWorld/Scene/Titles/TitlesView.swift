@@ -7,7 +7,7 @@ struct TitlesView: View {
     @State private var isHelpPresented = false
 
     var body: some View {
-        List {
+        StandardListLayout("Titles") {
             if let message = model.message, !model.items.isEmpty {
                 Section {
                     Text(message).foregroundStyle(.secondary)
@@ -47,7 +47,6 @@ struct TitlesView: View {
                 }
             }
         }
-        .navigationTitle("Titles")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Help", systemImage: "questionmark.circle") {

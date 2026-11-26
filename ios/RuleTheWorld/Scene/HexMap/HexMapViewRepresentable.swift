@@ -66,8 +66,9 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polygon = overlay as? MKMultiPolygon {
                 let renderer = MKMultiPolygonRenderer(multiPolygon: polygon)
-                renderer.fillColor = mapView.tintColor.withAlphaComponent(0.05)
-                renderer.strokeColor = mapView.tintColor
+                let ink = UIColor(red: 0.3, green: 0.18, blue: 0.11, alpha: 1)
+                renderer.fillColor = UIColor(red: 0.94, green: 0.81, blue: 0.55, alpha: 0.08)
+                renderer.strokeColor = ink.withAlphaComponent(0.75)
                 renderer.lineWidth = 2
                 return renderer
             }
