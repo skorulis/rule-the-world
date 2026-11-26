@@ -1,4 +1,5 @@
 import ASKCoordinator
+import Foundation
 
 enum MainPath: CoordinatorPath {
     case signedOut
@@ -9,6 +10,7 @@ enum MainPath: CoordinatorPath {
     case titles
     case regionTitles(TitlesViewModel.Item)
     case shop
+    case notification(AppNotification, UUID)
 
     var id: String {
         switch self {
@@ -28,6 +30,8 @@ enum MainPath: CoordinatorPath {
             "regionTitles:\(item.id)"
         case .shop:
             "shop"
+        case let .notification(notification, sessionID):
+            "notification:\(sessionID):\(notification.id)"
         }
     }
 }

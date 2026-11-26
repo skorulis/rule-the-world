@@ -34,6 +34,13 @@ struct MainPathRenderer: CoordinatorPathRenderer {
             RegionTitlesView(item: item)
         case .shop:
             ShopView(model: ShopViewModel.make(resolver: resolver))
+        case let .notification(notification, _):
+            NotificationBanner(
+                title: notification.title,
+                message: notification.message,
+                icon: notification.icon,
+                rarity: notification.rarity
+            )
         }
     }
 }

@@ -94,6 +94,8 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
 
     @MainActor
     private func registerSupportServices(container: Container<TargetResolver>) {
+        container.register(NotificationService.self) { _ in NotificationService() }
+            .inObjectScope(.container)
         container.register(HexGridService.self) { _ in HexGridService() }
             .inObjectScope(.container)
         container.register(RegionNameCatalog.self) { _ in RegionNameCatalog() }

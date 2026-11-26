@@ -10,5 +10,7 @@ struct ContentView: View {
     var body: some View {
         CoordinatorView(coordinator: model.hexMapCoordinator)
             .withRenderers(resolver: resolver!)
+            .onAppear { model.appeared() }
+            .onDisappear { model.disappeared() }
     }
 }

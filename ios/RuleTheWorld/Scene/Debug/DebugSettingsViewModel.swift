@@ -26,13 +26,40 @@ final class DebugSettingsViewModel {
     private let locationService: LocationService
     private let captureService: LocationCaptureService
     private let service: AuthenticatedService
+    private let notificationService: NotificationService
 
     @Resolvable<Resolver>
-    init(locationService: LocationService, captureService: LocationCaptureService, service: AuthenticatedService) {
+    init(
+        locationService: LocationService,
+        captureService: LocationCaptureService,
+        service: AuthenticatedService,
+        notificationService: NotificationService
+    ) {
         self.locationService = locationService
         self.captureService = captureService
         self.service = service
+        self.notificationService = notificationService
         self.endpoint = settings.endpoint
+    }
+
+    var canShowNotifications: Bool { notificationService.hasHost }
+
+    func showSampleNotifications(queued: Bool) {
+        guard canShowNotifications else { return }
+        notificationService.show(AppNotification(title: "Exploration", message: "You discovered a new region"))
+        guard queued else { return }
+        notificationService.show(AppNotification(
+            title: "New rank!",
+            message: "You have gained the Burgess rank in Australia",
+            icon: "rank-burgess",
+            rarity: .common
+        ))
+        notificationService.show(AppNotification(
+            title: "New rank!",
+            message: "You have gained the Duke rank in Australia",
+            icon: "rank-duke",
+            rarity: .legendary
+        ))
     }
 
     var hasLocation: Bool {

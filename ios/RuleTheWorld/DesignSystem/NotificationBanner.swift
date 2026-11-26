@@ -13,33 +13,37 @@ struct NotificationBanner: View {
     var rarity: Rarity?
 
     var body: some View {
-        HStack(spacing: 12) {
-            if let icon {
-                Image(icon)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 44, height: 44)
-                    .overlay {
-                        if let rarity {
-                            RoundedRectangle(cornerRadius: 44 * 0.22, style: .continuous)
-                                .strokeBorder(rarity.color.opacity(0.8), lineWidth: 1.5)
+        ParchmentPanel(
+            style: .thin(borderColor: rarity?.color ?? Color(red: 0.35, green: 0.22, blue: 0.13)),
+            contentInsets: EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        ) {
+            HStack(spacing: 12) {
+                if let icon {
+                    Image(icon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 44, height: 44)
+                        .overlay {
+                            if let rarity {
+                                RoundedRectangle(cornerRadius: 44 * 0.22, style: .continuous)
+                                    .strokeBorder(rarity.color, lineWidth: 2)
+                            }
                         }
-                    }
-                    .shadow(color: rarity?.color.opacity(0.5) ?? .clear, radius: 4)
-                    .accessibilityHidden(true)
+                        .accessibilityHidden(true)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.caption.bold())
+                        .foregroundStyle(Color(red: 0.35, green: 0.22, blue: 0.13))
+                        .textCase(.uppercase)
+                    Text(message)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color(red: 0.18, green: 0.13, blue: 0.12))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption.bold())
-                    .foregroundStyle(rarity?.color ?? .secondary)
-                    .textCase(.uppercase)
-                Text(message)
-                    .font(.subheadline.weight(.medium))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
         }
-        .gameCard(rarity: rarity, fallback: .accentColor)
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
     }

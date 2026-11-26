@@ -1,14 +1,37 @@
 import SwiftUI
 
+enum ParchmentPanelStyle {
+    case metal
+    case thin(borderColor: Color)
+
+    var borderWidth: CGFloat {
+        switch self {
+        case .metal: 16
+        case .thin: 2
+        }
+    }
+}
+
+private enum ParchmentPalette {
+    static let colors: [Color] = [
+        Color(red: 0.76, green: 0.55, blue: 0.31),
+        Color(red: 0.98, green: 0.88, blue: 0.64),
+        Color(red: 0.94, green: 0.81, blue: 0.55),
+        Color(red: 0.74, green: 0.52, blue: 0.3),
+    ]
+}
+
 struct ParchmentPanel<Content: View>: View {
     private let contentInsets: EdgeInsets
     private let content: Content
-    private let borderWidth: CGFloat = 16
+    private let style: ParchmentPanelStyle
 
     init(
+        style: ParchmentPanelStyle = .metal,
         contentInsets: EdgeInsets = EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20),
         @ViewBuilder content: () -> Content
     ) {
+        self.style = style
         self.contentInsets = contentInsets
         self.content = content()
     }
@@ -18,11 +41,26 @@ struct ParchmentPanel<Content: View>: View {
             content
         }
         .padding(contentInsets)
-        .padding(borderWidth)
+        .padding(style.borderWidth)
         .background {
-            ParchmentPanelBackground(borderWidth: borderWidth)
+            background
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private var background: some View {
+        switch style {
+        case .metal:
+            ParchmentPanelBackground(borderWidth: style.borderWidth)
+        case let .thin(borderColor):
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(LinearGradient(colors: ParchmentPalette.colors, startPoint: .top, endPoint: .bottom))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(borderColor, lineWidth: style.borderWidth)
+                }
         }
     }
 }
@@ -53,12 +91,7 @@ private struct ParchmentPanelBackground: View {
             let paperRect = CGRect(origin: .zero, size: size).insetBy(dx: borderWidth, dy: borderWidth)
             let paper = paperPath(in: paperRect)
             context.fill(paper, with: .linearGradient(
-                Gradient(colors: [
-                    Color(red: 0.76, green: 0.55, blue: 0.31),
-                    Color(red: 0.98, green: 0.88, blue: 0.64),
-                    Color(red: 0.94, green: 0.81, blue: 0.55),
-                    Color(red: 0.74, green: 0.52, blue: 0.3),
-                ]),
+                Gradient(colors: ParchmentPalette.colors),
                 startPoint: CGPoint(x: 0, y: paperRect.minY),
                 endPoint: CGPoint(x: 0, y: paperRect.maxY)
             ))
@@ -160,6 +193,10 @@ private struct ParchmentPanelBackground: View {
         }
         ParchmentPanel {
             Text("A smaller panel")
+        }
+        ParchmentPanel(style: .thin(borderColor: Rarity.legendary.color)) {
+            Text("A compact parchment panel")
+                .foregroundStyle(Color(red: 0.18, green: 0.13, blue: 0.12))
         }
     }
     .padding(24)

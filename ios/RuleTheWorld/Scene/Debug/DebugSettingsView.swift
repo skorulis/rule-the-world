@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DebugSettingsView: View {
     @State var model: DebugSettingsViewModel
+    let showNotifications: (_ queued: Bool) -> Void
 
     var body: some View {
         Form {
@@ -34,6 +35,11 @@ struct DebugSettingsView: View {
                     Text(powerUpMessage)
                 }
             }
+            Section("Notifications") {
+                Button("Show Notification") { showNotifications(false) }
+                Button("Queue Three Notifications") { showNotifications(true) }
+            }
+            .disabled(!model.canShowNotifications)
             Section("Money") {
                 Button(model.isAddingMoney ? "Adding money…" : "Add 1,000 Coins") {
                     Task { await model.addMoney() }
