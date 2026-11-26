@@ -105,9 +105,34 @@ struct StandardListLayout<Content: View, HeaderActions: View>: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea(.container, edges: .top)
+            .overlay { headerStars }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }
+    }
+
+    private var headerStars: some View {
+        GeometryReader { geometry in
+            ZStack {
+                TwinkleStar(shape: .circle, size: 5, duration: 2.8)
+                    .position(x: geometry.size.width * 0.18, y: geometry.size.height * 0.16)
+                TwinkleStar(size: 10, duration: 3.2)
+                    .position(x: geometry.size.width * 0.29, y: geometry.size.height * 0.25)
+                TwinkleStar(shape: .circle, size: 6, duration: 2.2)
+                    .position(x: geometry.size.width * 0.4, y: geometry.size.height * 0.82)
+                TwinkleStar(shape: .circle, size: 4, duration: 3.5)
+                    .position(x: geometry.size.width * 0.54, y: geometry.size.height * 0.12)
+                TwinkleStar(size: 8, duration: 2.6)
+                    .position(x: geometry.size.width * 0.68, y: geometry.size.height * 0.14)
+                TwinkleStar(size: 13, duration: 3)
+                    .position(x: geometry.size.width * 0.77, y: geometry.size.height * 0.78)
+                TwinkleStar(shape: .circle, size: 6, duration: 2.4)
+                    .position(x: geometry.size.width * 0.92, y: geometry.size.height * 0.2)
+                TwinkleStar(shape: .circle, size: 5, duration: 3.4)
+                    .position(x: geometry.size.width * 0.08, y: geometry.size.height * 0.86)
+            }
+        }
+        .clipped()
     }
 }
 
