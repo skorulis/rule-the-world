@@ -5,7 +5,7 @@ import SwiftUI
 struct RankIcon: View {
     let name: String
     var rarity: Rarity? = nil
-    var size: CGFloat = 44
+    var size: CGFloat = 56
 
     var body: some View {
         Image(name)

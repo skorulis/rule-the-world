@@ -20,6 +20,8 @@ struct RegionDetailView: View {
             } else if let leaders = model.leaders, !leaders.isEmpty {
                 List(Array(leaders.enumerated()), id: \.offset) { _, leader in
                     leaderRow(leader)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                 }
             } else {
                 ContentUnavailableView(
@@ -34,8 +36,8 @@ struct RegionDetailView: View {
     }
 
     private func leaderRow(_ leader: RegionLeader) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            let definition = model.rankDefinition(for: leader)
+        let definition = model.rankDefinition(for: leader)
+        return HStack(alignment: .top, spacing: 12) {
             if let icon = definition?.icon {
                 RankIcon(name: icon, rarity: definition?.rarity)
                     .padding(.top, 2)
@@ -54,6 +56,7 @@ struct RegionDetailView: View {
             .foregroundStyle(.secondary)
             .padding(.top, 2)
         }
+        .gameCard(rarity: definition?.rarity)
     }
 }
 

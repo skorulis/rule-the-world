@@ -34,9 +34,10 @@ struct RegionTitlesView: View {
                 }
                 Section {
                     ForEach(item.ranks, id: \.number) { rank in
-                        rankRow(rank)
+                        rankRow(rank, isCurrent: rank.number == item.number)
                             .id(rank.number)
-                            .listRowBackground(rank.number == item.number ? Color.accentColor.opacity(0.12) : nil)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
                     if !item.ranks.contains(where: { $0.number == item.number }) {
                         VStack(alignment: .leading, spacing: 6) {
@@ -44,6 +45,7 @@ struct RegionTitlesView: View {
                             Text("Requirements unavailable.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 4)
                         .id(item.number)
                         .listRowBackground(Color.accentColor.opacity(0.12))
@@ -61,7 +63,7 @@ struct RegionTitlesView: View {
         .navigationTitle(item.regionName)
     }
 
-    private func rankRow(_ rank: RankDefinition) -> some View {
+    private func rankRow(_ rank: RankDefinition, isCurrent: Bool) -> some View {
         HStack(alignment: .top, spacing: 12) {
             if let icon = rank.icon {
                 RankIcon(name: icon, rarity: rank.rarity)
@@ -95,7 +97,11 @@ struct RegionTitlesView: View {
                 }
             }
             .font(.footnote)
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 4)
+        .gameCard(
+            accent: isCurrent ? .accentColor : rank.rarity.color,
+            prominent: isCurrent || rank.rarity >= .epic
+        )
     }
 }

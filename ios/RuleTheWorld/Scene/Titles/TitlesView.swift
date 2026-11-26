@@ -51,10 +51,12 @@ struct TitlesView: View {
                             .font(.footnote).foregroundStyle(.tertiary)
                             .accessibilityHidden(true)
                     }
-                    .padding(.vertical, 4)
+                    .gameCard(rarity: item.rarity)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
         }
         .overlay {
