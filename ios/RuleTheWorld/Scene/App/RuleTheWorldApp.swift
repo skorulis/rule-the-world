@@ -20,6 +20,7 @@ struct RuleTheWorldApp: App {
     private let captureService: LocationCaptureService?
     private let authManager: AuthManager?
     private let visitSyncService: HexVisitSyncService?
+    private let backgroundSyncScheduler: BackgroundVisitSyncScheduler?
 
     private var shouldSyncVisits: Bool {
         scenePhase == .active && authManager?.isSignedIn == true
@@ -31,6 +32,7 @@ struct RuleTheWorldApp: App {
             captureService = nil
             authManager = nil
             visitSyncService = nil
+            backgroundSyncScheduler = nil
             return
         }
         let locationService = assembler.resolver.locationService()
@@ -41,6 +43,7 @@ struct RuleTheWorldApp: App {
         self.captureService = captureService
         self.authManager = assembler.resolver.authManager()
         self.visitSyncService = assembler.resolver.hexVisitSyncService()
+        self.backgroundSyncScheduler = assembler.resolver.backgroundVisitSyncScheduler()
     }
 
     var body: some Scene {
@@ -66,6 +69,13 @@ struct RuleTheWorldApp: App {
                 guard shouldSyncVisits else { return }
                 await visitSyncService?.run()
             }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .background else { return }
+                Task { await backgroundSyncScheduler?.appDidEnterBackground() }
+            }
+        }
+        .backgroundTask(.appRefresh(BackgroundVisitSyncScheduler.refreshTaskIdentifier)) { [backgroundSyncScheduler] in
+            await backgroundSyncScheduler?.performRefresh()
         }
     }
 }

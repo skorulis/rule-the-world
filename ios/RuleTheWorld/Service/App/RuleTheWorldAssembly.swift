@@ -33,15 +33,7 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
         let endpoint = DebugSettings().endpoint
 
         registerSupportServices(container: container)
-        container.register(LocationCaptureService.self) { resolver in
-            LocationCaptureService(
-                grid: resolver.hexGridService(),
-                store: resolver.hexInfoStore(),
-                logStore: resolver.hexVisitLogStore(),
-                onNewDailyHex: resolver.hexVisitSyncService().requestImmediateSync
-            )
-        }
-        .inObjectScope(.container)
+        registerVisitSyncServices(container: container)
         container.register(URLSessionProtocol.self) { _ in
             endpoint.makeSession()
         }
@@ -66,6 +58,35 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             ProfileService(service: $0.authenticatedService(), store: $0.profileSummaryStore())
         }
         .inObjectScope(.container)
+        container.register(AuthTokenStore.self) {
+            AuthTokenStore(keyValueStore: $0.secureKeyValueStore())
+        }
+        .inObjectScope(.container)
+        container.register(AuthManager.self) {
+            AuthManager(
+                service: $0.authService(),
+                authenticatedService: $0.authenticatedService(),
+                tokenStore: $0.authTokenStore(),
+                database: $0.appDatabase(),
+                visitStore: $0.hexInfoStore(),
+                profileStore: $0.profileSummaryStore()
+            )
+        }
+        .inObjectScope(.container)
+    }
+
+    @MainActor
+    private func registerVisitSyncServices(container: Container<TargetResolver>) {
+        container.register(LocationCaptureService.self) { resolver in
+            LocationCaptureService(
+                grid: resolver.hexGridService(),
+                store: resolver.hexInfoStore(),
+                logStore: resolver.hexVisitLogStore(),
+                onNewDailyHex: resolver.hexVisitSyncService().requestImmediateSync,
+                onBackgroundVisit: resolver.backgroundVisitSyncScheduler().visitRecordedInBackground
+            )
+        }
+        .inObjectScope(.container)
         container.register(HexVisitSyncService.self) {
             HexVisitSyncService(
                 store: $0.hexVisitLogStore(),
@@ -80,18 +101,12 @@ final class RuleTheWorldAssembly: AutoInitModuleAssembly {
             )
         }
         .inObjectScope(.container)
-        container.register(AuthTokenStore.self) {
-            AuthTokenStore(keyValueStore: $0.secureKeyValueStore())
-        }
-        .inObjectScope(.container)
-        container.register(AuthManager.self) {
-            AuthManager(
-                service: $0.authService(),
-                authenticatedService: $0.authenticatedService(),
+        container.register(BackgroundVisitSyncScheduler.self) {
+            BackgroundVisitSyncScheduler(
+                syncService: $0.hexVisitSyncService(),
+                store: $0.hexVisitLogStore(),
                 tokenStore: $0.authTokenStore(),
-                database: $0.appDatabase(),
-                visitStore: $0.hexInfoStore(),
-                profileStore: $0.profileSummaryStore()
+                keyValueStore: $0.pKeyValueStore()
             )
         }
         .inObjectScope(.container)

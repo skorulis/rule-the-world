@@ -9,13 +9,15 @@ struct LocationCaptureServiceTests {
 
     private func makeService(
         haptics: any CaptureHaptics = UICaptureHaptics(),
-        onNewDailyHex: @escaping () -> Void = {}
+        onNewDailyHex: @escaping () -> Void = {},
+        onBackgroundVisit: @escaping () -> Void = {}
     ) throws -> LocationCaptureService {
         let database = try AppDatabase.inMemory()
         let store = HexInfoStore(database: database)
         let logStore = HexVisitLogStore(database: database)
         return LocationCaptureService(
-            grid: grid, store: store, logStore: logStore, haptics: haptics, onNewDailyHex: onNewDailyHex
+            grid: grid, store: store, logStore: logStore, haptics: haptics,
+            onNewDailyHex: onNewDailyHex, onBackgroundVisit: onBackgroundVisit
         )
     }
 
@@ -303,6 +305,18 @@ extension LocationCaptureServiceTests {
         await service.handle(sample(speed: 1, accuracy: 150, latitude: -33.95))
         #expect(requests == 0)
         #expect(try await service.logStore.all().count == 1)
+    }
+
+    @Test func onlyRecordedBackgroundSamplesNotifyBackgroundVisit() async throws {
+        var notifications = 0
+        let service = try makeService(onBackgroundVisit: { notifications += 1 })
+        await service.handle(sample(speed: 1))
+        #expect(notifications == 0)
+        await service.handle(sample(speed: 1, accuracy: 150, latitude: -33.95, locationType: .background))
+        #expect(notifications == 0)
+        await service.handle(sample(speed: 1, latitude: -33.95, locationType: .background))
+        #expect(notifications == 1)
+        #expect(try await service.logStore.all().count == 2)
     }
 
     @Test func restartedCaptureDoesNotRequestSyncForExistingDailyHex() async throws {

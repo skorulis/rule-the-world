@@ -9,6 +9,7 @@ final class LocationCaptureService {
     let logStore: HexVisitLogStore
     private let haptics: any CaptureHaptics
     private let onNewDailyHex: @MainActor () -> Void
+    private let onBackgroundVisit: @MainActor () -> Void
     private var task: Task<Void, Never>?
 
     struct Recorded: Equatable {
@@ -24,13 +25,15 @@ final class LocationCaptureService {
         store: HexInfoStore,
         logStore: HexVisitLogStore,
         haptics: (any CaptureHaptics)? = nil,
-        onNewDailyHex: @escaping @MainActor () -> Void = {}
+        onNewDailyHex: @escaping @MainActor () -> Void = {},
+        onBackgroundVisit: @escaping @MainActor () -> Void = {}
     ) {
         self.grid = grid
         self.store = store
         self.logStore = logStore
         self.haptics = haptics ?? UICaptureHaptics()
         self.onNewDailyHex = onNewDailyHex
+        self.onBackgroundVisit = onBackgroundVisit
     }
 
     func start(samples: AsyncStream<LocationSample>) {
@@ -113,6 +116,9 @@ final class LocationCaptureService {
             lastRecorded = Recorded(cell: cell, score: score, date: sample.timestamp)
             if result.isNewDailyVisit, sample.locationType == .foreground {
                 onNewDailyHex()
+            }
+            if sample.locationType == .background {
+                onBackgroundVisit()
             }
             if !wasOwned, store.snapshot.states[cell]?.isOwned == true {
                 haptics.captureFeedback()
