@@ -9,7 +9,7 @@ struct BannerConfigurationTests {
         #expect(try JSONDecoder().decode(BannerConfiguration.self, from: data) == original)
         let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         #expect(Set(json.keys) == [
-            "schemaVersion", "pattern", "backgroundColor", "patternColor", "emblem", "emblemColor",
+            "schemaVersion", "pattern", "backgroundColor", "patternColor", "emblem", "emblemColor"
         ])
         #expect(json["schemaVersion"] as? Int == 1)
         #expect(json["pattern"] as? String == "chevron")

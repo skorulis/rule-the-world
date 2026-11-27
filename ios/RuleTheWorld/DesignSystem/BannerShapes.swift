@@ -15,7 +15,7 @@ struct BannerPatternShape: Shape {
         case .diagonalBand:
             path.addLines([
                 CGPoint(x: -0.2, y: 0.8), CGPoint(x: 0.8, y: -0.2),
-                CGPoint(x: 1.2, y: 0.2), CGPoint(x: 0.2, y: 1.2),
+                CGPoint(x: 1.2, y: 0.2), CGPoint(x: 0.2, y: 1.2)
             ])
             path.closeSubpath()
         case .cross:
@@ -23,13 +23,13 @@ struct BannerPatternShape: Shape {
                 CGPoint(x: 0.4, y: 0), CGPoint(x: 0.6, y: 0), CGPoint(x: 0.6, y: 0.4),
                 CGPoint(x: 1, y: 0.4), CGPoint(x: 1, y: 0.6), CGPoint(x: 0.6, y: 0.6),
                 CGPoint(x: 0.6, y: 1), CGPoint(x: 0.4, y: 1), CGPoint(x: 0.4, y: 0.6),
-                CGPoint(x: 0, y: 0.6), CGPoint(x: 0, y: 0.4), CGPoint(x: 0.4, y: 0.4),
+                CGPoint(x: 0, y: 0.6), CGPoint(x: 0, y: 0.4), CGPoint(x: 0.4, y: 0.4)
             ])
             path.closeSubpath()
         case .chevron:
             path.addLines([
                 CGPoint(x: 0, y: 0.7), CGPoint(x: 0.5, y: 0.15), CGPoint(x: 1, y: 0.7),
-                CGPoint(x: 1, y: 1), CGPoint(x: 0.5, y: 0.45), CGPoint(x: 0, y: 1),
+                CGPoint(x: 1, y: 1), CGPoint(x: 0.5, y: 0.45), CGPoint(x: 0, y: 1)
             ])
             path.closeSubpath()
         }
@@ -50,7 +50,7 @@ struct BannerEmblemShape: Shape {
             path.addLines([
                 CGPoint(x: 0.12, y: 0.28), CGPoint(x: 0.34, y: 0.47), CGPoint(x: 0.5, y: 0.08),
                 CGPoint(x: 0.66, y: 0.47), CGPoint(x: 0.88, y: 0.28),
-                CGPoint(x: 0.78, y: 0.82), CGPoint(x: 0.22, y: 0.82),
+                CGPoint(x: 0.78, y: 0.82), CGPoint(x: 0.22, y: 0.82)
             ])
             path.closeSubpath()
             path.addRoundedRect(in: CGRect(x: 0.2, y: 0.85, width: 0.6, height: 0.08),
@@ -70,7 +70,7 @@ struct BannerEmblemShape: Shape {
                 CGPoint(x: 0.58, y: 0.2), CGPoint(x: 0.55, y: 0.66), CGPoint(x: 0.8, y: 0.62),
                 CGPoint(x: 0.8, y: 0.73), CGPoint(x: 0.56, y: 0.75), CGPoint(x: 0.56, y: 0.94),
                 CGPoint(x: 0.44, y: 0.94), CGPoint(x: 0.44, y: 0.75),
-                CGPoint(x: 0.2, y: 0.73), CGPoint(x: 0.2, y: 0.62),
+                CGPoint(x: 0.2, y: 0.73), CGPoint(x: 0.2, y: 0.62)
             ])
             path.closeSubpath()
         case .star, .compass:

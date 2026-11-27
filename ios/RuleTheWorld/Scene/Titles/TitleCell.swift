@@ -68,7 +68,7 @@ struct TitleCell: View {
                 id: "global:1", number: 12, type: "global", ranks: [],
                 name: "American Crofter", icon: "RankCrofter", rarity: nil,
                 regionName: "World", detail: nil, visited: 6, owned: 6, stipend: nil
-            ),
+            )
         ]) { item in
             TitleCell(item: item)
                 .listRowSeparator(.hidden)

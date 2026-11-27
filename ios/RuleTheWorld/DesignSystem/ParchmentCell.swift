@@ -75,7 +75,7 @@ private struct ParchmentCellBackground: View {
             CGPoint(x: rect.minX, y: rect.minY),
             CGPoint(x: rect.maxX, y: rect.minY),
             CGPoint(x: rect.minX, y: rect.maxY),
-            CGPoint(x: rect.maxX, y: rect.maxY),
+            CGPoint(x: rect.maxX, y: rect.maxY)
         ]
         for position in positions {
             let rivet = Path(ellipseIn: CGRect(x: position.x - 3.5, y: position.y - 3.5, width: 7, height: 7))

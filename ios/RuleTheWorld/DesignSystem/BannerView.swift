@@ -52,7 +52,7 @@ struct BannerView: View {
                 .init(color: .clear, location: 0.3),
                 .init(color: .black.opacity(0.23), location: 0.53),
                 .init(color: .white.opacity(0.16), location: 0.8),
-                .init(color: .clear, location: 1),
+                .init(color: .clear, location: 1)
             ]), startPoint: CGPoint(x: 45, y: 0), endPoint: CGPoint(x: 280, y: 60)
         ))
         fabric.stroke(silhouette, with: .color(BannerColor.gold.color), lineWidth: 9)

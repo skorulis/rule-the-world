@@ -113,7 +113,7 @@ private struct HexNumberShape: Shape {
             CGPoint(x: badge.maxX, y: badge.minY + badge.height * 0.75),
             CGPoint(x: badge.midX, y: badge.maxY),
             CGPoint(x: badge.minX, y: badge.minY + badge.height * 0.75),
-            CGPoint(x: badge.minX, y: badge.minY + badge.height * 0.25),
+            CGPoint(x: badge.minX, y: badge.minY + badge.height * 0.25)
         ]
         let rounding: CGFloat = 0.1
         return Path { path in

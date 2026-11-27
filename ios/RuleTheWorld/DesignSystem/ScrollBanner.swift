@@ -8,7 +8,7 @@ struct ScrollBanner<Content: View>: View {
     private let content: Content
 
     init(
-        contentInsets: EdgeInsets = EdgeInsets(top: 0, leading: 52, bottom: 0, trailing: 42),
+        contentInsets: EdgeInsets = EdgeInsets(top: 0, leading: 42, bottom: 0, trailing: 42),
         minHeight: CGFloat = 76,
         @ViewBuilder content: () -> Content
     ) {

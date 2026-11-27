@@ -66,7 +66,7 @@ private struct TitledParchmentShape: Shape {
                 CGPoint(x: paper.minX + paper.width * 0.2 + 8, y: paper.minY),
                 CGPoint(x: paper.maxX - paper.width * 0.2 - 8, y: paper.minY),
                 CGPoint(x: paper.maxX - paper.width * 0.2, y: paper.minY + shoulder),
-                CGPoint(x: paper.maxX, y: paper.minY + shoulder - 1),
+                CGPoint(x: paper.maxX, y: paper.minY + shoulder - 1)
             ])
             path.addQuadCurve(
                 to: CGPoint(x: paper.maxX - 1, y: paper.midY - notch),

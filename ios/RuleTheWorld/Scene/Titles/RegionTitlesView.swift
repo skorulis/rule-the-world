@@ -81,7 +81,7 @@ struct RegionTitlesView: View {
                     description: "A dependable local landholder.",
                     icon: "RankYeoman", minOwnership: 5, minVisits: 8,
                     maxQuantity: nil, maxPercentage: nil, stipend: 2
-                ),
+                )
             ],
             name: "Sydney Councillor", icon: "RankCouncillor", rarity: .epic,
             regionName: "Sydney", detail: nil, visited: 23, owned: 17, stipend: 9

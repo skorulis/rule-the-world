@@ -62,11 +62,11 @@ private struct GoldButtonPalette {
         face: [
             Color(red: 1, green: 0.93, blue: 0.43),
             Color(red: 1, green: 0.76, blue: 0.09),
-            Color(red: 0.94, green: 0.5, blue: 0.03),
+            Color(red: 0.94, green: 0.5, blue: 0.03)
         ],
         pressedFace: [
             Color(red: 0.88, green: 0.48, blue: 0.04),
-            Color(red: 1, green: 0.74, blue: 0.12),
+            Color(red: 1, green: 0.74, blue: 0.12)
         ],
         rim: [.yellow.opacity(0.95), Color(red: 0.69, green: 0.32, blue: 0.02)]
     )
@@ -78,11 +78,11 @@ private struct GoldButtonPalette {
         face: [
             Color(red: 0.93, green: 0.3, blue: 0.24),
             Color(red: 0.78, green: 0.12, blue: 0.09),
-            Color(red: 0.56, green: 0.05, blue: 0.04),
+            Color(red: 0.56, green: 0.05, blue: 0.04)
         ],
         pressedFace: [
             Color(red: 0.55, green: 0.05, blue: 0.04),
-            Color(red: 0.8, green: 0.16, blue: 0.12),
+            Color(red: 0.8, green: 0.16, blue: 0.12)
         ],
         rim: [Color(red: 1, green: 0.55, blue: 0.43), Color(red: 0.46, green: 0.04, blue: 0.03)]
     )
