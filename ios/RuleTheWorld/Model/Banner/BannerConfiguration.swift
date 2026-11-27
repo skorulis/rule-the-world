@@ -5,7 +5,7 @@ nonisolated struct BannerConfiguration: Codable, Equatable, Sendable {
     var pattern: BannerPattern = .chevron
     var backgroundColor: BannerColor = .navy
     var patternColor: BannerColor = .purple
-    var emblem: BannerEmblem = .compass
+    var emblem: BannerEmblem = .compassRose
     var emblemColor: BannerColor = .gold
 
     static let `default` = BannerConfiguration()
@@ -27,7 +27,7 @@ nonisolated struct BannerConfiguration: Codable, Equatable, Sendable {
         pattern = BannerPattern(rawValue: try values.decode(String.self, forKey: .pattern)) ?? .chevron
         backgroundColor = BannerColor(rawValue: try values.decode(String.self, forKey: .backgroundColor)) ?? .navy
         patternColor = BannerColor(rawValue: try values.decode(String.self, forKey: .patternColor)) ?? .purple
-        emblem = BannerEmblem(rawValue: try values.decode(String.self, forKey: .emblem)) ?? .compass
+        emblem = BannerEmblem(rawValue: try values.decode(String.self, forKey: .emblem)) ?? .compassRose
         emblemColor = BannerColor(rawValue: try values.decode(String.self, forKey: .emblemColor)) ?? .gold
     }
 
@@ -44,14 +44,14 @@ nonisolated struct BannerConfiguration: Codable, Equatable, Sendable {
     mutating func shuffle(using generator: inout some RandomNumberGenerator) {
         let previous = self
         pattern = BannerPattern.allCases.randomElement(using: &generator) ?? .solid
-        emblem = BannerEmblem.allCases.randomElement(using: &generator) ?? .crown
+        emblem = BannerEmblem.allCases.randomElement(using: &generator) ?? .compassRose
         backgroundColor = BannerColor.allCases.randomElement(using: &generator) ?? .navy
         patternColor = BannerColor.allCases.filter { $0 != backgroundColor }
             .randomElement(using: &generator) ?? .gold
         emblemColor = BannerColor.allCases.filter { $0 != backgroundColor && $0 != patternColor }
             .randomElement(using: &generator) ?? .ivory
         if self == previous {
-            emblem = emblem == .crown ? .star : .crown
+            emblem = emblem == .lion ? .compassRose : .lion
         }
     }
 }

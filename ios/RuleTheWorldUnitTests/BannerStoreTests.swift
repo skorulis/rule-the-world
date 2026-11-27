@@ -15,7 +15,7 @@ struct BannerStoreTests {
         let values = InMemoryKeyValueStore()
         let first = BannerStore(keyValueStore: values)
         var banner = BannerConfiguration.default
-        banner.emblem = .sword
+        banner.emblem = .lion
         try first.save(banner, for: "alice")
         let second = BannerStore(keyValueStore: values)
         #expect(second.banner(for: "alice") == banner)

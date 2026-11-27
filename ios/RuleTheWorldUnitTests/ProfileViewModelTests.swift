@@ -133,7 +133,7 @@ struct ProfileViewModelTests {
         ProfileSummaryStore(keyValueStore: values).save(summary)
         let banners = BannerStore(keyValueStore: values)
         var banner = BannerConfiguration.default
-        banner.emblem = .sword
+        banner.emblem = .lion
         try banners.save(banner, for: "alice")
         let (model, _) = try makeModel(values: values) { _ in throw URLError(.notConnectedToInternet) }
         await model.load()
@@ -156,7 +156,7 @@ struct ProfileViewModelTests {
         profiles.save(summary)
         let banners = BannerStore(keyValueStore: values)
         var banner = BannerConfiguration.default
-        banner.emblem = .crown
+        banner.emblem = .wave
         try banners.save(banner, for: "alice")
         let (model, _) = try makeModel(values: values) { _ in throw URLError(.notConnectedToInternet) }
         await model.load()
@@ -180,7 +180,7 @@ struct ProfileViewModelTests {
     @Test func fetchedIdentityDoesNotUseAnotherAccountsBanner() async throws {
         let values = InMemoryKeyValueStore()
         var banner = BannerConfiguration.default
-        banner.emblem = .shield
+        banner.emblem = .paw
         try BannerStore(keyValueStore: values).save(banner, for: "alice")
         let (model, _) = try makeModel(values: values) { request in
             (Data(#"{"user":{"id":"bob","name":"Bob"}}"#.utf8),

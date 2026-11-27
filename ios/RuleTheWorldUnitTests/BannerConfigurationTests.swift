@@ -15,7 +15,7 @@ struct BannerConfigurationTests {
         #expect(json["pattern"] as? String == "chevron")
         #expect(json["backgroundColor"] as? String == "navy")
         #expect(json["patternColor"] as? String == "purple")
-        #expect(json["emblem"] as? String == "compass")
+        #expect(json["emblem"] as? String == "compassRose")
         #expect(json["emblemColor"] as? String == "gold")
     }
 

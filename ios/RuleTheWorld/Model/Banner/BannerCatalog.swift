@@ -16,10 +16,9 @@ nonisolated enum BannerPattern: String, CaseIterable, Sendable {
 }
 
 nonisolated enum BannerEmblem: String, CaseIterable, Sendable {
-    case none, crown, compass, shield, sword, star
-    case compassRose, tome, lion, gauntlet, tree, anchor, summit
+    case none, compassRose, tome, lion, gauntlet, anchor, summit
     case wingedHelm, wave, royalCrown, potion, hourglass, paw
-    case pirate, starBadge, roseBadge, rose, ramSkull, lightning
+    case pirate, starBadge, ramSkull, lightning
 
     var title: String {
         switch self {
@@ -27,7 +26,6 @@ nonisolated enum BannerEmblem: String, CaseIterable, Sendable {
         case .wingedHelm: "Winged helm"
         case .royalCrown: "Royal crown"
         case .starBadge: "Star badge"
-        case .roseBadge: "Rose badge"
         case .ramSkull: "Ram skull"
         default: rawValue.capitalized
         }
@@ -42,13 +40,8 @@ nonisolated enum BannerEmblem: String, CaseIterable, Sendable {
     }
 
     /// Fixed-color overlay (outlines, gems) drawn untinted on top of the base.
-    var detailImageName: String? {
-        switch self {
-        case .crown, .compass, .shield, .sword, .star:
-            baseImageName.map { $0 + "Detail" }
-        default: nil
-        }
-    }
+    /// No current emblems ship one; return a name here if an overlay asset exists.
+    var detailImageName: String? { nil }
 }
 
 nonisolated enum BannerColor: String, CaseIterable, Sendable {

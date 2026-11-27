@@ -8,7 +8,7 @@ struct BannerEditorViewModelTests {
         let store = BannerStore(keyValueStore: InMemoryKeyValueStore())
         let model = BannerEditorViewModel(store: store, userID: "alice")
         model.draft.pattern = .cross
-        model.draft.emblem = .shield
+        model.draft.emblem = .lion
         #expect(store.banner(for: "alice") == .default)
         let reopened = BannerEditorViewModel(store: store, userID: "alice")
         #expect(reopened.draft == .default)
@@ -41,7 +41,7 @@ struct BannerEditorViewModelTests {
         let model = BannerEditorViewModel(
             store: BannerStore(keyValueStore: DiscardingBannerKeyValueStore()), userID: "alice"
         )
-        model.draft.emblem = .crown
+        model.draft.emblem = .wave
         let draft = model.draft
         #expect(!model.save())
         #expect(model.draft == draft)
