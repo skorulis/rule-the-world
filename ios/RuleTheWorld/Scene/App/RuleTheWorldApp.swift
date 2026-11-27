@@ -52,7 +52,10 @@ struct RuleTheWorldApp: App {
                 if ProcessInfo.isRunningTests {
                     Color.clear
                 } else if let authManager, authManager.isSignedIn {
-                    if let locationService, !locationService.hasLocationAccess {
+                    if authManager.needsBannerSetup {
+                        BannerSetupView { authManager.completeBannerSetup() }
+                            .environment(\.resolver, assembler.resolver)
+                    } else if let locationService, !locationService.hasLocationAccess {
                         LocationPermissionView(locationService: locationService)
                     } else {
                         ContentView(model: ContentViewModel.make(resolver: assembler.resolver))

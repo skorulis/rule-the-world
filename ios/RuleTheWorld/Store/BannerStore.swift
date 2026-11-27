@@ -6,6 +6,9 @@ final class BannerStore {
         case missingIdentity, writeFailed
     }
 
+    /// ID used for the banner created during sign-up, before the real user ID is known.
+    static let setupUserID = "__banner_setup__"
+
     private let keyValueStore: PKeyValueStore
 
     init(keyValueStore: PKeyValueStore) {
@@ -25,6 +28,14 @@ final class BannerStore {
         let storageKey = key(for: userID)
         keyValueStore.set(data, forKey: storageKey)
         guard keyValueStore.data(forKey: storageKey) == data else { throw SaveError.writeFailed }
+    }
+
+    /// Moves a banner saved under `setupUserID` to the real user ID, if one exists.
+    func applySetupBanner(to userID: String) {
+        let setupKey = key(for: Self.setupUserID)
+        guard userID != Self.setupUserID, let data = keyValueStore.data(forKey: setupKey) else { return }
+        keyValueStore.set(data, forKey: key(for: userID))
+        keyValueStore.removeObject(forKey: setupKey)
     }
 
     private func key(for userID: String) -> String { "banner-v1:\(userID)" }

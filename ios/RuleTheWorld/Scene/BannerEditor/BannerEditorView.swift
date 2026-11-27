@@ -5,6 +5,8 @@ struct BannerEditorView: View {
     @Environment(\.coordinator) private var coordinator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State var model: BannerEditorViewModel
+    /// When set, the editor shows a single "Next" button (sign-up flow) instead of Cancel/Save.
+    var onNext: (() -> Void)?
     private let ink = Color(red: 0.25, green: 0.12, blue: 0.04)
 
     var body: some View {
@@ -76,11 +78,18 @@ struct BannerEditorView: View {
 
     private var actions: some View {
         Group {
-            Button("Cancel") { coordinator?.pop() }
-            Button("Save") {
-                if model.save() { coordinator?.pop() }
+            if let onNext {
+                Button("Next") {
+                    if model.save() { onNext() }
+                }
+                .accessibilityHint("Saves this banner and continues")
+            } else {
+                Button("Cancel") { coordinator?.pop() }
+                Button("Save") {
+                    if model.save() { coordinator?.pop() }
+                }
+                .accessibilityHint("Saves this banner on this device")
             }
-            .accessibilityHint("Saves this banner on this device")
         }
         .buttonStyle(GoldButtonStyle(fillsWidth: true))
     }

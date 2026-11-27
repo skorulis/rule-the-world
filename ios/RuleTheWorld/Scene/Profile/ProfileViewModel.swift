@@ -54,6 +54,9 @@ final class ProfileViewModel {
         coins = summary.coins
         userName = summary.userName
         userID = summary.userID
+        if let userID {
+            bannerStore.applySetupBanner(to: userID)
+        }
         refreshBanner()
     }
 

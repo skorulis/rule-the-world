@@ -11,6 +11,7 @@ final class AuthManager {
     private let visitStore: HexInfoStore
     private let profileStore: ProfileSummaryStore?
     private(set) var isSignedIn: Bool
+    private(set) var needsBannerSetup = false
 
     init(
         service: AuthService, authenticatedService: AuthenticatedService,
@@ -30,11 +31,17 @@ final class AuthManager {
     func signIn(email: String, password: String) async throws {
         let token = try await service.signIn(email: email, password: password)
         try await finishLogin(token: token)
+        needsBannerSetup = false
     }
 
     func signUp(name: String, email: String, password: String) async throws {
         let token = try await service.signUp(name: name, email: email, password: password)
         try await finishLogin(token: token)
+        needsBannerSetup = true
+    }
+
+    func completeBannerSetup() {
+        needsBannerSetup = false
     }
 
     private func finishLogin(token: String) async throws {
@@ -60,5 +67,6 @@ final class AuthManager {
         tokenStore.clear()
         profileStore?.clear()
         isSignedIn = false
+        needsBannerSetup = false
     }
 }

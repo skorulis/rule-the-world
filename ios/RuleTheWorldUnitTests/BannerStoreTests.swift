@@ -48,6 +48,25 @@ struct BannerStoreTests {
         let store = BannerStore(keyValueStore: DiscardingBannerKeyValueStore())
         #expect(throws: BannerStore.SaveError.self) { try store.save(.default, for: "alice") }
     }
+
+    @Test func appliesSetupBannerToRealUserID() throws {
+        let values = InMemoryKeyValueStore()
+        let store = BannerStore(keyValueStore: values)
+        var banner = BannerConfiguration.default
+        banner.emblem = .lion
+        try store.save(banner, for: BannerStore.setupUserID)
+
+        store.applySetupBanner(to: "alice")
+
+        #expect(store.banner(for: "alice") == banner)
+        #expect(store.banner(for: BannerStore.setupUserID) == .default)
+    }
+
+    @Test func applySetupBannerIsNoOpWithoutPendingBanner() {
+        let store = BannerStore(keyValueStore: InMemoryKeyValueStore())
+        store.applySetupBanner(to: "alice")
+        #expect(store.banner(for: "alice") == .default)
+    }
 }
 
 final class DiscardingBannerKeyValueStore: PKeyValueStore {
