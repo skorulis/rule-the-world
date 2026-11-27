@@ -2,13 +2,8 @@ import ASKCore
 import Foundation
 
 nonisolated private struct ConsumePowerUpBody: Encodable {
-    struct Location: Encodable {
-        let latitude: Double
-        let longitude: Double
-    }
-
     let powerup: Int
-    let location: Location
+    let cells: [String]
 }
 
 struct ConsumePowerUpRequest: HTTPRequest {
@@ -20,10 +15,10 @@ struct ConsumePowerUpRequest: HTTPRequest {
     let headers = ["Content-Type": "application/json"]
     let body: Data?
 
-    init(powerup id: Int, latitude: Double, longitude: Double) throws {
+    init(powerup id: Int, cells: [HexCell]) throws {
         body = try JSONEncoder().encode(ConsumePowerUpBody(
             powerup: id,
-            location: .init(latitude: latitude, longitude: longitude)
+            cells: cells.map(\.description)
         ))
     }
 

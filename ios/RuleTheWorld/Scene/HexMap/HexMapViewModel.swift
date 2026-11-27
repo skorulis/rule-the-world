@@ -35,6 +35,7 @@ final class HexMapViewModel {
     @ObservationIgnored private var fetchTask: Task<Void, Never>?
     @ObservationIgnored private var pendingFetch: MKCoordinateRegion?
     @ObservationIgnored private var fetchCooldownUntil: Date?
+    @ObservationIgnored private var lastVisibleRegion: MKCoordinateRegion?
 
     private struct RegionCameraRequest {
         let latitude: Double
@@ -94,8 +95,17 @@ final class HexMapViewModel {
         UserMapStatus.make(sample: locationService.latestSample, heading: locationService.heading)
     }
 
+    /// Base-resolution cells covering the visible map window, or nil when the
+    /// map is zoomed out — power-ups may only be used at max hex resolution.
+    var powerUpWindow: [HexCell]? {
+        guard displayedResolution == HexGridService.baseResolution,
+              let lastVisibleRegion else { return nil }
+        return grid.cells(in: lastVisibleRegion, resolution: HexGridService.baseResolution)
+    }
+
     func cameraChanged(zoomScale: MKZoomScale, region: MKCoordinateRegion, visibleWidthMeters: Double) {
         let center = region.center
+        lastVisibleRegion = region
         let resolution = HexZoomPolicy.resolution(forZoomScale: zoomScale, latitude: center.latitude)
         if resolution != displayedResolution {
             displayedResolution = resolution

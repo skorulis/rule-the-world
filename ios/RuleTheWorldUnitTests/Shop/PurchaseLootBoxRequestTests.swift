@@ -31,10 +31,10 @@ struct PurchaseLootBoxRequestTests {
 
     @Test func decodesRewardsInventoryAndCoins() async throws {
         let response = try await service(body: """
-            {"rewards":[{"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"}],"powerups":{"1":3},"coins":80}
+            {"rewards":[{"id":1,"type":"attack","rarity":"common","bonus":1,"squares":3,"description":"+{bonus} score"}],"powerups":{"1":3},"coins":80}
             """).purchaseLootBox(id: 1, count: 1)
         #expect(response.rewards.count == 1)
-        #expect(response.rewards.first?.displayName == "Common Revisit")
+        #expect(response.rewards.first?.displayName == "Common Attack")
         #expect(response.powerups == ["1": 3])
         #expect(response.coins == 80)
     }

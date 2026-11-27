@@ -56,24 +56,24 @@ struct ShopViewModelTests {
     @Test func purchaseUpdatesCoinsAndOpensRewards() async {
         let model = makeModel { request in
             ok(request, body: """
-                {"rewards":[{"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"}],"powerups":{"1":1},"coins":80}
+                {"rewards":[{"id":1,"type":"attack","rarity":"common","bonus":1,"squares":3,"description":"+{bonus} score"}],"powerups":{"1":1},"coins":80}
                 """)
         }
         let box = try #require(model.boxes.first)
         await model.purchase(box: box, count: 1)
         #expect(model.coins == 80)
-        #expect(model.openedBox?.summary == "Common Revisit")
+        #expect(model.openedBox?.summary == "Common Attack")
         #expect(model.errorMessage == nil)
     }
 
     @Test func purchaseAggregatesDuplicateRewards() async {
-        let reward = #"{"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"}"#
+        let reward = #"{"id":1,"type":"attack","rarity":"common","bonus":1,"squares":3,"description":"+{bonus} score"}"#
         let model = makeModel { request in
             ok(request, body: #"{"rewards":[\#(reward),\#(reward)],"powerups":{"1":2},"coins":0}"#)
         }
         let box = try #require(model.boxes.first)
         await model.purchase(box: box, count: 2)
-        #expect(model.openedBox?.summary == "Common Revisit ×2")
+        #expect(model.openedBox?.summary == "Common Attack ×2")
     }
 
     @Test func insufficientFundsDisablesButtons() async {

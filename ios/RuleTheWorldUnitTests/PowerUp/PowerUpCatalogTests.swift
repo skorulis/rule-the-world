@@ -6,16 +6,16 @@ import Testing
 struct PowerUpCatalogTests {
     private let data = Data(#"""
         [
-          {"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
-          {"id":2,"type":"revisit","rarity":"epic","bonus":3,"description":"+{bonus} score"}
+          {"id":1,"type":"attack","rarity":"common","bonus":1,"squares":3,"description":"+{bonus} score to up to {squares} squares"},
+          {"id":2,"type":"attack","rarity":"rare","bonus":2,"squares":5,"description":"+{bonus} score to up to {squares} squares"}
         ]
         """#.utf8)
 
     @Test func decodesDefinitionsAndLooksUpById() {
         let catalog = PowerUpCatalog(data: data)
         #expect(catalog.all.count == 2)
-        #expect(catalog.definition(for: 1)?.displayName == "Common Revisit")
-        #expect(catalog.definition(for: 2)?.rarity == .epic)
+        #expect(catalog.definition(for: 1)?.displayName == "Common Attack")
+        #expect(catalog.definition(for: 2)?.rarity == .rare)
         #expect(catalog.definition(for: 99) == nil)
     }
 
@@ -24,41 +24,33 @@ struct PowerUpCatalogTests {
         #expect(PowerUpCatalog(data: Data("invalid".utf8)).all.isEmpty)
     }
 
-    @Test func formattedDescriptionSubstitutesBonus() {
+    @Test func formattedDescriptionSubstitutesBonusAndSquares() {
         let catalog = PowerUpCatalog(data: data)
-        #expect(catalog.definition(for: 2)?.formattedDescription == "+3 score")
+        #expect(catalog.definition(for: 2)?.formattedDescription == "+2 score to up to 5 squares")
     }
 
-    @Test func decodesLegendaryPowerUp() {
-        let data = Data(#"[{"id":3,"type":"revisit","rarity":"legendary","bonus":4,"description":"+{bonus} score"}]"#.utf8)
-        let definition = PowerUpCatalog(data: data).definition(for: 3)
-        #expect(definition?.rarity == .legendary)
-        #expect(definition?.displayName == "Legendary Revisit")
-    }
-
-    @Test func decodesCommonAttack() {
-        let data = Data(#"[{"id":6,"type":"attack","rarity":"common","bonus":1,"description":"+{bonus} score to a nearby square where you already have a score and someone else owns it"}]"#.utf8)
-        let definition = PowerUpCatalog(data: data).definition(for: 6)
-        #expect(definition?.type == .attack)
-        #expect(definition?.displayName == "Common Attack")
-        #expect(definition?.bonus == 1)
-    }
-
-    @Test func decodesRareConquer() {
-        let data = Data(#"[{"id":7,"type":"conquer","rarity":"rare","bonus":1,"description":"+{bonus} score to a nearby contested square"}]"#.utf8)
-        let definition = PowerUpCatalog(data: data).definition(for: 7)
-        #expect(definition?.type == .conquer)
-        #expect(definition?.rarity == .rare)
-        #expect(definition?.displayName == "Rare Conquer")
-        #expect(definition?.formattedDescription == "+1 score to a nearby contested square")
+    @Test func decodesEachType() {
+        for (id, type, name) in [(1, PowerUpType.attack, "Attack"), (3, .defend, "Defend"), (5, .explore, "Explore")] {
+            let data = Data(#"[{"id":\#(id),"type":"\#(type.rawValue)","rarity":"common","bonus":1,"squares":3,"description":"+{bonus}"}]"#.utf8)
+            let definition = PowerUpCatalog(data: data).definition(for: id)
+            #expect(definition?.type == type)
+            #expect(definition?.displayName == "Common \(name)")
+            #expect(definition?.squares == 3)
+        }
     }
 
     @Test func decodesRareDefend() {
-        let data = Data(#"[{"id":8,"type":"defend","rarity":"rare","bonus":1,"description":"+{bonus} score to a square you own where a rival is closest to taking the lead"}]"#.utf8)
-        let definition = PowerUpCatalog(data: data).definition(for: 8)
+        let data = Data(#"[{"id":4,"type":"defend","rarity":"rare","bonus":2,"squares":5,"description":"+{bonus} score to up to {squares} squares you own"}]"#.utf8)
+        let definition = PowerUpCatalog(data: data).definition(for: 4)
         #expect(definition?.type == .defend)
         #expect(definition?.rarity == .rare)
         #expect(definition?.displayName == "Rare Defend")
+        #expect(definition?.formattedDescription == "+2 score to up to 5 squares you own")
+    }
+
+    @Test func unknownTypesFailToDecode() {
+        let data = Data(#"[{"id":9,"type":"revisit","rarity":"common","bonus":1,"squares":3,"description":"+{bonus}"}]"#.utf8)
+        #expect(PowerUpCatalog(data: data).all.isEmpty)
     }
 
     @Test func raritiesHaveColors() {

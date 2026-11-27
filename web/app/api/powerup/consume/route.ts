@@ -1,10 +1,12 @@
-import { latLngToCell } from "h3-js";
+import { getResolution, isValidCell } from "h3-js";
 import { NextResponse } from "next/server";
 import { jsonError, parsePositiveId, readJsonBody, requireSession, serverError } from "@/lib/api/route-helpers";
 import { consumePowerUp, ConsumePowerUpError } from "@/lib/powerups/consume-powerup";
 import { powerUpDefinition } from "@/lib/powerups/powerups";
 
 export const dynamic = "force-dynamic";
+
+const maxCells = 16;
 
 export async function POST(request: Request) {
   try {
@@ -17,16 +19,17 @@ export async function POST(request: Request) {
     const definition = id === null ? undefined : powerUpDefinition(id);
     if (!definition) return jsonError("Unknown power-up", 400);
 
-    const location = (body.location ?? {}) as Record<string, unknown>;
-    const { latitude, longitude } = location;
-    if (typeof latitude !== "number" || typeof longitude !== "number"
-      || !Number.isFinite(latitude) || !Number.isFinite(longitude)
-      || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-      return jsonError("Invalid location", 400);
+    const rawCells = body.cells;
+    if (!Array.isArray(rawCells) || rawCells.length === 0 || rawCells.length > maxCells
+      || !rawCells.every((cell) => typeof cell === "string")) {
+      return jsonError("Invalid cells", 400);
     }
+    if (!rawCells.every((cell) => isValidCell(cell) && getResolution(cell) === 10)) {
+      return jsonError("Invalid cells", 400);
+    }
+    const cells = rawCells.map((cell) => BigInt(`0x${cell}`));
 
-    const cell = BigInt(`0x${latLngToCell(latitude, longitude, 10)}`);
-    const result = await consumePowerUp(session.user.id, definition, cell);
+    const result = await consumePowerUp(session.user.id, definition, cells);
     return NextResponse.json(result, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof ConsumePowerUpError) return jsonError(error.message, error.status);

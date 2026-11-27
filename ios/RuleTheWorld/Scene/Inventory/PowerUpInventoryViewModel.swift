@@ -8,40 +8,51 @@ import Observation
 final class PowerUpInventoryViewModel {
     struct Item: Identifiable {
         let id: Int
-        let definition: PowerUpDefinition?
+        let definition: PowerUpDefinition
         let count: Int
 
-        var name: String { definition?.displayName ?? "Unknown power-up #\(id)" }
-        var rarity: Rarity? { definition?.rarity }
-        var detail: String? { definition?.formattedDescription }
+        var name: String { definition.displayName }
+        var rarity: Rarity { definition.rarity }
+        var detail: String { definition.formattedDescription }
     }
 
     private let service: AuthenticatedService
     private let profileService: ProfileService
     private let catalog: PowerUpCatalog
-    private let locationService: LocationService
     private let store: HexInfoStore
     private(set) var items: [Item] = []
     private(set) var isConsuming = false
     private(set) var message: String?
+
+    /// Supplies the base-resolution cells covering the map's visible window, or
+    /// nil when the map isn't showing individual hexes. Wired by the map view.
+    var mapWindowProvider: () -> [HexCell]? = { nil }
+
+    /// Whether the map is at base hex resolution, kept in sync by the map view
+    /// so `canUse` stays observable while this sheet is presented.
+    var mapIsAtHexResolution = false
 
     @Resolvable<Resolver>
     init(
         service: AuthenticatedService,
         profileService: ProfileService,
         catalog: PowerUpCatalog,
-        locationService: LocationService,
         store: HexInfoStore
     ) {
         self.service = service
         self.profileService = profileService
         self.catalog = catalog
-        self.locationService = locationService
         self.store = store
     }
 
     var totalCount: Int {
         items.reduce(0) { $0 + $1.count }
+    }
+
+    /// Power-ups target hexes in the visible window, so they only work while
+    /// the map shows base-resolution hexes.
+    var canUse: Bool {
+        mapIsAtHexResolution && mapWindowProvider() != nil
     }
 
     func load() async {
@@ -54,39 +65,66 @@ final class PowerUpInventoryViewModel {
 
     private func apply(_ summary: ProfileSummary) {
         items = summary.powerups
-            .map { Item(id: $0.key, definition: catalog.definition(for: $0.key), count: $0.value) }
-            .sorted { lhs, rhs in
-                switch (lhs.rarity, rhs.rarity) {
-                case let (left?, right?) where left != right: return left < right
-                case (_?, nil): return true
-                case (nil, _?): return false
-                default: return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
-                }
+            .compactMap { id, count in
+                guard let definition = catalog.definition(for: id) else { return nil }
+                return Item(id: id, definition: definition, count: count)
             }
+            .sorted { $0.rarity != $1.rarity
+                ? $0.rarity < $1.rarity
+                : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
-    func consume(item: Item, location: LocationSample? = nil) async {
+    /// Cells in `window` eligible for `type`, based on locally cached hex info.
+    private func viableCells(in window: [HexCell], for type: PowerUpType, infos: [HexCell: HexInfo]) -> [HexCell] {
+        window.filter { cell in
+            let info = infos[cell]
+            let userScore = info?.userVisit?.score ?? 0
+            let rivalScore = info?.totals?.rivalScore ?? 0
+            switch type {
+            case .attack:
+                return rivalScore > 0 && rivalScore >= userScore
+            case .defend:
+                return userScore > 0 && userScore > rivalScore
+            case .explore:
+                return (info?.userVisit?.total ?? 0) == 0
+            }
+        }
+    }
+
+    func consume(item: Item) async {
         guard !isConsuming, item.count > 0 else { return }
-        guard let sample = location ?? locationService.latestSample else {
-            message = "Location unavailable — try again when your position is known."
+        guard let window = mapWindowProvider() else {
+            message = "Zoom in until hexes appear to use power-ups."
             return
         }
         isConsuming = true
         defer { isConsuming = false }
         do {
-            let response = try await service.consumePowerUp(
-                id: item.id,
-                latitude: sample.latitude,
-                longitude: sample.longitude
+            let infos = try await store.infos(for: window)
+            let viable = viableCells(
+                in: window, for: item.definition.type,
+                infos: Dictionary(infos.map { ($0.cell, $0) }, uniquingKeysWith: { first, _ in first })
             )
-            guard !Task.isCancelled else { return }
-            try await store.restore(response.visits)
-            let powerups = response.powerups
-            items = items.compactMap { entry in
-                let count = powerups[String(entry.id)] ?? 0
-                return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
+            let targets = Array(viable.shuffled().prefix(item.definition.squares))
+            guard !targets.isEmpty else {
+                message = "No viable squares in view — \(item.name) was not used."
+                return
             }
-            message = "\(item.name) applied."
+            let previous = try await store.applyPowerUp(bonus: Double(item.definition.bonus), to: targets)
+            do {
+                let response = try await service.consumePowerUp(id: item.id, cells: targets)
+                guard !Task.isCancelled else { return }
+                try await store.restore(response.visits)
+                let powerups = response.powerups
+                items = items.compactMap { entry in
+                    let count = powerups[String(entry.id)] ?? 0
+                    return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
+                }
+                message = "\(item.name) applied to \(targets.count) \(targets.count == 1 ? "square" : "squares")."
+            } catch {
+                try? await store.undoPowerUp(previous: previous, for: targets)
+                throw error
+            }
         } catch let error as ConsumePowerUpFailure {
             message = error.error
         } catch {

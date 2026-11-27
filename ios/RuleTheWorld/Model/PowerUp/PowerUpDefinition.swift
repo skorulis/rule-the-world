@@ -1,12 +1,9 @@
 import Foundation
 
 nonisolated enum PowerUpType: String, Decodable, Sendable {
-    case revisit
-    case exploration
-    case fortification
     case attack
-    case conquer
     case defend
+    case explore
 
     var displayName: String {
         rawValue.prefix(1).uppercased() + rawValue.dropFirst()
@@ -18,6 +15,7 @@ nonisolated struct PowerUpDefinition: Decodable, Sendable, Identifiable {
     let type: PowerUpType
     let rarity: Rarity
     let bonus: Int
+    let squares: Int
     let description: String
 
     var displayName: String {
@@ -25,6 +23,8 @@ nonisolated struct PowerUpDefinition: Decodable, Sendable, Identifiable {
     }
 
     var formattedDescription: String {
-        description.replacingOccurrences(of: "{bonus}", with: String(bonus))
+        description
+            .replacingOccurrences(of: "{bonus}", with: String(bonus))
+            .replacingOccurrences(of: "{squares}", with: String(squares))
     }
 }

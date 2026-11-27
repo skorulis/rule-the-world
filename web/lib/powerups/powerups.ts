@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rarities, type Rarity } from "../rarity";
 
-export const powerUpTypes = ["revisit", "exploration", "fortification", "attack", "conquer", "defend"] as const;
+export const powerUpTypes = ["attack", "defend", "explore"] as const;
 export type PowerUpType = (typeof powerUpTypes)[number];
 
 export interface PowerUpDefinition {
@@ -11,6 +11,7 @@ export interface PowerUpDefinition {
   type: PowerUpType;
   rarity: Rarity;
   bonus: number;
+  squares: number;
   description: string;
 }
 
@@ -40,6 +41,7 @@ function parseDefinitions(raw: unknown): PowerUpDefinition[] {
       !powerUpTypes.includes(def.type as PowerUpType) ||
       !rarities.includes(def.rarity as Rarity) ||
       !Number.isSafeInteger(def.bonus) ||
+      !Number.isSafeInteger(def.squares) || (def.squares as number) <= 0 ||
       typeof def.description !== "string"
     ) {
       throw new Error(`Invalid power-up definition: ${JSON.stringify(entry)}`);

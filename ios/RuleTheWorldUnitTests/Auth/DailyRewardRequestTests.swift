@@ -19,11 +19,11 @@ struct DailyRewardRequestTests {
 
     @Test func decodesGrantedPowerUpAndInventory() async throws {
         let response = try await service(body: """
-            {"powerup":{"id":4,"type":"exploration","rarity":"common","bonus":1,"description":"+{bonus} score"},
+            {"powerup":{"id":4,"type":"defend","rarity":"rare","bonus":2,"squares":5,"description":"+{bonus} score"},
             "powerups":{"4":1,"1":3}}
             """).claimDailyReward()
         #expect(response.powerup.id == 4)
-        #expect(response.powerup.displayName == "Common Exploration")
+        #expect(response.powerup.displayName == "Rare Defend")
         #expect(response.powerups == ["1": 3, "4": 1])
     }
 

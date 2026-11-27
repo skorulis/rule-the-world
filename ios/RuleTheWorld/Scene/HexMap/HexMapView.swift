@@ -99,6 +99,13 @@ struct HexMapView: View {
             .padding()
         }
         .animation(.default, value: model.selectedRegion)
+        .onAppear {
+            powerUpInventory.mapWindowProvider = { model.powerUpWindow }
+            powerUpInventory.mapIsAtHexResolution = model.displayedResolution == HexGridService.baseResolution
+        }
+        .onChange(of: model.displayedResolution) {
+            powerUpInventory.mapIsAtHexResolution = model.displayedResolution == HexGridService.baseResolution
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await powerUpInventory.load()

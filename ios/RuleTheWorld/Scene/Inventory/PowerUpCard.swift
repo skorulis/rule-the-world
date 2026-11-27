@@ -5,18 +5,17 @@ import SwiftUI
 struct PowerUpCard: View {
     let item: PowerUpInventoryViewModel.Item
     let isConsuming: Bool
+    let canUse: Bool
     let onUse: () -> Void
 
-    private var rarity: Rarity? { item.rarity }
-    private var color: Color { rarity?.color ?? .secondary }
-    private var isHighRarity: Bool { rarity.map { $0 >= .epic } ?? false }
+    private var rarity: Rarity { item.rarity }
+    private var color: Color { rarity.color }
+    private var isHighRarity: Bool { rarity >= .epic }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            if let type = item.definition?.type {
-                PowerUpIcon(type: type, rarity: rarity)
-                    .padding(.top, 2)
-            }
+            PowerUpIcon(type: item.definition.type, rarity: rarity)
+                .padding(.top, 2)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(item.name).font(.headline)
@@ -25,15 +24,13 @@ struct PowerUpCard: View {
                         .font(.subheadline.monospacedDigit().weight(.semibold))
                         .foregroundStyle(color)
                 }
-                if let detail = item.detail {
-                    Text(detail).font(.subheadline).foregroundStyle(.secondary)
-                }
+                Text(item.detail).font(.subheadline).foregroundStyle(.secondary)
                 HStack {
                     Spacer()
                     Button("Use", action: onUse)
                         .buttonStyle(.borderedProminent)
                         .tint(isHighRarity ? color : nil)
-                        .disabled(isConsuming || item.count < 1)
+                        .disabled(isConsuming || item.count < 1 || !canUse)
                 }
             }
         }
@@ -54,7 +51,7 @@ struct PowerUpCard: View {
             AnyShapeStyle(LinearGradient(colors: [color, rarity == .legendary ? .yellow : .indigo],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
         } else {
-            AnyShapeStyle(color.opacity(rarity == nil ? 0.3 : 0.7))
+            AnyShapeStyle(color.opacity(0.7))
         }
     }
 }

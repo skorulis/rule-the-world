@@ -23,12 +23,9 @@ struct PowerUpIcon: View {
 
     private var image: Image {
         switch type {
-        case .revisit: Image("PowerUpRevisit")
-        case .exploration: Image("PowerUpExploration")
-        case .fortification: Image("PowerUpFortification")
         case .attack: Image(systemName: "bolt.shield.fill")
-        case .conquer: Image(systemName: "flag.fill")
-        case .defend: Image(systemName: "shield.fill")
+        case .defend: Image("PowerUpFortification")
+        case .explore: Image("PowerUpExploration")
         }
     }
 

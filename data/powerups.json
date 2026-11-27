@@ -1,58 +1,50 @@
 [
   {
     "id": 1,
-    "type": "revisit",
-    "rarity": "common",
-    "bonus": 1,
-    "description": "+{bonus} score to a square you have visited"
-  },
-  {
-    "id": 2,
-    "type": "revisit",
-    "rarity": "rare",
-    "bonus": 2,
-    "description": "+{bonus} score to a square you have visited"
-  },
-  {
-    "id": 3,
-    "type": "revisit",
-    "rarity": "epic",
-    "bonus": 3,
-    "description": "+{bonus} score to a square you have visited"
-  },
-  {
-    "id": 4,
-    "type": "exploration",
-    "rarity": "common",
-    "bonus": 1,
-    "description": "+{bonus} score to a nearby square you haven't visited"
-  },
-  {
-    "id": 5,
-    "type": "fortification",
-    "rarity": "common",
-    "bonus": 1,
-    "description": "+{bonus} score to a square you own"
-  },
-  {
-    "id": 6,
     "type": "attack",
     "rarity": "common",
     "bonus": 1,
-    "description": "+{bonus} score to a nearby square where you already have a score and someone else owns it"
+    "squares": 3,
+    "description": "+{bonus} score to up to {squares} visible squares someone else owns"
   },
   {
-    "id": 7,
-    "type": "conquer",
+    "id": 2,
+    "type": "attack",
     "rarity": "rare",
-    "bonus": 1,
-    "description": "+{bonus} score to a nearby contested square where you are tied for the highest score"
+    "bonus": 2,
+    "squares": 5,
+    "description": "+{bonus} score to up to {squares} visible squares someone else owns"
   },
   {
-    "id": 8,
+    "id": 3,
+    "type": "defend",
+    "rarity": "common",
+    "bonus": 1,
+    "squares": 3,
+    "description": "+{bonus} score to up to {squares} visible squares you own"
+  },
+  {
+    "id": 4,
     "type": "defend",
     "rarity": "rare",
+    "bonus": 2,
+    "squares": 5,
+    "description": "+{bonus} score to up to {squares} visible squares you own"
+  },
+  {
+    "id": 5,
+    "type": "explore",
+    "rarity": "common",
     "bonus": 1,
-    "description": "+{bonus} score to a square you own where a rival is closest to taking the lead"
+    "squares": 3,
+    "description": "+{bonus} score to up to {squares} visible squares you haven't visited"
+  },
+  {
+    "id": 6,
+    "type": "explore",
+    "rarity": "rare",
+    "bonus": 2,
+    "squares": 5,
+    "description": "+{bonus} score to up to {squares} visible squares you haven't visited"
   }
 ]

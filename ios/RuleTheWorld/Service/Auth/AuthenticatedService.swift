@@ -37,8 +37,8 @@ final class AuthenticatedService: HTTPService {
         try await execute(request: StipendRequest())
     }
 
-    func consumePowerUp(id: Int, latitude: Double, longitude: Double) async throws -> ConsumePowerUpResponse {
-        try await execute(request: ConsumePowerUpRequest(powerup: id, latitude: latitude, longitude: longitude))
+    func consumePowerUp(id: Int, cells: [HexCell]) async throws -> ConsumePowerUpResponse {
+        try await execute(request: ConsumePowerUpRequest(powerup: id, cells: cells))
     }
 
     func purchaseLootBox(id: Int, count: Int) async throws -> LootBoxPurchaseResponse {

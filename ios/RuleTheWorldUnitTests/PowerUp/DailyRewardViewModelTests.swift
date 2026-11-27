@@ -11,7 +11,7 @@ struct DailyRewardViewModelTests {
     private let nextMidnight = Date(timeIntervalSince1970: 1_795_478_400)
 
     private let grantBody = """
-        {"powerup":{"id":1,"type":"revisit","rarity":"common","bonus":1,"description":"+{bonus} score"},
+        {"powerup":{"id":1,"type":"attack","rarity":"common","bonus":1,"squares":3,"description":"+{bonus} score"},
         "powerups":{"1":2}}
         """
 
@@ -86,7 +86,7 @@ struct DailyRewardViewModelTests {
         let response = await model.claim()
         #expect(response?.powerups == ["1": 2])
         #expect(model.reward?.id == 1)
-        #expect(model.reward?.displayName == "Common Revisit")
+        #expect(model.reward?.displayName == "Common Attack")
         #expect(model.availableAt == nextMidnight)
         #expect(model.errorMessage == nil)
         #expect(!model.isClaiming)

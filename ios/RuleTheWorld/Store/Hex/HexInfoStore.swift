@@ -60,6 +60,49 @@ final class HexInfoStore {
         }
     }
 
+    func infos(for cells: [HexCell]) async throws -> [HexInfo] {
+        try await database.writer.read { db in
+            try HexInfo.fetchAll(db, keys: cells)
+        }
+    }
+
+    /// Optimistically adds `bonus` to the user's score on each cell so the map
+    /// updates instantly. Returns the previous infos so callers can roll back
+    /// if the server rejects the consume.
+    @discardableResult
+    func applyPowerUp(bonus: Double, to cells: [HexCell]) async throws -> [HexInfo] {
+        let previous = try await database.writer.write { db in
+            let previous = try HexInfo.fetchAll(db, keys: cells)
+            for cell in cells {
+                var info = try HexInfo.fetchOne(db, key: cell)
+                    ?? HexInfo(cell: cell, totals: nil, userVisit: nil)
+                var visit = info.userVisit ?? HexVisit(lastVisit: .distantPast, score: 0, lastScore: 0)
+                visit.score += bonus
+                info.userVisit = visit
+                try info.save(db)
+            }
+            return previous
+        }
+        await reload()
+        return previous
+    }
+
+    /// Undoes an optimistic `applyPowerUp`: writes the previous records back
+    /// verbatim (no max-merge) and deletes records created for cells that had
+    /// none before.
+    func undoPowerUp(previous: [HexInfo], for cells: [HexCell]) async throws {
+        try await database.writer.write { db in
+            let restored = Set(previous.map(\.cell))
+            for info in previous {
+                try info.save(db)
+            }
+            for cell in cells where !restored.contains(cell) {
+                try HexInfo.deleteOne(db, key: cell)
+            }
+        }
+        await reload()
+    }
+
     func staleCells(in cells: [HexCell], asOf date: Date = .now) async throws -> [HexCell] {
         let threshold = date.addingTimeInterval(-HexInfoRefreshPolicy.staleInterval)
         return try await database.writer.read { db in

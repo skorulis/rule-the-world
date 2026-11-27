@@ -13,7 +13,8 @@ import { POST } from "./route";
 
 const user = { id: "u1", name: "Alex", email: "a@b.c" };
 const definition = powerUpDefinitions[0];
-const request = (body: unknown = { powerup: definition.id, location: { latitude: 37.7, longitude: -122.4 } }) =>
+const cell = "8a2830828767fff";
+const request = (body: unknown = { powerup: definition.id, cells: [cell] }) =>
   new Request("http://test/api/powerup/consume", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -55,7 +56,7 @@ describe("POST /api/powerup/consume", () => {
 
   it("rejects unknown or missing power-up ids", async () => {
     for (const powerup of [undefined, 0, -1, 99999, "abc"]) {
-      const response = await POST(request({ powerup, location: { latitude: 0, longitude: 0 } }));
+      const response = await POST(request({ powerup, cells: [cell] }));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Unknown power-up" });
     }
@@ -63,16 +64,17 @@ describe("POST /api/powerup/consume", () => {
   });
 
   it.each([
-    { location: undefined },
-    { location: {} },
-    { location: { latitude: "x", longitude: 0 } },
-    { location: { latitude: 91, longitude: 0 } },
-    { location: { latitude: 0, longitude: -181 } },
-    { location: { latitude: NaN, longitude: 0 } },
-  ])("rejects invalid location %#", async (body) => {
+    { cells: undefined },
+    { cells: [] },
+    { cells: "not-an-array" },
+    { cells: [1, 2, 3] },
+    { cells: ["not-a-cell"] },
+    { cells: ["8528347bfffffff"] },
+    { cells: Array.from({ length: 17 }, () => cell) },
+  ])("rejects invalid cells %#", async (body) => {
     const response = await POST(request({ powerup: definition.id, ...body }));
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid location" });
+    expect(await response.json()).toEqual({ error: "Invalid cells" });
     expect(consumePowerUp).not.toHaveBeenCalled();
   });
 
@@ -81,10 +83,10 @@ describe("POST /api/powerup/consume", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(await response.json()).toEqual({ powerups: { "2": 1 }, visits: [visit] });
-    const [userId, def, cell] = vi.mocked(consumePowerUp).mock.calls[0];
+    const [userId, def, cells] = vi.mocked(consumePowerUp).mock.calls[0];
     expect(userId).toBe("u1");
     expect(def).toEqual(definition);
-    expect(typeof cell).toBe("bigint");
+    expect(cells).toEqual([BigInt(`0x${cell}`)]);
   });
 
   it("maps domain errors to responses without consuming", async () => {

@@ -17,22 +17,31 @@ describe("powerup definitions", () => {
       expect(powerUpTypes).toContain(def.type);
       expect(rarities).toContain(def.rarity);
       expect(Number.isInteger(def.bonus)).toBe(true);
+      expect(def.squares).toBeGreaterThan(0);
       expect(def.description.trim()).not.toBe("");
       expect(def.description).toContain("{bonus}");
+      expect(def.description).toContain("{squares}");
     }
   });
 
-  it("includes Common Attack with a +1 bonus", () => {
-    expect(powerUpDefinition(6)).toMatchObject({ type: "attack", rarity: "common", bonus: 1 });
+  it("defines each type at common and rare", () => {
+    for (const type of powerUpTypes) {
+      expect(powerUpDefinitions.some((def) => def.type === type && def.rarity === "common")).toBe(true);
+      expect(powerUpDefinitions.some((def) => def.type === type && def.rarity === "rare")).toBe(true);
+    }
   });
 
-  it("includes Rare Conquer with a +1 bonus and no common variant", () => {
-    expect(powerUpDefinition(7)).toMatchObject({ type: "conquer", rarity: "rare", bonus: 1 });
-    expect(powerUpDefinitions.some((def) => def.type === "conquer" && def.rarity === "common")).toBe(false);
+  it("common adds +1 to 3 squares and rare adds +2 to 5 squares", () => {
+    for (const def of powerUpDefinitions) {
+      expect(def).toMatchObject(def.rarity === "common"
+        ? { bonus: 1, squares: 3 }
+        : { bonus: 2, squares: 5 });
+    }
   });
 
-  it("includes Rare Defend with a +1 bonus", () => {
-    expect(powerUpDefinition(8)).toMatchObject({ type: "defend", rarity: "rare", bonus: 1 });
+  it("includes Common and Rare Attack", () => {
+    expect(powerUpDefinition(1)).toMatchObject({ type: "attack", rarity: "common", bonus: 1, squares: 3 });
+    expect(powerUpDefinition(2)).toMatchObject({ type: "attack", rarity: "rare", bonus: 2, squares: 5 });
   });
 
   it("looks up definitions by id", () => {
