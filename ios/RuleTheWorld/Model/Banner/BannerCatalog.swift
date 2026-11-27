@@ -19,6 +19,23 @@ nonisolated enum BannerEmblem: String, CaseIterable, Sendable {
     case none, crown, compass, shield, sword, star
 
     var title: String { rawValue.capitalized }
+
+    /// Grayscale luminance asset, tinted at render time with `colorMultiply`.
+    var baseImageName: String? {
+        switch self {
+        case .none: nil
+        case .crown: "EmblemCrown"
+        case .compass: "EmblemCompass"
+        case .shield: "EmblemShield"
+        case .sword: "EmblemSword"
+        case .star: "EmblemStar"
+        }
+    }
+
+    /// Fixed-color overlay (outlines, gems) drawn untinted on top of the base.
+    var detailImageName: String? {
+        baseImageName.map { $0 + "Detail" }
+    }
 }
 
 nonisolated enum BannerColor: String, CaseIterable, Sendable {

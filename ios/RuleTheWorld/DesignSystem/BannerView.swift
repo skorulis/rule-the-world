@@ -57,14 +57,15 @@ struct BannerView: View {
         ))
         fabric.stroke(silhouette, with: .color(BannerColor.gold.color), lineWidth: 9)
         context.stroke(silhouette, with: .color(ink), style: StrokeStyle(lineWidth: 3, lineJoin: .round))
-        let emblem = BannerEmblemShape(emblem: configuration.emblem)
-            .path(in: CGRect(x: 123, y: 67, width: 80, height: 80))
-        fabric.stroke(emblem, with: .color(ink), style: StrokeStyle(lineWidth: 7, lineJoin: .round))
-        fabric.fill(emblem, with: .linearGradient(
-            Gradient(colors: [configuration.emblemColor.color, configuration.emblemColor.color.opacity(0.75)]),
-            startPoint: CGPoint(x: 123, y: 67), endPoint: CGPoint(x: 203, y: 147)
-        ))
-        fabric.stroke(emblem, with: .color(.white.opacity(0.45)), lineWidth: 1)
+        let emblemRect = CGRect(x: 123, y: 67, width: 80, height: 80)
+        if let base = configuration.emblem.baseImageName {
+            var tinted = fabric
+            tinted.addFilter(.colorMultiply(configuration.emblemColor.color))
+            tinted.draw(context.resolve(Image(base)), in: emblemRect)
+        }
+        if let detail = configuration.emblem.detailImageName {
+            fabric.draw(context.resolve(Image(detail)), in: emblemRect)
+        }
     }
 
     private func drawPole(in context: GraphicsContext) {

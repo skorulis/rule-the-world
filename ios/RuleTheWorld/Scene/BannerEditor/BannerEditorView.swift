@@ -139,8 +139,7 @@ struct BannerEditorView: View {
                                         .font(.title2)
                                         .foregroundStyle(BannerColor.ivory.color)
                                 } else {
-                                    BannerEmblemShape(emblem: emblem)
-                                        .fill(model.draft.emblemColor.color.gradient)
+                                    EmblemView(emblem: emblem, color: model.draft.emblemColor)
                                         .padding(12)
                                 }
                             }
