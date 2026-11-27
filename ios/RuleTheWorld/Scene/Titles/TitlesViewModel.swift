@@ -40,40 +40,48 @@ final class TitlesViewModel {
         guard !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
+        if items.isEmpty, let cached = profileService.cachedSummary {
+            apply(cached)
+            hasLoaded = true
+        }
         do {
             let summary = try await profileService.fetchProfile()
             guard !Task.isCancelled else { return }
-            var seen: Set<String> = []
-            items = summary.rankings.sorted { $0.number < $1.number }.compactMap { ranking -> Item? in
-                let id = "\(ranking.type):\(ranking.id)"
-                guard seen.insert(id).inserted else { return nil }
-                let definition = catalog.definition(for: ranking.number, type: ranking.type)
-                let regionName = ranking.type == "global" ? "World" : (regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)")
-                return Item(
-                    id: id,
-                    number: ranking.number,
-                    type: ranking.type,
-                    ranks: catalog.definitions(for: ranking.type),
-                    name: definition.map { "\(qualifier(for: ranking, regionName: regionName)) \($0.name)" }
-                        ?? "Title #\(ranking.number)",
-                    icon: definition?.icon,
-                    rarity: definition?.rarity,
-                    regionName: regionName,
-                    detail: definition?.description,
-                    visited: ranking.visited,
-                    owned: ranking.owned,
-                    stipend: definition?.stipend
-                )
-            }.sorted { left, right in
-                if left.number != right.number { return left.number < right.number }
-                let comparison = left.regionName.localizedStandardCompare(right.regionName)
-                return comparison == .orderedSame ? left.id < right.id : comparison == .orderedAscending
-            }
+            apply(summary)
             hasLoaded = true
             message = nil
         } catch {
             guard !Task.isCancelled else { return }
             message = "Couldn't load your titles. Please try again."
+        }
+    }
+
+    private func apply(_ summary: ProfileSummary) {
+        var seen: Set<String> = []
+        items = summary.rankings.sorted { $0.number < $1.number }.compactMap { ranking -> Item? in
+            let id = "\(ranking.type):\(ranking.id)"
+            guard seen.insert(id).inserted else { return nil }
+            let definition = catalog.definition(for: ranking.number, type: ranking.type)
+            let regionName = ranking.type == "global" ? "World" : (regionNames.name(for: ranking.id) ?? "Region #\(ranking.id)")
+            return Item(
+                id: id,
+                number: ranking.number,
+                type: ranking.type,
+                ranks: catalog.definitions(for: ranking.type),
+                name: definition.map { "\(qualifier(for: ranking, regionName: regionName)) \($0.name)" }
+                    ?? "Title #\(ranking.number)",
+                icon: definition?.icon,
+                rarity: definition?.rarity,
+                regionName: regionName,
+                detail: definition?.description,
+                visited: ranking.visited,
+                owned: ranking.owned,
+                stipend: definition?.stipend
+            )
+        }.sorted { left, right in
+            if left.number != right.number { return left.number < right.number }
+            let comparison = left.regionName.localizedStandardCompare(right.regionName)
+            return comparison == .orderedSame ? left.id < right.id : comparison == .orderedAscending
         }
     }
 

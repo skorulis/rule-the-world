@@ -26,6 +26,8 @@ struct PowerUpInventoryViewModelTests {
 
     private func makeModel(
         body: String,
+        seededBody: String? = nil,
+        profileFails: Bool = false,
         consumeStatus: Int = 200,
         consumeBody: String = #"{"powerups":{},"visits":[]}"#,
         onConsumeRequest: @escaping (URLRequest) -> Void = { _ in }
@@ -34,6 +36,7 @@ struct PowerUpInventoryViewModelTests {
         tokenStore.save("session-token")
         let session = FakeURLSession { request in
             let path = request.url?.path
+            if path == "/api/me", profileFails { throw URLError(.notConnectedToInternet) }
             let status = path == "/api/powerup/consume" ? consumeStatus : 200
             if path == "/api/powerup/consume" { onConsumeRequest(request) }
             let responseBody = path == "/api/me" ? body : consumeBody
@@ -41,10 +44,14 @@ struct PowerUpInventoryViewModelTests {
                     HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
         }
         let service = AuthenticatedService(tokenStore: tokenStore, urlSession: session)
+        let store = ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+        if let seededBody,
+           let summary = try? JSONDecoder().decode(ProfileSummary.self, from: Data(seededBody.utf8)) {
+            store.save(summary)
+        }
         return PowerUpInventoryViewModel(
             service: service,
-            profileService: ProfileService(
-                service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())),
+            profileService: ProfileService(service: service, store: store),
             catalog: PowerUpCatalog(data: catalogData),
             locationService: LocationService(),
             store: try makeStore()
@@ -67,6 +74,15 @@ struct PowerUpInventoryViewModelTests {
         #expect(model.items.map(\.id) == [1, 99])
         #expect(model.items.last?.name == "Unknown power-up #99")
         #expect(model.items.last?.rarity == nil)
+    }
+
+    @Test func cachedSummaryPopulatesItemsWhenFetchFails() async throws {
+        let model = try makeModel(
+            body: "{}", seededBody: #"{"powerups":{"1":4,"2":2}}"#, profileFails: true)
+        await model.load()
+        #expect(model.items.map(\.id) == [1, 2])
+        #expect(model.items.map(\.count) == [4, 2])
+        #expect(model.totalCount == 6)
     }
 
     @Test func emptyInventoryAndFailuresYieldNoItems() async throws {

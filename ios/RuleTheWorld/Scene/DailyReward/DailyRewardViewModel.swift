@@ -24,8 +24,14 @@ final class DailyRewardViewModel {
         self.availableAt = availableAt
     }
 
+    /// The server stamps the request time (with milliseconds) as `availableAt` to mean
+    /// "available now", so a fresh value can sit a fraction of a second in the future
+    /// of the timeline tick that renders the button. Tolerate that skew; genuine future
+    /// values are exact UTC midnights.
+    private static let availabilityTolerance: TimeInterval = 1
+
     func isAvailable(at date: Date) -> Bool {
-        availableAt.map { $0 <= date } ?? false
+        availableAt.map { $0.timeIntervalSince(date) <= Self.availabilityTolerance } ?? false
     }
 
     /// Seconds until the next box, rounded up so the countdown never shows zero while locked.

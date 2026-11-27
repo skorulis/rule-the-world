@@ -10,13 +10,18 @@ struct ShopViewModelTests {
         """#.utf8)
 
     private func makeModel(
+        seededBody: String? = nil,
         handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)
     ) -> ShopViewModel {
         let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         tokens.save("session-token")
         let service = AuthenticatedService(tokenStore: tokens, urlSession: FakeURLSession(handler: handler))
-        let profileService = ProfileService(
-            service: service, store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore()))
+        let store = ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+        if let seededBody,
+           let summary = try? JSONDecoder().decode(ProfileSummary.self, from: Data(seededBody.utf8)) {
+            store.save(summary)
+        }
+        let profileService = ProfileService(service: service, store: store)
         return ShopViewModel(
             service: service, profileService: profileService, lootBoxes: LootBoxCatalog(data: boxData))
     }
@@ -35,6 +40,14 @@ struct ShopViewModelTests {
         let model = makeModel { request in
             #expect(request.url?.path == "/api/me")
             return ok(request, body: #"{"coins":42}"#)
+        }
+        await model.load()
+        #expect(model.coins == 42)
+    }
+
+    @Test func loadFallsBackToCachedBalanceWhenFetchFails() async {
+        let model = makeModel(seededBody: #"{"coins":42}"#) { _ in
+            throw URLError(.notConnectedToInternet)
         }
         await model.load()
         #expect(model.coins == 42)

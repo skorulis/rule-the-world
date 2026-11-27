@@ -70,6 +70,16 @@ struct DailyRewardViewModelTests {
         #expect(model.remaining(at: nextMidnight) == nil)
     }
 
+    @Test func availabilityToleratesServerNowStampedFractionallyInTheFuture() {
+        let model = makeModel()
+        // The server returns its own "now" when the reward is claimable, which can land
+        // a fraction of a second ahead of the timeline tick rendering the button.
+        model.update(availableAt: now.addingTimeInterval(0.4))
+        #expect(model.isAvailable(at: now))
+        model.update(availableAt: now.addingTimeInterval(2))
+        #expect(!model.isAvailable(at: now))
+    }
+
     @Test func successfulClaimRevealsRewardAndStartsCountdown() async {
         let model = makeModel()
         model.update(availableAt: now)

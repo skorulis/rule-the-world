@@ -45,7 +45,14 @@ final class PowerUpInventoryViewModel {
     }
 
     func load() async {
+        if items.isEmpty, let cached = profileService.cachedSummary {
+            apply(cached)
+        }
         guard let summary = try? await profileService.fetchProfile(), !Task.isCancelled else { return }
+        apply(summary)
+    }
+
+    private func apply(_ summary: ProfileSummary) {
         items = summary.powerups
             .map { Item(id: $0.key, definition: catalog.definition(for: $0.key), count: $0.value) }
             .sorted { lhs, rhs in

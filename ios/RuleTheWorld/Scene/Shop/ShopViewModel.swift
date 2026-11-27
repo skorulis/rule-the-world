@@ -34,6 +34,7 @@ final class ShopViewModel {
     }
 
     func load() async {
+        coins = profileService.cachedSummary?.coins ?? coins
         guard let summary = try? await profileService.fetchProfile(), !Task.isCancelled else { return }
         coins = summary.coins
     }

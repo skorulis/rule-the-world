@@ -5,13 +5,18 @@ import Testing
 
 @MainActor
 struct TitlesViewModelTests {
-    private func makeModel(session: FakeURLSession) -> TitlesViewModel {
+    private func makeModel(seededBody: String? = nil, session: FakeURLSession) -> TitlesViewModel {
         let tokens = AuthTokenStore(keyValueStore: InMemoryKeyValueStore())
         tokens.save("session-token")
+        let store = ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+        if let seededBody,
+           let summary = try? JSONDecoder().decode(ProfileSummary.self, from: Data(seededBody.utf8)) {
+            store.save(summary)
+        }
         return TitlesViewModel(
             profileService: ProfileService(
                 service: AuthenticatedService(tokenStore: tokens, urlSession: session),
-                store: ProfileSummaryStore(keyValueStore: InMemoryKeyValueStore())
+                store: store
             ),
             catalog: RankCatalog(data: Data(#"""
                 {"global":[{"number":1,"name":"Emperor","rarity":"mythic","description":"World ruler","icon":"RankEmperor"}],"country":[
@@ -120,6 +125,19 @@ struct TitlesViewModelTests {
         #expect(unknown?.ranks.map(\.number) == [1, 15])
         #expect(unknown?.number == 17)
         #expect(unknown?.name == "Title #17")
+    }
+
+    @Test func cachedSummaryPopulatesItemsWhenFetchFails() async {
+        let model = makeModel(
+            seededBody: #"{"rankings":[{"id":1,"type":"country","number":1,"visited":40,"owned":12}]}"#,
+            session: FakeURLSession { _ in throw URLError(.notConnectedToInternet) }
+        )
+        await model.load()
+        #expect(model.items.map(\.id) == ["country:1"])
+        #expect(model.items.map(\.name) == ["Zedlandian King"])
+        #expect(model.hasLoaded)
+        #expect(model.message != nil)
+        #expect(!model.isLoading)
     }
 
     @Test func emptyAwardsLoadSuccessfully() async {
