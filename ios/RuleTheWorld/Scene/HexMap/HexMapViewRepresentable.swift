@@ -8,6 +8,9 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let grid: HexGridService
     let userStatus: UserMapStatus?
     let selectedRegion: MapRegionSelection?
+    let powerUpTopInset: CGFloat
+    let powerUpBottomInset: CGFloat
+    let onPowerUpWindowProvider: (@escaping () -> [HexCell]?) -> Void
     let onCameraChange: (MKZoomScale, MKCoordinateRegion, Double) -> Void
     let onTap: (CLLocationCoordinate2D) -> Void
 
@@ -26,12 +29,19 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         mapView.addOverlay(HexGridOverlay(), level: .aboveRoads)
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         mapView.addGestureRecognizer(tap)
+        let coordinator = context.coordinator
+        onPowerUpWindowProvider { [weak mapView, weak coordinator] in
+            guard let mapView, let coordinator else { return nil }
+            return coordinator.powerUpWindow(in: mapView)
+        }
         return mapView
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onCameraChange = onCameraChange
         context.coordinator.onTap = onTap
+        context.coordinator.powerUpTopInset = powerUpTopInset
+        context.coordinator.powerUpBottomInset = powerUpBottomInset
         context.coordinator.renderer?.update(snapshot: snapshot, mode: mode)
         context.coordinator.apply(status: userStatus, to: mapView)
         context.coordinator.apply(region: selectedRegion, to: mapView)
@@ -50,6 +60,26 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var onCameraChange: ((MKZoomScale, MKCoordinateRegion, Double) -> Void)?
         var onTap: ((CLLocationCoordinate2D) -> Void)?
+
+        var powerUpTopInset: CGFloat = 0
+        var powerUpBottomInset: CGFloat = 0
+
+        func powerUpWindow(in mapView: MKMapView) -> [HexCell]? {
+            let safeBounds = mapView.bounds.inset(by: mapView.safeAreaInsets)
+            let rect = CGRect(
+                x: safeBounds.minX, y: safeBounds.minY + powerUpTopInset,
+                width: safeBounds.width,
+                height: max(0, safeBounds.height - powerUpTopInset - powerUpBottomInset)
+            )
+            guard rect.width > 0, rect.height > 0 else { return [] }
+            let region = mapView.convert(rect, toRegionFrom: mapView)
+            return grid.cells(in: region, resolution: HexGridService.baseResolution).filter { cell in
+                let boundary = grid.boundary(of: cell)
+                return !boundary.isEmpty && boundary.allSatisfy {
+                    rect.contains(mapView.convert($0, toPointTo: mapView))
+                }
+            }
+        }
 
         private(set) var renderer: HexGridOverlayRenderer?
         private let grid: HexGridService

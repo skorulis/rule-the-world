@@ -252,6 +252,121 @@ struct PowerUpInventoryViewModelTests {
         let unvisited = try await store.info(for: unvisitedCell)
         #expect(unvisited?.userVisit == nil)
     }
+}
+
+extension PowerUpInventoryViewModelTests {
+    @Test func selectionResolvesCurrentInventoryAndClearsWhenExhausted() async throws {
+        let store = try makeStore()
+        try await seedStore(store)
+        let model = try makeModel(body: #"{"powerups":{"1":1}}"#, store: store)
+        await model.load()
+        model.selectedItemID = 1
+        #expect(model.selectedItem?.count == 1)
+
+        await model.consumeSelected()
+
+        #expect(model.selectedItem == nil)
+        #expect(model.selectedItemID == nil)
+        #expect(model.message == "Common Attack applied to 2 squares.")
+        #expect(model.activatedItemID == 1)
+    }
+
+    @Test func refreshClearsMissingSelection() async throws {
+        let model = try makeModel(body: #"{"powerups":{"1":2}}"#)
+        model.selectedItemID = 99
+        await model.load()
+        #expect(model.selectedItemID == nil)
+        model.selectedItemID = 1
+        await model.load()
+        #expect(model.selectedItem?.count == 2)
+    }
+
+    @Test func zeroCountInventoryCannotRemainSelected() async throws {
+        let model = try makeModel(body: #"{"powerups":{"1":0}}"#)
+        model.selectedItemID = 1
+        await model.load()
+        #expect(model.items.isEmpty)
+        #expect(model.selectedItemID == nil)
+    }
+
+    @Test func staleItemCannotBeConsumedAgain() async throws {
+        let store = try makeStore()
+        try await seedStore(store)
+        var requests = 0
+        let model = try makeModel(
+            body: #"{"powerups":{"1":1}}"#, store: store,
+            onConsumeRequest: { _ in requests += 1 }
+        )
+        await model.load()
+        let staleItem = try #require(model.items.first)
+        await model.consume(item: staleItem)
+        await model.consume(item: staleItem)
+        #expect(requests == 1)
+    }
+
+    @Test func repeatedSuccessProducesDistinctFeedback() async throws {
+        let store = try makeStore()
+        try await seedStore(store)
+        let model = try makeModel(
+            body: #"{"powerups":{"1":2}}"#, store: store,
+            consumeBody: #"{"powerups":{"1":1},"visits":[]}"#
+        )
+        await model.load()
+        model.selectedItemID = 1
+        let initial = model.activationID
+        await model.consumeSelected()
+        let first = model.activationID
+        await model.consumeSelected()
+        #expect(initial != first)
+        #expect(first != model.activationID)
+        #expect(model.selectedItem?.count == 1)
+    }
+
+    @Test func concurrentUseOnlySendsOneRequest() async throws {
+        let store = try makeStore()
+        try await seedStore(store)
+        var requests = 0
+        let model = try makeModel(
+            body: #"{"powerups":{"1":2}}"#, store: store,
+            consumeBody: #"{"powerups":{"1":1},"visits":[]}"#,
+            onConsumeRequest: { _ in requests += 1 }
+        )
+        await model.load()
+        model.selectedItemID = 1
+        let first = Task { await model.consumeSelected() }
+        let second = Task { await model.consumeSelected() }
+        await first.value
+        await second.value
+        #expect(requests == 1)
+        #expect(!model.isConsuming)
+    }
+
+    @Test func newAttemptReplacesOldMessageWithoutSuccessFeedbackOnFailure() async throws {
+        let store = try makeStore()
+        try await seedStore(store)
+        var model: PowerUpInventoryViewModel?
+        var messageAtRequest: String? = "Not requested"
+        let inventory = try makeModel(
+            body: #"{"powerups":{"1":1}}"#, store: store,
+            consumeStatus: 500, consumeBody: #"{"error":"Try again later"}"#,
+            onConsumeRequest: { _ in messageAtRequest = model?.message }
+        )
+        model = inventory
+        defer { model = nil }
+        await inventory.load()
+        inventory.selectedItemID = 1
+        inventory.mapWindowProvider = { nil }
+        await inventory.consumeSelected()
+        #expect(inventory.message?.contains("Zoom in") == true)
+        let initial = inventory.activationID
+        inventory.mapWindowProvider = { self.window }
+        await inventory.consumeSelected()
+        #expect(messageAtRequest == nil)
+        #expect(inventory.message == "Try again later")
+        #expect(inventory.activationID == initial)
+        #expect(inventory.activatedItemID == nil)
+        #expect(inventory.selectedItemID == 1)
+    }
 
     @Test func serverErrorLeavesInventory() async throws {
         let store = try makeStore()

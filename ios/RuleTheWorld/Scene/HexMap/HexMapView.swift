@@ -5,6 +5,10 @@ import SwiftUI
 struct HexMapView: View {
     @State var model: HexMapViewModel
     @State var powerUpInventory: PowerUpInventoryViewModel
+    @State private var isPowerUpDockExpanded = false
+    @State private var topControlsHeight: CGFloat = 0
+    @State private var regionControlsHeight: CGFloat = 0
+    @State private var bottomControlsHeight: CGFloat = 0
     @Environment(\.coordinator) private var coordinator
     @Environment(\.scenePhase) private var scenePhase
 
@@ -16,6 +20,9 @@ struct HexMapView: View {
             grid: model.grid,
             userStatus: model.userStatus,
             selectedRegion: model.selectedRegion,
+            powerUpTopInset: max(topControlsHeight, regionControlsHeight),
+            powerUpBottomInset: bottomControlsHeight,
+            onPowerUpWindowProvider: { model.unobscuredPowerUpWindow = $0 },
             onCameraChange: { zoomScale, region, visibleWidthMeters in
                 model.cameraChanged(zoomScale: zoomScale, region: region, visibleWidthMeters: visibleWidthMeters)
             },
@@ -39,6 +46,8 @@ struct HexMapView: View {
                 .accessibilityLabel("Region details")
                 .accessibilityValue(region.boundary.name)
                 .padding()
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { regionControlsHeight = $0 }
+                .onDisappear { regionControlsHeight = 0 }
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -55,7 +64,7 @@ struct HexMapView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Profile")
                 Button {
-                    coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
+                    isPowerUpDockExpanded.toggle()
                 } label: {
                     HStack {
                         Image(systemName: "sparkles")
@@ -72,31 +81,22 @@ struct HexMapView: View {
                 .accessibilityValue(powerUpInventory.totalCount.formatted())
             }
             .padding()
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { topControlsHeight = $0 }
         }
         .overlay(alignment: .bottomTrailing) {
-            HStack(spacing: 4) {
-                ForEach(HexMapMode.allCases) { mode in
-                    Button {
-                        model.mapMode = mode
-                    } label: {
-                        Image(mode.imageName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
-                            .frame(width: 48, height: 48)
-                            .background(
-                                model.mapMode == mode ? Color.accentColor : Color.clear,
-                                in: .circle
-                            )
+            Group {
+                if isPowerUpDockExpanded {
+                    PowerUpDockView(model: powerUpInventory) {
+                        coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
+                    } onClose: {
+                        isPowerUpDockExpanded = false
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(mode.title)
-                    .accessibilityAddTraits(model.mapMode == mode ? .isSelected : [])
+                    .padding()
+                } else {
+                    mapModeControls
                 }
             }
-            .padding(4)
-            .background(.ultraThinMaterial, in: .capsule)
-            .padding()
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { bottomControlsHeight = $0 }
         }
         .animation(.default, value: model.selectedRegion)
         .onAppear {
@@ -128,5 +128,31 @@ struct HexMapView: View {
                     }
             }
         }
+    }
+
+    private var mapModeControls: some View {
+        HStack(spacing: 4) {
+            ForEach(HexMapMode.allCases) { mode in
+                Button {
+                    model.mapMode = mode
+                } label: {
+                    Image(mode.imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36, height: 36)
+                        .frame(width: 48, height: 48)
+                        .background(
+                            model.mapMode == mode ? Color.accentColor : Color.clear,
+                            in: .circle
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(mode.title)
+                .accessibilityAddTraits(model.mapMode == mode ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(.ultraThinMaterial, in: .capsule)
+        .padding()
     }
 }

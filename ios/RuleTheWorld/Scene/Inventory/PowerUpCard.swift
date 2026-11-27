@@ -4,9 +4,6 @@ import SwiftUI
 /// border, tint and glow instead of a text label.
 struct PowerUpCard: View {
     let item: PowerUpInventoryViewModel.Item
-    let isConsuming: Bool
-    let canUse: Bool
-    let onUse: () -> Void
 
     private var rarity: Rarity { item.rarity }
     private var color: Color { rarity.color }
@@ -25,13 +22,6 @@ struct PowerUpCard: View {
                         .foregroundStyle(color)
                 }
                 Text(item.detail).font(.subheadline).foregroundStyle(.secondary)
-                HStack {
-                    Spacer()
-                    Button("Use", action: onUse)
-                        .buttonStyle(.borderedProminent)
-                        .tint(isHighRarity ? color : nil)
-                        .disabled(isConsuming || item.count < 1 || !canUse)
-                }
             }
         }
         .padding(12)

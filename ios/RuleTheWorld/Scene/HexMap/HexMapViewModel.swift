@@ -17,6 +17,7 @@ final class HexMapViewModel {
 
     private(set) var selectedRegion: MapRegionSelection?
     private(set) var isLoadingRegions = false
+    @ObservationIgnored var unobscuredPowerUpWindow: (() -> [HexCell]?)?
 
     let grid: HexGridService
     private let store: HexInfoStore
@@ -100,6 +101,7 @@ final class HexMapViewModel {
     var powerUpWindow: [HexCell]? {
         guard displayedResolution == HexGridService.baseResolution,
               let lastVisibleRegion else { return nil }
+        if let unobscuredPowerUpWindow { return unobscuredPowerUpWindow() }
         return grid.cells(in: lastVisibleRegion, resolution: HexGridService.baseResolution)
     }
 

@@ -23,6 +23,22 @@ final class PowerUpInventoryViewModel {
     private(set) var items: [Item] = []
     private(set) var isConsuming = false
     private(set) var message: String?
+    var selectedItemID: Int?
+    private(set) var activationID = UUID()
+    private(set) var activatedItemID: Int?
+
+    var selectedItem: Item? {
+        items.first { $0.id == selectedItemID }
+    }
+
+    func consumeSelected() async {
+        guard let item = selectedItem else { return }
+        await consume(item: item)
+    }
+
+    private func reconcileSelection() {
+        if selectedItem == nil { selectedItemID = nil }
+    }
 
     /// Supplies the base-resolution cells covering the map's visible window, or
     /// nil when the map isn't showing individual hexes. Wired by the map view.
@@ -66,12 +82,13 @@ final class PowerUpInventoryViewModel {
     private func apply(_ summary: ProfileSummary) {
         items = summary.powerups
             .compactMap { id, count in
-                guard let definition = catalog.definition(for: id) else { return nil }
+                guard count > 0, let definition = catalog.definition(for: id) else { return nil }
                 return Item(id: id, definition: definition, count: count)
             }
             .sorted { $0.rarity != $1.rarity
                 ? $0.rarity < $1.rarity
                 : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        reconcileSelection()
     }
 
     /// Cells in `window` eligible for `type`, based on locally cached hex info.
@@ -92,8 +109,10 @@ final class PowerUpInventoryViewModel {
     }
 
     func consume(item: Item) async {
-        guard !isConsuming, item.count > 0 else { return }
-        guard let window = mapWindowProvider() else {
+        guard !isConsuming,
+              let item = items.first(where: { $0.id == item.id }), item.count > 0 else { return }
+        message = nil
+        guard mapIsAtHexResolution, let window = mapWindowProvider() else {
             message = "Zoom in until hexes appear to use power-ups."
             return
         }
@@ -120,6 +139,9 @@ final class PowerUpInventoryViewModel {
                     let count = powerups[String(entry.id)] ?? 0
                     return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
                 }
+                reconcileSelection()
+                activatedItemID = item.id
+                activationID = UUID()
                 message = "\(item.name) applied to \(targets.count) \(targets.count == 1 ? "square" : "squares")."
             } catch {
                 try? await store.undoPowerUp(previous: previous, for: targets)
