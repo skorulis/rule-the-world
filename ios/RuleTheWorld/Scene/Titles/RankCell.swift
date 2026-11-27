@@ -10,7 +10,12 @@ struct RankCell: View {
                 RankIcon(name: icon, rarity: rank.rarity, size: 64)
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text(rank.name).font(.title3.bold())
+                HStack(spacing: 8) {
+                    Text(rank.name).font(.title3.bold())
+                    if isCurrent {
+                        currentBadge
+                    }
+                }
                 Text(rank.description).font(.subheadline).foregroundStyle(.secondary)
                 requirements
             }
@@ -21,6 +26,26 @@ struct RankCell: View {
             accent: isCurrent ? .accentColor : rank.rarity.color,
             prominent: isCurrent || rank.rarity >= .epic
         )
+    }
+
+    private var currentBadge: some View {
+        Label("Current", systemImage: "crown.fill")
+            .font(.system(.caption, design: .rounded, weight: .heavy))
+            .foregroundStyle(Color(red: 0.25, green: 0.14, blue: 0.02))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [Color(red: 1, green: 0.9, blue: 0.45), Color(red: 0.9, green: 0.68, blue: 0.2)],
+                        startPoint: .top, endPoint: .bottom
+                    ))
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .stroke(Color(red: 0.45, green: 0.3, blue: 0.05), lineWidth: 1)
+                    }
+            }
+            .accessibilityLabel("Your current title")
     }
 
     @ViewBuilder

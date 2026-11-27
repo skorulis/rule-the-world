@@ -1,9 +1,15 @@
 import SwiftUI
 
 struct GoldButtonStyle: ButtonStyle {
+    enum Size {
+        case regular
+        case compact
+    }
+
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    var size: Size = .regular
     var fillsWidth = false
 
     func makeBody(configuration: Configuration) -> some View {
@@ -12,13 +18,13 @@ struct GoldButtonStyle: ButtonStyle {
         let outline = palette.outline
 
         configuration.label
-            .font(.system(.title3, design: .serif, weight: .heavy))
+            .font(.system(size == .compact ? .headline : .title3, design: .serif, weight: .heavy))
             .foregroundStyle(palette.label)
             .tint(palette.label)
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: 48)
+            .padding(.horizontal, size == .compact ? 14 : 24)
+            .padding(.vertical, size == .compact ? 8 : 12)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: size == .compact ? 40 : 48)
             .background {
                 GoldButtonFace(pressed: pressed, palette: palette)
             }
@@ -158,6 +164,8 @@ private struct GoldButtonFace: View {
             Button("Log out", role: .destructive) { }
             Button("Disabled destructive action", role: .destructive) { }
                 .disabled(true)
+            Button("Buy 1 · 10") { }
+                .buttonStyle(GoldButtonStyle(size: .compact, fillsWidth: true))
         }
         .buttonStyle(GoldButtonStyle(fillsWidth: true))
     }

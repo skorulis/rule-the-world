@@ -6,26 +6,49 @@ struct ShopView: View {
     var body: some View {
         StandardListLayout("Shop") {
             Section {
-                LabeledContent("Coins", value: (model.coins ?? 0).formatted())
+                ScrollBanner {
+                    HStack(spacing: 10) {
+                        Image("Coin")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 32)
+                            .accessibilityHidden(true)
+                        Text("Coins")
+                        Spacer()
+                        Text((model.coins ?? 0).formatted())
+                            .monospacedDigit()
+                    }
+                    .font(.system(.title3, design: .rounded, weight: .heavy))
+                    .foregroundStyle(Color(red: 0.25, green: 0.12, blue: 0.04))
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
                 if let errorMessage = model.errorMessage {
                     Text(errorMessage).font(.footnote).foregroundStyle(.secondary)
                 }
             }
             Section {
                 ForEach(model.boxes) { box in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(box.name)
-                            .font(.headline)
-                            .foregroundStyle(box.rarity.color)
-                        Text("Contains a random \(box.rarity.displayName.lowercased()) power-up")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        HStack(spacing: 12) {
-                            buyButton(box: box, count: 1)
-                            buyButton(box: box, count: 5)
+                    HStack(alignment: .center, spacing: 12) {
+                        Color.clear
+                            .frame(width: 72, height: 72)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(box.name)
+                                .font(.system(.title3, design: .rounded, weight: .heavy))
+                                .foregroundStyle(box.rarity.color)
+                            Text("Contains a random \(box.rarity.displayName.lowercased()) power-up")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 12) {
+                                buyButton(box: box, count: 1)
+                                buyButton(box: box, count: 5)
+                            }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .parchmentCell(rarity: box.rarity)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
             }
         }
@@ -48,9 +71,16 @@ struct ShopView: View {
         Button {
             Task { await model.purchase(box: box, count: count) }
         } label: {
-            Text("Buy \(count) · \((box.cost * count).formatted())")
+            HStack(spacing: 4) {
+                Text("Buy \(count) · \((box.cost * count).formatted())")
+                Image("Coin")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 18)
+                    .accessibilityHidden(true)
+            }
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(GoldButtonStyle(size: .compact, fillsWidth: true))
         .disabled(model.isPurchasing || !model.canAfford(box, count: count))
     }
 }
