@@ -2,6 +2,8 @@ import Foundation
 
 nonisolated enum BannerPattern: String, CaseIterable, Sendable {
     case solid, horizontalSplit, verticalSplit, diagonalBand, cross, chevron
+    case fess, pale, bendSinister, saltire, chief, quarters
+    case barry, paly, checkered, lozenge, roundel, rays
 
     var title: String {
         switch self {
@@ -11,6 +13,18 @@ nonisolated enum BannerPattern: String, CaseIterable, Sendable {
         case .diagonalBand: "Diagonal band"
         case .cross: "Cross"
         case .chevron: "Chevron"
+        case .fess: "Fess"
+        case .pale: "Pale"
+        case .bendSinister: "Bend sinister"
+        case .saltire: "Saltire"
+        case .chief: "Chief"
+        case .quarters: "Quarters"
+        case .barry: "Barry"
+        case .paly: "Paly"
+        case .checkered: "Checkered"
+        case .lozenge: "Lozenge"
+        case .roundel: "Roundel"
+        case .rays: "Rays"
         }
     }
 }
