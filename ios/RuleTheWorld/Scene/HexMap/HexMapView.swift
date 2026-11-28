@@ -64,6 +64,9 @@ struct HexMapView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Profile")
                 Button {
+                    if !isPowerUpDockExpanded {
+                        powerUpInventory.selectedItemID = nil
+                    }
                     isPowerUpDockExpanded.toggle()
                 } label: {
                     HStack {
@@ -87,8 +90,6 @@ struct HexMapView: View {
             Group {
                 if isPowerUpDockExpanded {
                     PowerUpDockView(model: powerUpInventory) {
-                        coordinator?.present(MainPath.powerUpInventory(powerUpInventory), style: .sheet)
-                    } onClose: {
                         isPowerUpDockExpanded = false
                     }
                     .padding()

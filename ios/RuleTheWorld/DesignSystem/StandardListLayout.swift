@@ -81,7 +81,7 @@ struct StandardListLayout<Content: View, HeaderActions: View>: View {
                         coordinator?.pop()
                     }
                     .labelStyle(.iconOnly)
-                    .buttonStyle(BackButtonStyle())
+                    .buttonStyle(SmallCircleButtonStyle())
                 } else {
                     Color.clear
                         .frame(width: 56, height: 56)

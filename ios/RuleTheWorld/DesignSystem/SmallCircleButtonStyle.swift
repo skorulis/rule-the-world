@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct BackButtonStyle: ButtonStyle {
+struct SmallCircleButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -63,7 +63,7 @@ struct BackButtonStyle: ButtonStyle {
             .disabled(true)
     }
     .labelStyle(.iconOnly)
-    .buttonStyle(BackButtonStyle())
+    .buttonStyle(SmallCircleButtonStyle())
     .padding(32)
     .background(LinearGradient(colors: [.indigo, .blue, .cyan], startPoint: .top, endPoint: .bottom))
 }
