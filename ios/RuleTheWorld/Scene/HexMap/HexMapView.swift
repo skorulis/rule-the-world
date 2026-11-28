@@ -11,6 +11,7 @@ struct HexMapView: View {
     @State private var bottomControlsHeight: CGFloat = 0
     @Environment(\.coordinator) private var coordinator
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HexMapViewRepresentable(
@@ -20,6 +21,9 @@ struct HexMapView: View {
             grid: model.grid,
             userStatus: model.userStatus,
             selectedRegion: model.selectedRegion,
+            powerUpEffect: powerUpInventory.mapEffect,
+            reduceMotion: reduceMotion,
+            animationsEnabled: scenePhase == .active,
             powerUpTopInset: max(topControlsHeight, regionControlsHeight),
             powerUpBottomInset: bottomControlsHeight,
             onPowerUpWindowProvider: { model.unobscuredPowerUpWindow = $0 },
@@ -101,6 +105,7 @@ struct HexMapView: View {
         }
         .animation(.default, value: model.selectedRegion)
         .onAppear {
+            powerUpInventory.setMapEffectsVisible(scenePhase == .active)
             powerUpInventory.mapWindowProvider = { model.powerUpWindow }
             powerUpInventory.mapIsAtHexResolution = model.displayedResolution == HexGridService.baseResolution
         }
@@ -115,7 +120,13 @@ struct HexMapView: View {
             guard scenePhase == .active else { return }
             await model.refreshGameDay()
         }
-        .onDisappear { model.cancelRegionSelection() }
+        .onChange(of: scenePhase) {
+            powerUpInventory.setMapEffectsVisible(scenePhase == .active)
+        }
+        .onDisappear {
+            powerUpInventory.setMapEffectsVisible(false)
+            model.cancelRegionSelection()
+        }
         .sheet(item: $model.selectedCell) { cell in
             HexCellDetailView(model: model.makeCellDetailViewModel(for: cell))
         }

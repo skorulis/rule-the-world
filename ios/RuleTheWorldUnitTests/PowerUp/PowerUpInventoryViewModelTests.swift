@@ -23,11 +23,11 @@ struct PowerUpInventoryViewModelTests {
                           HexCell(rawValue: 0x8a2830828760fff),
                           HexCell(rawValue: 0x8a2830828712fff)]
 
-    private func makeStore() throws -> HexInfoStore {
+    func makeStore() throws -> HexInfoStore {
         try HexInfoStore(database: AppDatabase.inMemory())
     }
 
-    private func seedStore(_ store: HexInfoStore) async throws {
+    func seedStore(_ store: HexInfoStore) async throws {
         try await store.restore([
             HexInfo(cell: rivalOwnedCell,
                     totals: HexTotals(totalVisits: 3, rivalScore: 4),
@@ -41,7 +41,7 @@ struct PowerUpInventoryViewModelTests {
         ])
     }
 
-    private func makeModel(
+    func makeModel(
         body: String,
         seededBody: String? = nil,
         profileFails: Bool = false,
@@ -78,7 +78,7 @@ struct PowerUpInventoryViewModelTests {
         return model
     }
 
-    private func sentCells(_ request: URLRequest?) throws -> [String] {
+    func sentCells(_ request: URLRequest?) throws -> [String] {
         let payload = try #require(request?.httpBody)
         let body = try JSONSerialization.jsonObject(with: payload) as? [String: Any]
         return try #require(body?["cells"] as? [String])
@@ -197,6 +197,7 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         #expect(model.canUse == false)
         await model.consume(item: try #require(model.items.first))
+        #expect(model.mapEffect == nil)
         #expect(model.message?.contains("Zoom in") == true)
         #expect(model.items.map(\.count) == [1])
         #expect(captured == nil)
@@ -214,6 +215,7 @@ struct PowerUpInventoryViewModelTests {
         model.mapWindowProvider = { [self.rivalOwnedCell, self.unvisitedCell] }
         await model.load()
         await model.consume(item: try #require(model.items.first))
+        #expect(model.mapEffect == nil)
         #expect(model.message == "No viable squares in view — Common Defend was not used.")
         #expect(model.items.map(\.count) == [1])
         #expect(captured == nil)
@@ -246,6 +248,7 @@ struct PowerUpInventoryViewModelTests {
         await model.load()
         await model.consume(item: try #require(model.items.first))
         #expect(model.items.map(\.count) == [1])
+        #expect(model.mapEffect == nil)
         #expect(model.message == "Unable to consume power-up")
         let info = try await store.info(for: rivalOwnedCell)
         #expect(info?.userVisit?.score == 2)
@@ -269,6 +272,8 @@ extension PowerUpInventoryViewModelTests {
         #expect(model.selectedItemID == nil)
         #expect(model.message == "Common Attack applied to 2 squares.")
         #expect(model.activatedItemID == 1)
+        #expect(model.mapEffect?.phase == .confirmed)
+        #expect(model.mapEffect?.bonus == 1)
     }
 
     @Test func refreshClearsMissingSelection() async throws {
@@ -316,7 +321,9 @@ extension PowerUpInventoryViewModelTests {
         let initial = model.activationID
         await model.consumeSelected()
         let first = model.activationID
+        let firstEffect = model.mapEffect?.id
         await model.consumeSelected()
+        #expect(model.mapEffect?.id != firstEffect)
         #expect(initial != first)
         #expect(first != model.activationID)
         #expect(model.selectedItem?.count == 1)

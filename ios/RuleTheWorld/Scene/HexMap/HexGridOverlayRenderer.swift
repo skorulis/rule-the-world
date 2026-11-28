@@ -3,7 +3,7 @@ import SwiftUI
 import os
 
 final class HexGridOverlayRenderer: MKOverlayRenderer {
-    private static let flipDuration: CFTimeInterval = 0.5
+    nonisolated private static let flipDuration: CFTimeInterval = 0.5
 
     let grid: HexGridService
     private var displayLink: CADisplayLink?
@@ -14,6 +14,9 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         var previousSnapshot = HexOwnershipSnapshot(states: [:])
         var hasReceivedSnapshot = false
         var animationStart: CFTimeInterval = 0
+        var powerUps = PowerUpEffectPlayback()
+        var reduceMotion = false
+        var animationsEnabled = true
         var aggregateCache: [Int: (states: [HexCell: HexState], levels: [HexCell: Int])] = [:]
         var visitCache: [Int: Set<HexCell>] = [:]
         var changedCellsCache: [Int: [HexCell: (from: HexState, to: HexState)]] = [:]
@@ -37,13 +40,14 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
             guard state.snapshot != snapshot || modeChanged else {
                 return (false, false)
             }
-            let animate = !modeChanged && mode == .territory
+            let animate = state.animationsEnabled && !state.reduceMotion && !modeChanged && mode == .territory
                 && state.hasReceivedSnapshot && state.snapshot != snapshot
             if animate {
                 state.previousSnapshot = state.snapshot
                 state.animationStart = CACurrentMediaTime()
             } else {
                 state.previousSnapshot = snapshot
+                state.animationStart = 0
             }
             state.hasReceivedSnapshot = true
             state.snapshot = snapshot
@@ -60,16 +64,52 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         }
     }
 
-    private func startDisplayLink() {
+    func updatePresentation(effect: PowerUpEffect?, reduceMotion: Bool, animationsEnabled: Bool) {
+        state.withLock { state in
+            state.reduceMotion = reduceMotion
+            state.animationsEnabled = animationsEnabled
+            state.powerUps.update(effect, at: .now, reduceMotion: reduceMotion, enabled: animationsEnabled)
+            if reduceMotion || !animationsEnabled {
+                state.animationStart = 0
+                state.previousSnapshot = state.snapshot
+                state.changedCellsCache = [:]
+            }
+        }
+        animationTick()
+    }
+
+    func stopAnimations() {
         displayLink?.invalidate()
-        let link = CADisplayLink(target: self, selector: #selector(animationTick))
+        displayLink = nil
+        state.withLock { state in
+            state.powerUps.stop()
+            state.animationStart = 0
+            state.previousSnapshot = state.snapshot
+            state.changedCellsCache = [:]
+            state.animationsEnabled = false
+        }
+    }
+
+    private func startDisplayLink() {
+        guard displayLink == nil else { return }
+        let link = CADisplayLink(
+            target: HexAnimationTarget(renderer: self), selector: #selector(HexAnimationTarget.tick)
+        )
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
         link.add(to: .main, forMode: .common)
         displayLink = link
     }
 
-    @objc private func animationTick() {
-        let start = state.withLock { $0.animationStart }
-        if CACurrentMediaTime() - start >= Self.flipDuration {
+    fileprivate func animationTick() {
+        let animate = state.withLock { state in
+            state.powerUps.prune(at: .now, reduceMotion: state.reduceMotion)
+            return state.animationsEnabled && (
+                state.powerUps.needsAnimation || CACurrentMediaTime() - state.animationStart < Self.flipDuration
+            )
+        }
+        if animate {
+            startDisplayLink()
+        } else {
             displayLink?.invalidate()
             displayLink = nil
         }
@@ -121,5 +161,21 @@ final class HexGridOverlayRenderer: MKOverlayRenderer {
         for item in geometry.flipping {
             drawFlip(cell: item, progress: progress, zoomScale: zoomScale, in: context)
         }
+        if resolution == HexGridService.baseResolution {
+            drawPowerUps(in: mapRect, hexEdge: hexEdge, zoomScale: zoomScale, context: context)
+        }
+    }
+}
+
+@MainActor
+private final class HexAnimationTarget: NSObject {
+    weak var renderer: HexGridOverlayRenderer?
+
+    init(renderer: HexGridOverlayRenderer) {
+        self.renderer = renderer
+    }
+
+    @objc func tick() {
+        renderer?.animationTick()
     }
 }

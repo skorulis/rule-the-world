@@ -26,6 +26,13 @@ final class PowerUpInventoryViewModel {
     var selectedItemID: Int?
     private(set) var activationID = UUID()
     private(set) var activatedItemID: Int?
+    private(set) var mapEffect: PowerUpEffect?
+    private var showsMapEffects = true
+
+    func setMapEffectsVisible(_ visible: Bool) {
+        showsMapEffects = visible
+        if !visible { mapEffect = nil }
+    }
 
     var selectedItem: Item? {
         items.first { $0.id == selectedItemID }
@@ -34,6 +41,14 @@ final class PowerUpInventoryViewModel {
     func consumeSelected() async {
         guard let item = selectedItem else { return }
         await consume(item: item)
+    }
+
+    private func reconcileInventory(_ powerups: [String: Int]) {
+        items = items.compactMap { entry in
+            let count = powerups[String(entry.id)] ?? 0
+            return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
+        }
+        reconcileSelection()
     }
 
     private func reconcileSelection() {
@@ -117,7 +132,10 @@ final class PowerUpInventoryViewModel {
             return
         }
         isConsuming = true
-        defer { isConsuming = false }
+        defer {
+            isConsuming = false
+            if mapEffect?.phase == .pending { mapEffect = nil }
+        }
         do {
             let infos = try await store.infos(for: window)
             let viable = viableCells(
@@ -129,17 +147,21 @@ final class PowerUpInventoryViewModel {
                 message = "No viable squares in view — \(item.name) was not used."
                 return
             }
+            try Task.checkCancellation()
+            let effect = PowerUpEffect(
+                id: UUID(), type: item.definition.type, rarity: item.rarity,
+                bonus: item.definition.bonus, cells: targets, startedAt: .now
+            )
+            if showsMapEffects { mapEffect = effect }
             let previous = try await store.applyPowerUp(bonus: Double(item.definition.bonus), to: targets)
             do {
                 let response = try await service.consumePowerUp(id: item.id, cells: targets)
                 guard !Task.isCancelled else { return }
                 try await store.restore(response.visits)
-                let powerups = response.powerups
-                items = items.compactMap { entry in
-                    let count = powerups[String(entry.id)] ?? 0
-                    return count > 0 ? Item(id: entry.id, definition: entry.definition, count: count) : nil
+                reconcileInventory(response.powerups)
+                if showsMapEffects && mapEffect?.id == effect.id && !Task.isCancelled {
+                    mapEffect = effect.confirmed()
                 }
-                reconcileSelection()
                 activatedItemID = item.id
                 activationID = UUID()
                 message = "\(item.name) applied to \(targets.count) \(targets.count == 1 ? "square" : "squares")."

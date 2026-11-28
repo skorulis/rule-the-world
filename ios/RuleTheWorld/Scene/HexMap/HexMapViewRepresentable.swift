@@ -8,6 +8,9 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     let grid: HexGridService
     let userStatus: UserMapStatus?
     let selectedRegion: MapRegionSelection?
+    let powerUpEffect: PowerUpEffect?
+    let reduceMotion: Bool
+    let animationsEnabled: Bool
     let powerUpTopInset: CGFloat
     let powerUpBottomInset: CGFloat
     let onPowerUpWindowProvider: (@escaping () -> [HexCell]?) -> Void
@@ -21,6 +24,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
         config.showsTraffic = false
 
         let mapView = MKMapView()
+        configurePresentation(context.coordinator)
         mapView.delegate = context.coordinator
         mapView.pointOfInterestFilter = .excludingAll
         mapView.showsUserLocation = true
@@ -40,16 +44,26 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onCameraChange = onCameraChange
         context.coordinator.onTap = onTap
-        context.coordinator.powerUpTopInset = powerUpTopInset
-        context.coordinator.powerUpBottomInset = powerUpBottomInset
-        context.coordinator.renderer?.update(snapshot: snapshot, mode: mode)
+        configurePresentation(context.coordinator)
+        context.coordinator.updateRenderer()
         context.coordinator.apply(status: userStatus, to: mapView)
         context.coordinator.apply(region: selectedRegion, to: mapView)
+    }
+
+    private func configurePresentation(_ coordinator: Coordinator) {
+        coordinator.powerUpTopInset = powerUpTopInset
+        coordinator.powerUpBottomInset = powerUpBottomInset
+        coordinator.snapshot = snapshot
+        coordinator.mode = mode
+        coordinator.powerUpEffect = powerUpEffect
+        coordinator.reduceMotion = reduceMotion
+        coordinator.animationsEnabled = animationsEnabled
     }
 
     static func dismantleUIView(_ mapView: MKMapView, coordinator: Coordinator) {
         coordinator.onCameraChange = nil
         coordinator.onTap = nil
+        coordinator.renderer?.stopAnimations()
         mapView.delegate = nil
     }
 
@@ -60,6 +74,19 @@ struct HexMapViewRepresentable: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var onCameraChange: ((MKZoomScale, MKCoordinateRegion, Double) -> Void)?
         var onTap: ((CLLocationCoordinate2D) -> Void)?
+
+        var snapshot = HexOwnershipSnapshot(states: [:])
+        var mode: HexMapMode = .territory
+        var powerUpEffect: PowerUpEffect?
+        var reduceMotion = false
+        var animationsEnabled = true
+
+        func updateRenderer() {
+            renderer?.updatePresentation(
+                effect: powerUpEffect, reduceMotion: reduceMotion, animationsEnabled: animationsEnabled
+            )
+            renderer?.update(snapshot: snapshot, mode: mode)
+        }
 
         var powerUpTopInset: CGFloat = 0
         var powerUpBottomInset: CGFloat = 0
@@ -108,6 +135,7 @@ struct HexMapViewRepresentable: UIViewRepresentable {
             }
             let renderer = HexGridOverlayRenderer(overlay: overlay, grid: grid)
             self.renderer = renderer
+            updateRenderer()
             return renderer
         }
 
