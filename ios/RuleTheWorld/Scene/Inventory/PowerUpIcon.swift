@@ -12,10 +12,11 @@ struct PowerUpIcon: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                    .strokeBorder(color.opacity(0.8), lineWidth: 1.5)
+            .background {
+                Circle()
+                    .fill(color.opacity(0.3))
+                    .padding(size * 0.1)
+                    .blur(radius: size * 0.14)
             }
             .shadow(color: color.opacity(0.5), radius: 4)
             .accessibilityHidden(true)
@@ -23,7 +24,7 @@ struct PowerUpIcon: View {
 
     private var image: Image {
         switch type {
-        case .attack: Image(systemName: "bolt.shield.fill")
+        case .attack: Image("PowerUpAttack")
         case .defend: Image("PowerUpFortification")
         case .explore: Image("PowerUpExploration")
         }

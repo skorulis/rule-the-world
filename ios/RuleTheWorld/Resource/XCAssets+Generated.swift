@@ -28,6 +28,7 @@ internal enum Asset {
   internal static let onboardingCapture = ImageAsset(name: "OnboardingCapture")
   internal static let onboardingExplore = ImageAsset(name: "OnboardingExplore")
   internal static let onboardingPowerUp = ImageAsset(name: "OnboardingPowerUp")
+  internal static let powerUpAttack = ImageAsset(name: "PowerUpAttack")
   internal static let powerUpExploration = ImageAsset(name: "PowerUpExploration")
   internal static let powerUpFortification = ImageAsset(name: "PowerUpFortification")
   internal static let powerUpRevisit = ImageAsset(name: "PowerUpRevisit")
